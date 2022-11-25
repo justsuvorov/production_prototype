@@ -4,6 +4,8 @@ from BaseObject.ObjectInfo import ObjectInfo
 from BaseObject.Indicators import Indicators
 from BaseObject.ObjectStatus import ObjectStatus
 from Well.WellInfo import WellInfo
+from DomainModel import DomainModel
+from BaseObject.Parser import Parser
 import pandas as pd
 
 class WellDO(BaseObject):
@@ -28,3 +30,10 @@ class WellDO(BaseObject):
         pass
     def data(self):
         pass
+
+    @classmethod
+    def from_data(cls, domain_model: DomainModel, name: str):
+        try:
+            return domain_model.wellDO(name)
+        except:
+            print('No data for this well')

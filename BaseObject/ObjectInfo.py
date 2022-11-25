@@ -1,4 +1,4 @@
-from ObjectStatus import ObjectStatus
+from BaseObject.ObjectStatus import ObjectStatus
 
 
 class ObjectInfo:

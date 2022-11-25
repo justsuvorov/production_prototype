@@ -6,14 +6,14 @@ from BaseObject.ObjectStatus import ObjectStatus
 from Well.WellInfo import WellInfo
 import pandas as pd
 
-class PumpDO(BaseObject):
+class ClusterDO(BaseObject):
     def __init__(self,
                  name: str,
                  object_info: ObjectInfo,
                  indicators: Indicators,
                  object_status: ObjectStatus,
                  sensor: Sensor,
-                 pump_info: WellInfo
+                 cluster_info: WellInfo = None
                  ) -> None:
             super().__init__(
                  name=name,
@@ -22,7 +22,7 @@ class PumpDO(BaseObject):
                  object_status=object_status,
                  sensor=sensor,
             )
-            self.pump_info = pump_info
+            self.cluster_info = cluster_info
 
     def build(self):
         pass

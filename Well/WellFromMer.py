@@ -25,15 +25,15 @@ class WellFromMer:
                 Wells.append(Well(
                     id=well[MERNames.WELL][0],
                     objectInfo=self._well_info(welldata=well),
-                    indicators = self._indicator(well),
+                    indicators=self._indicator(well),
                     wellStatus=WellStatus(),
                     sensor=Sensor()
                                 )
                 )
             except:
                 Wells.append(Well(
-                    id = 1,
-                    objectInfo = self._well_info(welldata=well),
+                    id=1,
+                    objectInfo= self._well_info(welldata=well),
                     indicators = {'Indicators': 'No data'},
                     wellStatus = WellStatus(),
                     sensor = Sensor(False)

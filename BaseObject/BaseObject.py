@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 
-from Sensor import Sensor
-from ObjectInfo import ObjectInfo
-from Indicators import Indicators
-from ObjectStatus import ObjectStatus
-from Constraint import Constraint
+from BaseObject.Sensor import Sensor
+from BaseObject.ObjectInfo import ObjectInfo
+from BaseObject.Indicators import Indicators
+from BaseObject.ObjectStatus import ObjectStatus
+from BaseObject.Constraint import Constraint
 import pandas as pd
+
 
 
 class BaseObject(ABC):
@@ -24,13 +25,13 @@ class BaseObject(ABC):
         self.sensor = sensor
         self.constraint = constraint
 
-    @abstractmethod
-    def init_from_config(cls, id: str,  *args):
-        "Создание default объектов через config файл"
+  #  @abstractmethod
+  #  def init_from_config(cls, id: str,  *args):
+  #      "Создание default объектов через config файл"
 
-    @abstractmethod
-    def init_from_df(cls, data: pd.DataFrame,  *args):
-        "Создание объектов из датафрейма"
+  #  @abstractmethod
+  #  def init_from_df(cls, data: pd.DataFrame,  *args):
+  #      "Создание объектов из датафрейма"
 
     @abstractmethod
     def build(self):
@@ -39,5 +40,8 @@ class BaseObject(ABC):
     @abstractmethod
     def data(self):
         pass
+
+
+
 
 

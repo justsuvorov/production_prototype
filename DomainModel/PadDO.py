@@ -28,3 +28,10 @@ class PadDO(BaseObject):
         pass
     def data(self):
         pass
+
+    @classmethod
+    def from_data(cls, domain_model: DomainModel, name: str):
+        try:
+            return domain_model.wellDO(name)
+        except:
+            print('No data for this well')
