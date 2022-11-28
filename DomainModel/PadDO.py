@@ -5,6 +5,7 @@ from BaseObject.Indicators import Indicators
 from BaseObject.ObjectStatus import ObjectStatus
 from Well.WellInfo import WellInfo
 import pandas as pd
+from DomainModel import DomainModel
 
 class PadDO(BaseObject):
     def __init__(self,

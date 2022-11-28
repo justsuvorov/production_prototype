@@ -4,6 +4,7 @@ from BaseObject.ObjectInfo import ObjectInfo
 from BaseObject.Indicators import Indicators
 from BaseObject.ObjectStatus import ObjectStatus
 from Well.WellInfo import WellInfo
+from DomainModel import DomainModel
 import pandas as pd
 
 class ClusterDO(BaseObject):

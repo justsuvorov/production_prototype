@@ -11,5 +11,5 @@ filePath = DATA_DIR/'МЭР_Новопортовское.xlsx'
 
 mer = MerData(dataPath=DATA_DIR)
 domainModel = DomainModel(parser=MerParser(merData=mer))
-domainModel.wells_collection()
+print(domainModel.create_domain_objects())
 print(domainModel.object_list)

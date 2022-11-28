@@ -13,3 +13,4 @@ class ObjectRecord:
         self.object = object
         self.links = links
         self.status = status.status
+

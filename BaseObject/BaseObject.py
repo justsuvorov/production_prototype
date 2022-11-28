@@ -19,7 +19,7 @@ class BaseObject(ABC):
                  constraint: Constraint = None
                  ) -> None:
         self.name = name
-        self.objectInfo = object_info
+        self.object_info = object_info
         self.indicators = indicators
         self.objectStatus = object_status
         self.sensor = sensor

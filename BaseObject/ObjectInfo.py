@@ -3,10 +3,11 @@ from BaseObject.ObjectStatus import ObjectStatus
 
 class ObjectInfo:
     def __init__(self,
-                 linkList: dict,
+
                  objectStatus: ObjectStatus,
+                 link: list = None,
                  ):
-        self.linkList = linkList
+        self.link = link
         self.objectStatus = objectStatus
 
     def build(self):
