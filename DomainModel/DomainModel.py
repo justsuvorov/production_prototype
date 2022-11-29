@@ -28,14 +28,13 @@ class DomainModel:
 
         wells = self._wells_collection()
         self.object_id = 100000
-        pads=self._pads_collection(wells=wells)
+        pads =self._pads_collection(wells=wells)
         domain_objects = {'Wells': wells, 'Pads': pads}
 
         return domain_objects
 
     def _parsed_data(self):
         return self.parser.data()
-
     def well(self, name: str):
         pass
     def _wells_collection(self):
@@ -54,7 +53,6 @@ class DomainModel:
                 )
 
         return wells
-
     def _pads_collection(self, wells: dict):
         pads = {}
         pads_keys = []
@@ -81,7 +79,6 @@ class DomainModel:
             self.object_list[self.object_id] = self._create_record(object=pads[pads_keys_unique[i][0]],
                                                                    type_of_object='Pad')
         return pads
-
     def wellsdata(self):
         data = self._parsed_data()
         wellsdata = []
@@ -90,7 +87,6 @@ class DomainModel:
             for i in range(len(wells_id_list)):
                 wellsdata.append(_.loc[[wells_id_list[i]]])
         return wellsdata
-
     def _field_list(self):
         return self.merData.data_list()
     def _mer(self):
