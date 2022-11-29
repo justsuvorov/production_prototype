@@ -32,7 +32,6 @@ class MerData:
                 self.data_path,
                 self.data_path,
             )
-
         else:
             raise ValueError('Нет корректных данных для расчета')
         return mer_dict, fields

@@ -35,7 +35,6 @@ class MerParser(Parser):
 
     def data(self) -> pd.DataFrame:
         data = self._mer()
-    #    return self.wells_collection()
         return data
 
     def _mer(self):

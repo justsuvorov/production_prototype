@@ -3,7 +3,6 @@ from BaseObject.ObjectStatus import ObjectStatus
 
 class ObjectInfo:
     def __init__(self,
-
                  objectStatus: ObjectStatus,
                  link: list = None,
                  ):

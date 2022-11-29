@@ -10,6 +10,7 @@ from BaseObject.Hierarchy import Hierarchy
 from DomainModel.WellDO import WellDO
 from DomainModel.PadDO import PadDO
 from DomainModel.Cluster import ClusterDO
+from BaseObject.Hierarchy import Hierarchy
 
 from constants import MERNames, StringConstants
 
@@ -35,8 +36,10 @@ class DomainModel:
 
     def _parsed_data(self):
         return self.parser.data()
+
     def well(self, name: str):
         pass
+
     def _wells_collection(self):
         wells = {}
         wellsdata = self.wellsdata()
@@ -48,11 +51,11 @@ class DomainModel:
             finally:
                 wells[well[MERNames.WELL][0]] = well_object
                 self.object_id += 1
-                self.object_list[self.object_id] = self._create_record(object=well_object,
+                self.object_list[self.object_id] = ObjectRecord.create(object=well_object,
                                                     type_of_object='Well',
-                )
-
+                                                                        )
         return wells
+
     def _pads_collection(self, wells: dict):
         pads = {}
         pads_keys = []
@@ -76,9 +79,10 @@ class DomainModel:
                                                 object_status=ObjectStatus(),
                                                 )
             self.object_id += 1
-            self.object_list[self.object_id] = self._create_record(object=pads[pads_keys_unique[i][0]],
+            self.object_list[self.object_id] = ObjectRecord.create(object=pads[pads_keys_unique[i][0]],
                                                                    type_of_object='Pad')
         return pads
+
     def wellsdata(self):
         data = self._parsed_data()
         wellsdata = []
@@ -87,12 +91,16 @@ class DomainModel:
             for i in range(len(wells_id_list)):
                 wellsdata.append(_.loc[[wells_id_list[i]]])
         return wellsdata
+
     def _field_list(self):
         return self.merData.data_list()
+
     def _mer(self):
         return self.merData.dataframe()
+
     def _indicator(self, welldata: pandas.DataFrame):
         return {MERNames.OIL_PRODUCTION: welldata[MERNames.OIL_PRODUCTION]}
+
     def _well_constructor(self, well: pandas.DataFrame):
         name = well[MERNames.WELL][0]
         link = []
@@ -101,18 +109,18 @@ class DomainModel:
         if pad_name != []:
             link.append(pad_name[0])
 
-
         objectInfo = ObjectInfo(link=link, objectStatus=ObjectStatus())
         wellStatus = ObjectStatus()
         #indicators = self._indicator(well)
         indicators = {'Indicators': 'No data'}
-
         sensor = Sensor()
         return WellDO(name=name,
-                    object_info= objectInfo,
-                    indicators=indicators,
-                    object_status=wellStatus,
-                    sensor=sensor)
+                      object_info=objectInfo,
+                      indicators=Indicators(indicators=indicators),
+                      object_status=wellStatus,
+                      sensor=sensor
+                      )
+
     def _default_well(self, well: pandas.DataFrame):
         name = well[MERNames.WELL][0]
         objectInfo = ObjectInfo(objectStatus=ObjectStatus())
@@ -120,17 +128,12 @@ class DomainModel:
         wellStatus = ObjectStatus()
         sensor = Sensor(False)
         return WellDO(name=name,
-                    object_info=objectInfo,
-                    indicators=indicators,
-                    object_status=wellStatus,
-                    sensor=sensor
+                      object_info=objectInfo,
+                      indicators=indicators,
+                      object_status=wellStatus,
+                      sensor=sensor
                       )
-    def _create_record(self, object, type_of_object: str):
-        return ObjectRecord(name=object.name,
-                                                    type_of_object=type_of_object,
-                                                    object=object,
-                                                    links=[],
-                                                    status=object.sensor)
+
     def _find_pad_name(self, well: pandas.DataFrame):
         pad_names = list(well['Куст'].unique())
 

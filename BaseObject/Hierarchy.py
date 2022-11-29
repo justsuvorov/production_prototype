@@ -16,7 +16,6 @@ class Hierarchy(ABC):
                  object_list: dict,
                  indicators: Indicators,
                  sensor: Sensor,
-
                  ):
         self.name = name
         self.last_fact_date = last_fact_date
