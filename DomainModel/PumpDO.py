@@ -12,16 +12,17 @@ class PumpDO(BaseObject):
                  name: str,
                  object_info: ObjectInfo,
                  indicators: Indicators,
-                 object_status: ObjectStatus,
                  sensor: Sensor,
-                 pump_info: WellInfo
+                 pump_info: WellInfo = None,
+                 link: list = None
                  ) -> None:
             super().__init__(
                  name=name,
                  object_info=object_info,
                  indicators=indicators,
-                 object_status=object_status,
                  sensor=sensor,
+                 link=link,
+
             )
             self.pump_info = pump_info
 

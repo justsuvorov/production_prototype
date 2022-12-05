@@ -13,16 +13,16 @@ class WellDO(BaseObject):
                  name: str,
                  object_info: ObjectInfo,
                  indicators: Indicators,
-                 object_status: ObjectStatus,
                  sensor: Sensor,
+                 link: list = None,
                  well_info: WellInfo = None
                  ) -> None:
             super().__init__(
                  name=name,
                  object_info=object_info,
                  indicators=indicators,
-                 object_status=object_status,
                  sensor=sensor,
+                 link=link
             )
             self.wellInfo = well_info
 

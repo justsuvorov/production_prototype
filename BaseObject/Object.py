@@ -11,11 +11,11 @@ class Object(ABC):
 
     def __init__(self,
                  name: str,
-                 indicators: Indicators,
-                 sensor: Sensor):
+                 sensor: Sensor,
+                 link: list = None):
         self.name = name
-        self.indicators = indicators
         self.sensor = sensor
+        self.link = link
 
     @abstractmethod
     def build(self):

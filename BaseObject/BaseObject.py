@@ -6,24 +6,28 @@ from BaseObject.Indicators import Indicators
 from BaseObject.ObjectStatus import ObjectStatus
 from BaseObject.Constraint import Constraint
 import pandas as pd
+from BaseObject.Object import Object
 
 
 
-class BaseObject(ABC):
+class BaseObject(Object):
     def __init__(self,
                  name: str,
                  object_info: ObjectInfo,
                  indicators: Indicators,
-                 object_status: ObjectStatus,
                  sensor: Sensor,
-                 constraint: Constraint = None
+                 link: list = None,
                  ) -> None:
         self.name = name
         self.object_info = object_info
         self.indicators = indicators
-        self.objectStatus = object_status
         self.sensor = sensor
-        self.constraint = constraint
+        self.link = link
+
+        super().__init__(name=name,
+                         sensor=sensor,
+                         link=link
+                         )
 
   #  @abstractmethod
   #  def init_from_config(cls, id: str,  *args):

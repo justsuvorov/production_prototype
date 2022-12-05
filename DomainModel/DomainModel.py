@@ -136,7 +136,6 @@ class DomainModel:
 
     def _find_pad_name(self, well: pandas.DataFrame):
         pad_names = list(well['Куст'].unique())
-
         pad_names.pop(0)
 
         return pad_names
