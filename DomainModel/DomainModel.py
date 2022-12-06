@@ -7,8 +7,6 @@ from BaseObject.ObjectInfo import ObjectInfo
 from BaseObject.Sensor import Sensor
 from BaseObject.Hierarchy import Hierarchy
 
-from DomainModel.WellDO import WellDO
-from DomainModel.PadDO import PadDO
 from DomainModel.Cluster import ClusterDO
 from BaseObject.Hierarchy import Hierarchy
 

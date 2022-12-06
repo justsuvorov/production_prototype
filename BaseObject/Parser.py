@@ -18,7 +18,7 @@ from Well.Sensor import Sensor
 
 class Parser:
 
-    def data(self) -> pd.DataFrame:
+    def data(self) :#-> pd.DataFrame:
         pass
 
     def gtm_object(self):
@@ -33,8 +33,8 @@ class MerParser(Parser):
                  ):
         self.merData = merData
 
-    def data(self) -> pd.DataFrame:
-        data = self._mer()
+    def data(self) :#-> pd.DataFrame:
+        data = self._mer()[0]
         return data
 
     def _mer(self):

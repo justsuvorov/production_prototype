@@ -21,7 +21,7 @@ class FormatReader(ABC):
 class MerFormatReader(FormatReader):
 
     def __init__(self,
-                 indicator_names: list):
+                 indicator_names: list = None):
         self.indicator_names = indicator_names
 
     def names(self, df: pd.DataFrame):

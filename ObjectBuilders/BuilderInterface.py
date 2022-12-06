@@ -1,12 +1,15 @@
 import abc
-
-from FormatReader import FormatReader
+from ObjectBuilders.FormatReader import FormatReader
 from BaseObject.Object import Object
 from BaseObject.ObjectInfo import ObjectInfo
 from BaseObject.Indicators import Indicators
 from BaseObject.Sensor import Sensor
 from abc import ABC
 from DomainModel.ObjectList import ObjectRecord
+from DomainModel.WellDO import WellDO
+from DomainModel.PadDO import PadDO
+from DomainModel.Cluster import ClusterDO
+from BaseObject.Hierarchy import Hierarchy
 
 
 class ObjectBuilder(ABC):
@@ -49,5 +52,3 @@ class BaseObjectBuilder(ObjectBuilder):
 
     def _create_record(self) -> ObjectRecord:
         pass
-
-
