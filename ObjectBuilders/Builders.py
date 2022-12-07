@@ -8,6 +8,7 @@ from BaseObject.Indicators import Indicators
 from BaseObject.Sensor import Sensor
 from DomainModel.ObjectList import ObjectRecord
 from BaseObject.Parser import Parser
+from constants import MERNames, StringConstants
 
 class WellBuilder(BaseObjectBuilder):
 
@@ -17,18 +18,25 @@ class WellBuilder(BaseObjectBuilder):
         self.format_reader = format_reader
         super().__init__(format_reader=format_reader)
         self.data = data
+        self.error = False
+        self.wells_count = 0
 
     def build_object(self) -> Object:
-       pass
+       return WellDO(
+           name=self.format_reader.names(self.data)['Well'],
+           object_info=self._object_info(),
+           indicators=self._indicators(),
+           sensor=self.sensor(),
+       )
 
     def sensor(self) -> Sensor:
-        pass
+        return Sensor()
 
     def _object_info(self) -> ObjectInfo:
-        return self.format_reader(self.data)
+        return self.format_reader.object_info(self.data)
 
     def _indicators(self) -> Indicators:
-        pass
+        return self.format_reader.indicators(self.data)
 
     def _create_record(self) -> ObjectRecord:
         pass
@@ -93,16 +101,17 @@ class DomainModelBuilder(ObjectBuilder):
                  parser: Parser,
                  format_reader: FormatReader,
                  ):
-        self.paser = parser
+        self.parser = parser
         self.format_reader = format_reader
         super().__init__(format_reader=format_reader)
+        self.object_id = 0
+        self.object_list = {}
 
     def build_object(self) -> Object:
         domain_model = []
         data = self._data()
-        for row in data.iterrows():
 
-            domain_model.append( WellBuilder(format_reader=self.format_reader, data=row)._object_info())
+        domain_model.append(self._create_wells(data))
         return domain_model
 
     def sensor(self) -> Sensor:
@@ -112,5 +121,19 @@ class DomainModelBuilder(ObjectBuilder):
         pass
 
     def _data(self):
-        return self.paser.data()
+        return self.parser.data()
+
+    def _create_wells(self, data):
+        wells = []
+        well_names = data[MERNames.WELL].unique()
+        for name in well_names:
+            data_temp = data.loc[data[MERNames.WELL] == name].to_numpy()
+            well = WellBuilder(
+                format_reader=self.format_reader,
+                data=data_temp).build_object()
+            self.object_id += 1
+            self.object_list[self.object_id] = ObjectRecord.create(object=well,
+                                                                   type_of_object='Well')
+            wells.append(well)
+        return wells
 
