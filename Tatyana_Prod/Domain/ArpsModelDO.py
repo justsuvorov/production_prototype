@@ -1,8 +1,8 @@
 import numpy as np
 
-from Domain.OilModelDO import OilModel
-from Domain.LiqModelDO import LiqModel
-from Domain.WellDO import WellDo
+from Tatyana_Prod.Domain.OilModelDO import OilModel
+from Tatyana_Prod.Domain.LiqModelDO import LiqModel
+from Tatyana_Prod.Domain.WellDO import WellDo
 
 
 class ArpsOModel(OilModel):

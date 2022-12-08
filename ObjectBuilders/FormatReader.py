@@ -19,43 +19,56 @@ class FormatReader(ABC):
         pass
 
 
-class MerFormatReader2(FormatReader):
+class SetOfWellsFormatReader(FormatReader):
 
     def __init__(self,
                  indicator_names: list = None):
         self.indicator_names = indicator_names
 
-    def names(self, df: pd.DataFrame):
+    def names(self, df: np.array):
         try:
-            well_name = df[MERNames.WELL]
-            pad_name = df['Куст']
-            field = df['Месторождение']
+            well_name = df[0][2]
+            pad_name = df[0][3]
+            cluster_name = df[0][1]
+            field = df[0][0]
 
         except:
             print('Corrupted date')
             well_name = 'Noname'
             pad_name = 'Noname'
+            cluster_name = 'Noname'
             field = 'Noname'
 
         finally:
-            return {'Well': well_name, 'Куст': pad_name, 'Месторождение': field}
+            return {'Well': well_name, 'Куст': pad_name, 'ДНС': cluster_name, 'Месторождение': field}
 
-    def _object_type(self, df: pd.DataFrame):
-        #return df['Характер работы скважины'].tolist()
-        return str('')
-    def indicators(self, df: pd.DataFrame):
+    def _object_type(self, data: np.array):
+        # return df['Характер работы скважины'].tolist()
+        return data.T[4]
+
+    def indicators(self, data: np.array):
         result = {}
-        for _ in self.indicator_names:
-            result[_] = df[_]
+
+        self.indicator_names = ['Добыча нефти, тыс. т', 'Добыча жидкости, тыс. т', 'FCF']
+        indicators_numbers = [5, 65, 125, 184]
+        indicators_numbers1 = [5, 65, 125]
+        j = 0
+        shape = data.shape
+        if data.shape[0] > 1:
+            data = data.T
+        else: data = data[0]
+        for i in indicators_numbers1:
+            a = np.arange(i, indicators_numbers[j+1])
+            result[self.indicator_names[j]] = data[a]
+            j += 1
         return result
 
-    def object_info(self, df: pd.DataFrame) -> ObjectInfo:
+    def object_info(self, data: np.array) -> ObjectInfo:
         return ObjectInfo(
-            object_type=self._object_type(df),
+            object_type=self._object_type(data),
             link=[]
-          #  link=[df['Куст'].unique()[0], df['Месторождение'].unique()[0]]
+            #  link=[df['Куст'].unique()[0], df['Месторождение'].unique()[0]]
         )
-
 class MerFormatReader(FormatReader):
 
     def __init__(self,

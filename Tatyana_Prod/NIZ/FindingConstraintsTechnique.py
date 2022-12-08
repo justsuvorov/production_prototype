@@ -1,15 +1,11 @@
 import numpy as np
 import pandas as pd
-from typing import Dict, Tuple, Type, List, Optional, Union
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
-from scipy import interpolate
+from typing import Optional
 import math
 from sklearn.linear_model import LinearRegression
 
-from constants import MERNames, StringConstants
-from Domain.WellDO import WellDo
-from Domain.CoreyModelDO import CoreyModel
+from constants import MERNames
+
 
 class OIZ():
     """Класс, характеризующий ОИЗ скважины

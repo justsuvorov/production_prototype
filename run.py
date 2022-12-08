@@ -1,6 +1,6 @@
 import datetime as dt
 from pathlib import Path
-from calculator import Calculator, \
+from Tatyana_Prod.calculator import Calculator, \
                     OilPredictionMethod, \
                     FluidPredictionMethod, \
                     WCPredictionMethod

@@ -11,15 +11,15 @@ import datareader as DR
 #from utils.schemas import ClassifiedObjectsData
 from BASEcalculator import BASECalculator
 
-from OilProd.ArpsOilTechnique import ArpsPredictionTechnique
+from Tatyana_Prod.OilProd.ArpsOilTechnique import ArpsPredictionTechnique
 #from OilProd.OilAndWCTechnique import OilandWCPredictionTechnique
-from OilProd.WC_with_integral import OilandWCPredictionTechnique
-from LiqProd.LiqAndWCTechnique import LiqandWCPredictionTechnique
-from LiqProd.ArpsTechnique import ArpsLiqPredictionTechnique
-from LiqProd.ExpTechnique import ExpPredictionTechnique
-from LiqProd.BuckleyLeverettTechnique import BLPredictionTechnique
-from WaterCut.CoreyOizTechnique import CoreyPredictionTechnique
-from WaterCut.CircTechnique import CircPredictionTechnique
+from Tatyana_Prod.OilProd.WC_with_integral import OilandWCPredictionTechnique
+from Tatyana_Prod.LiqProd.LiqAndWCTechnique import LiqandWCPredictionTechnique
+from Tatyana_Prod.LiqProd.ArpsTechnique import ArpsLiqPredictionTechnique
+from Tatyana_Prod.LiqProd.ExpTechnique import ExpPredictionTechnique
+from Tatyana_Prod.LiqProd.BuckleyLeverettTechnique import BLPredictionTechnique
+from Tatyana_Prod.WaterCut.CoreyOizTechnique import CoreyPredictionTechnique
+from Tatyana_Prod.WaterCut.CircTechnique import CircPredictionTechnique
 
 from Domain.WellDO import WellDo
 
@@ -31,8 +31,7 @@ from constants import (
     OilProductionNames,
     StringConstants as SC,
     TFileInput,
-    HOURS_IN_DAY,
-    StringConstants
+    HOURS_IN_DAY
 )
 
 

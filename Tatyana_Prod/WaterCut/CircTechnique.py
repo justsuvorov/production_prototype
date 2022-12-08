@@ -1,22 +1,13 @@
-from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Tuple, Type, List, Optional, Union
-from copy import deepcopy
+from typing import Type, Optional
 import numpy as np
-import pandas as pd
 from constants import (
-    AVG_DAYS_IN_MONTH,
-    HOURS_IN_DAY,
-    GTMNames,
-    MERNames,
-    MetricSIPrefix,
-    ProductionNames,
-    FundFormationDates
+    ProductionNames
 )
 
 
-from Domain.WellDO import WellDo
-from Domain.CircWCModelDO import CircModel
+from Tatyana_Prod.Domain.WellDO import WellDo
+from Tatyana_Prod.Domain.CircWCModelDO import CircModel
 
 TProductionNames = Type[ProductionNames]
 

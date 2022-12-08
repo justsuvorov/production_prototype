@@ -6,15 +6,13 @@ import math
 from scipy.optimize import minimize, Bounds, NonlinearConstraint, fsolve
 from constants import (
     MERNames,
-    MetricSIPrefix,
     ProductionNames,
-    StringConstants,
 )
 
-from NIZ.FindingConstraintsTechnique import OIZ
+from Tatyana_Prod.NIZ.FindingConstraintsTechnique import OIZ
 
-from Domain.WellDO import WellDo
-from Domain.CoreyModelDO import CoreyModel
+from Tatyana_Prod.Domain.WellDO import WellDo
+from Tatyana_Prod.Domain.CoreyModelDO import CoreyModel
 
 TProductionNames = Type[ProductionNames]
 

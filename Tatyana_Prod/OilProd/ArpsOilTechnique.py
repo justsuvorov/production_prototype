@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Tuple, Type, List, Optional, Union
+from typing import Type
 import numpy as np
 from scipy.optimize import minimize, Bounds, NonlinearConstraint
 
@@ -7,15 +7,12 @@ from scipy.optimize import minimize, Bounds, NonlinearConstraint
 from constants import (
     AVG_DAYS_IN_MONTH,
     HOURS_IN_DAY,
-    GTMNames,
     MERNames,
-    MetricSIPrefix,
     ProductionNames,
-    FundFormationDates,
 )
-from Domain.WellDO import WellDo
-from Domain.ArpsModelDO import ArpsOModel
-from arps_function import CombinedArps
+from Tatyana_Prod.Domain.WellDO import WellDo
+from Tatyana_Prod.Domain.ArpsModelDO import ArpsOModel
+from Tatyana_Prod.arps_function import CombinedArps
 
 
 TProductionNames = Type[ProductionNames]

@@ -39,3 +39,12 @@ class MerParser(Parser):
 
     def _mer(self):
         return self.merData.dataframe()
+
+class SetOfWellsParser(Parser):
+    def __init__(self,
+                 data_path: str,
+                 ):
+        self.data_path = data_path
+
+    def data(self) -> pd.DataFrame:
+        return pd.read_excel(self.data_path)

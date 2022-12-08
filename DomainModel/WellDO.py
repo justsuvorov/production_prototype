@@ -2,11 +2,9 @@ from BaseObject.BaseObject import BaseObject
 from BaseObject.Sensor import Sensor
 from BaseObject.ObjectInfo import ObjectInfo
 from BaseObject.Indicators import Indicators
-from BaseObject.ObjectStatus import ObjectStatus
 from Well.WellInfo import WellInfo
 from DomainModel import DomainModel
-from BaseObject.Parser import Parser
-import pandas as pd
+
 
 class WellDO(BaseObject):
     def __init__(self,

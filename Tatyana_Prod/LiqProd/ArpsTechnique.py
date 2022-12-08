@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Tuple, Type, List, Optional, Union
+from typing import Type, Optional
 import numpy as np
 from scipy.optimize import minimize, Bounds, NonlinearConstraint
 
@@ -9,9 +9,9 @@ from constants import (
     MERNames,
     ProductionNames,
 )
-from Domain.WellDO import WellDo
-from Domain.ArpsModelDO import ArpsLModel, ArpsCombLModel
-from arps_function import CombinedArps
+from Tatyana_Prod.Domain.WellDO import WellDo
+from Tatyana_Prod.Domain.ArpsModelDO import ArpsLModel, ArpsCombLModel
+from Tatyana_Prod.arps_function import CombinedArps
 
 TProductionNames = Type[ProductionNames]
 

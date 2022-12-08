@@ -1,11 +1,7 @@
 import numpy as np
 import pandas as pd
-from typing import Dict, Tuple, Type, List, Optional, Union
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
 
-from constants import MERNames, StringConstants
-from Domain.WellDO import WellDo
+from Tatyana_Prod.Domain.WellDO import WellDo
 
 
 class CoreyModel():

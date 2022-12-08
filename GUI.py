@@ -7,7 +7,7 @@ from tkinter import filedialog as fd, Tk,\
     Label, Button, TOP, Entry, Checkbutton, BooleanVar
 from pathlib import Path
 
-from calculator import Calculator, \
+from Tatyana_Prod.calculator import Calculator, \
                     OilPredictionMethod, \
                     FluidPredictionMethod, \
                     WCPredictionMethod

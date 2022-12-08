@@ -1,16 +1,11 @@
 import numpy as np
-from tkinter import Entry, filedialog as fd, Tk,\
-    Label, Button, TOP, Entry, Checkbutton, BooleanVar
-import tkinter.ttk as ttk
-import datetime as dt
 from tkinter import *
 import matplotlib
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
 from matplotlib import gridspec
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from arps_function import CombinedArps
+from Tatyana_Prod.arps_function import CombinedArps
 
 
 def get_start_date(data, dob_neft):

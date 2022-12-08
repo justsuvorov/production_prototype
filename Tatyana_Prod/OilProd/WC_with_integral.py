@@ -1,9 +1,10 @@
 from datetime import datetime
-from typing import Type, List, Optional, Union
+from typing import Type, Optional, Union
 from dateutil.relativedelta import relativedelta
 import numpy as np
 import pandas as pd
 import calendar
+
 
 from constants import (
     AVG_DAYS_IN_MONTH,
@@ -13,46 +14,50 @@ from constants import (
 )
 from constants import StringConstants as SC
 from constants import ConstantsForCalc as Const
-from arps_function import CombinedArps
-from Domain.WellDO import WellDo
-from Domain.OilModelDO import OilModel
-from Domain.CoreyModelDO import CoreyModel
-from Domain.LiqModelDO import LiqModel
+from Tatyana_Prod.arps_function import CombinedArps
+from Tatyana_Prod.Domain.WellDO import WellDo
+from Tatyana_Prod.Domain.OilModelDO import OilModel
+from Tatyana_Prod.Domain.CoreyModelDO import CoreyModel
+from Tatyana_Prod.Domain.LiqModelDO import LiqModel
 
 
 TProductionNames = Type[ProductionNames]
+
 GTM_CORRECTED = 'gtm_corrected'
 BASE_PRODUCTION = 'base_production'
 
 
-class LiqandWCPredictionTechnique():
-    '''Класс содержит логику построения прогнозных кривых добычи жидкости
-       по модели характеристик вытеснения и модели добычи нефти
+class OilandWCPredictionTechnique():
+    '''Класс содержит логику построения прогнозных кривых добычи нефти
+       по модели характеристик вытеснения и модели добычи жидкости
 
-    :param
-    :param
-    :param
+
+    :param binding_period: период привязки
+    :param substract_gtm: вычитать ГТМ при прогнозировании.
+    :param ret_only_base_prod: при установке в `True` возвращается только БД. Иначе - БД + ГТМ.
     '''
 
     def __init__(self,
-                 #prod_names: TProductionNames,
+                 prod_names: TProductionNames,
                  use_koeff: pd.DataFrame,
-                 #binding_period: int = 3,
-                 #ret_only_base_prod: bool = True,
-                 #account_condensate: bool = False,
+                 binding_period: int = 3,
+                 ret_only_base_prod: bool = True,
+                 account_condensate: bool = False,
                  ):
-        #self.prod_names = prod_names
+        self.prod_names = prod_names
         self.default_operating_factor = Const.DEFAULT_OPERATING_FACTOR
-        #self.fact_production_column = self.prod_names.StandardCode
-        #self.oil_condensate = pd.DataFrame()
+        self.fact_production_column = self.prod_names.StandardCode
+        self.oil_condensate = pd.DataFrame()
+        #use_koeff.loc[use_koeff['КЭ']<=0.90] = 0.95
         self.use_koeff = use_koeff
 
 
 
-    def calc_liq(self, well: WellDo,
+    def calc_oil(self, well: WellDo,
                   on_date: datetime, off_date: datetime,
                   wc_model: Optional[CoreyModel] = None,
-                  oil_model: Optional[OilModel] = None,
+                  liq_model: Optional[LiqModel] = None,
+                  bf_date: Optional[datetime] = None,
                   ) -> OilModel:
         """Расчет помесячной добычи для каждой скважины WellDO.
 
@@ -60,49 +65,63 @@ class LiqandWCPredictionTechnique():
             :param on_date: конечная дата фактической добычи.
             :param off_date: конечная дата прогноза
             :param use_coef: предрасчитанный коэффициент эксплуатации.
-            #:param bf_date: дата формирования базового фонда.
+            :param bf_date: дата формирования базового фонда.
             :param wc_model: оптимизированная модель ХВ.
             :param liq_model: оптимизированная модель добычи жидкости.
-            :return: экземпляр класса LiqModel, описывающий прогнозную модель.
+            :return: экземпляр класса OilModel, описывающий прогнозную модель.
                      экземпляр класса WellDo с заполненными прогнозными данными
             """
 
-        model = OilModel(well, on_date, off_date)
+        model = OilModel(well, on_date, off_date, sum_condensate=False)
         time_forecast = 12*(off_date.year - on_date.year) + (off_date.month - on_date.month)
         list = np.arange(1, time_forecast + 1, 1).tolist()
         self.dateline = [on_date + relativedelta(months=i) for i in list]
 
-        Qoil_t = []
-        Ql = []
+        Qn_t = [0]
+        Qn = []
         Wc_mod = []
+        Qliq = []
 
-        if oil_model.new_wells is not None:
+        if liq_model.new_wells is not None:
             # если скважина работала меньше 4 месяцев, она будет рассчитана как среднее по месторождению
             model.new_wells = well.wellID
             well.OIZ = wc_model.OIZ
             well.NIZ = wc_model.NIZ
             return model, well
 
+        if liq_model.double_arps == True:
+            #Qliq = np.zeros(time_forecast)
+            now_RF = wc_model.RF_last_fact
+            num_m = well.mer[MERNames.OIL_PRODUCTION].size + 1
 
-        now_RF = wc_model.RF_last_fact
-        num_m = well.mer[MERNames.OIL_PRODUCTION].size + 1
+            arps_coeffs = np.array([liq_model.b1, liq_model.b2, liq_model.D1, liq_model.t])
+            Qliq = self.calc_liq_by_integral(well, on_date, arps_coeffs) * liq_model.start_q/self.use_koeff.loc[well.wellID, 'КЭ']
+            Qliq = Qliq.loc[:, Qliq.columns > on_date].values.tolist()[0]
+            for i in range(time_forecast):
+                now_RF = now_RF + Qn_t[-1] / wc_model.NIZ / 1000
+                if now_RF >= 1: now_RF = 0.99999999999
+                Wc_mod.append(self.calc_wc(wc_model.corey_oil, wc_model.corey_water, wc_model.mef, now_RF))
+                num_m += 1
+                Qn.append(Qliq[i] * (1 - Wc_mod[-1]))
+                days_in_month = calendar.monthrange(on_date.year, on_date.month)[1]
+                Qn_t.append(Qn[i] * days_in_month)
 
-        arps_coeffs = np.array([oil_model.b1, oil_model.b2, oil_model.D1, oil_model.t])
-        Qoil = self.calc_liq_by_integral(well, on_date, arps_coeffs) * oil_model.start_q/self.use_koeff.loc[well.wellID, 'КЭ']
-        Qoil = Qoil.loc[:, Qoil.columns > on_date].values.tolist()[0]
-        for i in range(time_forecast):
-            days_in_month = calendar.monthrange(on_date.year, on_date.month)[1]
-            now_RF = now_RF + Qoil[i]* days_in_month / wc_model.NIZ / 1000
-            if now_RF >= 1: now_RF = 0.99999999999
-            Wc_mod.append(self.calc_wc(wc_model.corey_oil, wc_model.corey_water, wc_model.mef, now_RF))
-            num_m += 1
-            Ql.append(Qoil[i] / (1 - Wc_mod[-1]))
-            Qoil_t.append(Qoil[i] * days_in_month)
+        else:
+            now_RF = wc_model.RF_last_fact
+            num_m = well.mer[MERNames.OIL_PRODUCTION].size + 1
+            for i in range(time_forecast):
+                now_RF = now_RF + Qn_t[-1] / wc_model.NIZ / 1000
+                if now_RF >= 1: now_RF = 0.99999999999
+                Wc_mod.append(self.calc_wc(wc_model.corey_oil, wc_model.corey_water, wc_model.mef, now_RF))
+                Qliq.append(self.calc_liq(liq_model.start_q, liq_model.k1, liq_model.k2, num_m))
+                num_m += 1
+                Qn.append(Qliq[-1] * (1 - Wc_mod[-1]))
+                days_in_month = calendar.monthrange(on_date.year, on_date.month)[1]
+                Qn_t.append(Qn[-1] * days_in_month)
 
-
-        Q_nak_pred = np.cumsum(Qoil_t) / 1000
-        well.prediction_oil = pd.Series(Qoil, index=self.dateline)
-        well.prediction_liq = pd.Series(Ql, index=self.dateline)
+        Q_nak_pred = np.cumsum(Qn_t) / 1000
+        well.prediction_oil = pd.Series(Qn, index=self.dateline)
+        well.prediction_liq = pd.Series(Qliq, index=self.dateline)
         well.prediction_wc = pd.Series(Wc_mod, index=self.dateline)
         well.OIZ = wc_model.OIZ
         well.NIZ = wc_model.NIZ
@@ -115,6 +134,9 @@ class LiqandWCPredictionTechnique():
     def calc_wc(self, Co, Cw, mef, now_RF):
         return mef * now_RF ** Cw / ((1 - now_RF) ** Co + mef * now_RF ** Cw)
 
+
+    def calc_liq(self, Qst, k1, k2, num_m):
+        return Qst * (1 + k1 * k2 * (num_m - 1)) ** (-1 / k2)
 
 
     def get_fact(self, well: WellDo, on_date: datetime):
@@ -132,6 +154,7 @@ class LiqandWCPredictionTechnique():
         well.prediction_oil = pd.concat([fact_oil, well.prediction_oil])
         well.prediction_liq = pd.concat([fact_liq, well.prediction_liq])
         well.prediction_wc = pd.concat([wc_fact, well.prediction_wc])
+        #well.time =
 
         return well
 

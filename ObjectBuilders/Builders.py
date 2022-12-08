@@ -7,8 +7,9 @@ from BaseObject.ObjectInfo import ObjectInfo
 from BaseObject.Indicators import Indicators
 from BaseObject.Sensor import Sensor
 from DomainModel.ObjectList import ObjectRecord
-from BaseObject.Parser import Parser
-from constants import MERNames, StringConstants
+from ObjectBuilders.Parser import Parser
+from constants import MERNames
+
 
 class WellBuilder(BaseObjectBuilder):
 
@@ -112,6 +113,7 @@ class DomainModelBuilder(ObjectBuilder):
         data = self._data()
 
         domain_model.append(self._create_wells(data))
+
         return domain_model
 
     def sensor(self) -> Sensor:
@@ -125,9 +127,9 @@ class DomainModelBuilder(ObjectBuilder):
 
     def _create_wells(self, data):
         wells = []
-        well_names = data[MERNames.WELL].unique()
+        well_names = data['Скважина'].unique()
         for name in well_names:
-            data_temp = data.loc[data[MERNames.WELL] == name].to_numpy()
+            data_temp = data.loc[data['Скважина'] == name].to_numpy()
             well = WellBuilder(
                 format_reader=self.format_reader,
                 data=data_temp).build_object()

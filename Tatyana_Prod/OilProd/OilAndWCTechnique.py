@@ -1,26 +1,19 @@
-from datetime import datetime, date, timedelta
-from typing import Dict, Tuple, Type, List, Optional, Union
+from datetime import datetime
+from typing import Type, Optional
 from dateutil.relativedelta import relativedelta
 import numpy as np
 import pandas as pd
 from constants import (
-    AVG_DAYS_IN_MONTH,
-    HOURS_IN_DAY,
-    GTMNames,
     MERNames,
-    MetricSIPrefix,
-    ProductionNames,
-    FundFormationDates
+    ProductionNames
 )
 import calendar
 
-from constants import StringConstants as SC
 from constants import ConstantsForCalc as Const
-from arps_function import CombinedArps
-from Domain.WellDO import WellDo
-from Domain.OilModelDO import OilModel
-from Domain.CoreyModelDO import CoreyModel
-from Domain.LiqModelDO import LiqModel
+from Tatyana_Prod.Domain.WellDO import WellDo
+from Tatyana_Prod.Domain.OilModelDO import OilModel
+from Tatyana_Prod.Domain.CoreyModelDO import CoreyModel
+from Tatyana_Prod.Domain.LiqModelDO import LiqModel
 
 
 TProductionNames = Type[ProductionNames]

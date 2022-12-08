@@ -1,5 +1,5 @@
 from Well.MerData import MerData
-from BaseObject.Parser import MerParser
+from ObjectBuilders.Parser import MerParser
 from pathlib import Path
 from ObjectBuilders.Builders import *
 from ObjectBuilders.FormatReader import *
