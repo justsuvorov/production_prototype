@@ -16,10 +16,10 @@ class ObjectRecord:
         self.status = status.status
 
     @classmethod
-    def create(cls, object, type_of_object: str, links: list = None):
+    def create(cls, object, type_of_object: str):
         return cls(name=object.name,
                    type_of_object=type_of_object,
                    object=object,
-                   links=links,
+                   links=object.link,
                    status=object.sensor
                    )

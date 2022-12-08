@@ -19,19 +19,19 @@ class WellBuilder(BaseObjectBuilder):
         self.format_reader = format_reader
         super().__init__(format_reader=format_reader)
         self.data = data
-        self.error = False
-        self.wells_count = 0
 
     def build_object(self) -> Object:
+
        return WellDO(
            name=self.format_reader.names(self.data)['Well'],
            object_info=self._object_info(),
            indicators=self._indicators(),
            sensor=self.sensor(),
+       #    link=self.format_reader.names(self.data)
        )
 
     def sensor(self) -> Sensor:
-        return Sensor()
+        return Sensor(self.error)
 
     def _object_info(self) -> ObjectInfo:
         return self.format_reader.object_info(self.data)
@@ -48,22 +48,31 @@ class WellBuilder(BaseObjectBuilder):
 class PadBuilder(BaseObjectBuilder):
 
     def __init__(self,
-                 format_reader: FormatReader
+                 format_reader: FormatReader,
+                 data: pd.DataFrame
                  ):
         self.format_reader = format_reader
+        self.data = data
         super().__init__(format_reader=format_reader)
 
     def build_object(self) -> Object:
-        pass
+        return PadDO(
+            name=self.format_reader.names(self.data)['Pad'],
+            object_info=self._object_info(),
+            indicators=self._indicators(),
+            sensor=self.sensor(),
+           # link=self.format_reader.names(self.data)
+        )
+
 
     def sensor(self) -> Sensor:
-        pass
+        return Sensor(self.error)
 
     def _object_info(self) -> ObjectInfo:
-        pass
+        return self.format_reader.object_info(self.data)
 
     def _indicators(self) -> Indicators:
-        pass
+        return Indicators(indicators={})
 
     def _create_record(self) -> ObjectRecord:
         pass
@@ -113,8 +122,10 @@ class DomainModelBuilder(ObjectBuilder):
         data = self._data()
 
         domain_model.append(self._create_wells(data))
+        domain_model.append(self._create_pads(data))
 
-        return domain_model
+
+        return self.object_list
 
     def sensor(self) -> Sensor:
         pass
@@ -134,8 +145,23 @@ class DomainModelBuilder(ObjectBuilder):
                 format_reader=self.format_reader,
                 data=data_temp).build_object()
             self.object_id += 1
-            self.object_list[self.object_id] = ObjectRecord.create(object=well,
+            self.object_list[str(well.name)] = ObjectRecord.create(object=well,
                                                                    type_of_object='Well')
             wells.append(well)
         return wells
+
+    def _create_pads(self, data):
+        self.object_id = 100000
+        pads = []
+        pad_names = data['Куст'].unique()
+        for name in pad_names:
+            data_temp = data.loc[data['Куст'] == name].to_numpy()
+            pad = PadBuilder(
+                format_reader=self.format_reader,
+                data=data_temp).build_object()
+            self.object_id += 1
+            self.object_list[str(pad.name)] = ObjectRecord.create(object=pad,
+                                                                   type_of_object='Pad')
+            pads.append(pad)
+        return pads
 

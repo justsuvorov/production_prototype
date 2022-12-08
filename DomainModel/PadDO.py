@@ -12,18 +12,19 @@ class PadDO(BaseObject):
                  name: str,
                  object_info: ObjectInfo,
                  indicators: Indicators,
-                 object_status: ObjectStatus,
                  sensor: Sensor,
+                 link: list = None,
                  pad_info: WellInfo = None
                  ) -> None:
             super().__init__(
                  name=name,
                  object_info=object_info,
                  indicators=indicators,
-                 object_status=object_status,
                  sensor=sensor,
+                 link=link,
             )
             self.pad_info = pad_info
+
 
     def build(self):
         pass

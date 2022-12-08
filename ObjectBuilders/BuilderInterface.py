@@ -17,6 +17,7 @@ class ObjectBuilder(ABC):
                  format_reader: FormatReader
                  ):
         self.format_reader = format_reader
+        self.error = False
 
     @abc.abstractmethod
     def build_object(self) -> Object:

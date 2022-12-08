@@ -12,7 +12,7 @@ class WellDO(BaseObject):
                  object_info: ObjectInfo,
                  indicators: Indicators,
                  sensor: Sensor,
-                 link: list = None,
+                 link=None,
                  well_info: WellInfo = None
                  ) -> None:
             super().__init__(

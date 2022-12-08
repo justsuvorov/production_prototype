@@ -27,10 +27,10 @@ class SetOfWellsFormatReader(FormatReader):
 
     def names(self, df: np.array):
         try:
-            well_name = df[0][2]
-            pad_name = df[0][3]
-            cluster_name = df[0][1]
-            field = df[0][0]
+            well_name = np.unique(df.T[2])
+            pad_name = np.unique(df.T[3])
+            cluster_name = np.unique(df.T[1])
+            field = np.unique(df.T[0])
 
         except:
             print('Corrupted date')
@@ -40,11 +40,16 @@ class SetOfWellsFormatReader(FormatReader):
             field = 'Noname'
 
         finally:
-            return {'Well': well_name, 'Куст': pad_name, 'ДНС': cluster_name, 'Месторождение': field}
+
+            return {'Well': well_name, 'Pad': pad_name, 'ДНС': cluster_name, 'Месторождение': field}
 
     def _object_type(self, data: np.array):
         # return df['Характер работы скважины'].tolist()
-        return data.T[4]
+        return str('неф')
+
+    def _object_activity(self, data: np.array):
+        # return df['Характер работы скважины'].tolist()
+        return True
 
     def indicators(self, data: np.array):
         result = {}
@@ -53,7 +58,6 @@ class SetOfWellsFormatReader(FormatReader):
         indicators_numbers = [5, 65, 125, 184]
         indicators_numbers1 = [5, 65, 125]
         j = 0
-        shape = data.shape
         if data.shape[0] > 1:
             data = data.T
         else: data = data[0]
@@ -63,12 +67,20 @@ class SetOfWellsFormatReader(FormatReader):
             j += 1
         return result
 
-    def object_info(self, data: np.array) -> ObjectInfo:
+    def object_info(self, data: np.array, object_list: dict = None ) -> ObjectInfo:
+
         return ObjectInfo(
             object_type=self._object_type(data),
-            link=[]
+            object_activity=self._object_activity(data),
+            link_list=self.names(data),
+
+            #link=self.create_links(object_list)
             #  link=[df['Куст'].unique()[0], df['Месторождение'].unique()[0]]
         )
+    def create_links(self, object_list: dict = None):
+        pass
+
+
 class MerFormatReader(FormatReader):
 
     def __init__(self,
