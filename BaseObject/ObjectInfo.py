@@ -1,5 +1,6 @@
 from BaseObject.ObjectStatus import ObjectStatus
-
+from BaseObject.BaseObject import BaseObject
+import numpy as np
 
 class ObjectInfo:
     def __init__(self,
@@ -15,3 +16,17 @@ class ObjectInfo:
 
     def build(self):
         pass
+
+class ObjectActivity:
+    def __init__(self,
+                 last_status: bool) -> None:
+        self.last_status = last_status
+
+    def switch_status(self):
+        self._check_status()
+        self.last_status = not self.last_status
+
+    def _check_status(self):
+        if self.last_status == None:
+            self.last_status = True
+

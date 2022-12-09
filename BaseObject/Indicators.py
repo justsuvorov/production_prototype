@@ -5,3 +5,4 @@ class Indicators:
         self.indicators = indicators
         self.description = description
 
+

@@ -12,8 +12,8 @@ def main():
     domainModel = DomainModelBuilder(parser=SetOfWellsParser(data_path=filePath),
                                      format_reader=SetOfWellsFormatReader(),
                                      )
-    do = domainModel.build_object()
-    print(do)
+    domain_model = domainModel.build_object()
+    return domain_model
 
 
 

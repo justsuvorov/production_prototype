@@ -1,0 +1,15 @@
+from DOTests.WellDoFromSetOfWellsTest import main
+from Production.CalculationMethods import *
+
+domain_model = main()
+
+result = SimpleOperations(domain_model=domain_model,
+                          indicator_name='Добыча нефти, тыс. т',
+                          date=1).wells_sum()
+print(result)
+
+result = SimpleOperations(domain_model=domain_model,
+                          indicator_name='Добыча нефти, тыс. т',
+                          date=0,
+                          end_interval_date=5).avarage_sum()
+print(result)

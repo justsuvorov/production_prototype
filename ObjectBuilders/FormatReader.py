@@ -40,7 +40,6 @@ class SetOfWellsFormatReader(FormatReader):
             field = 'Noname'
 
         finally:
-
             return {'Well': well_name, 'Pad': pad_name, 'Cluster': cluster_name, 'Field': field}
 
     def _object_type(self, data: np.array):
@@ -48,8 +47,15 @@ class SetOfWellsFormatReader(FormatReader):
         return str('неф')
 
     def _object_activity(self, data: np.array):
-        # return df['Характер работы скважины'].tolist()
-        return True
+        activity = data.T[184]
+        shape = activity.shape
+        if shape[0] > 1:
+            return True
+        if activity == 1:
+            return True
+        else:
+            return False
+
 
     def indicators(self, data: np.array):
         result = {}
@@ -62,12 +68,12 @@ class SetOfWellsFormatReader(FormatReader):
             data = data.T
         else: data = data[0]
         for i in indicators_numbers1:
-            a = np.arange(i, indicators_numbers[j+1])
+            a = np.arange(i-1, indicators_numbers[j+1]-1)
             result[self.indicator_names[j]] = data[a]
             j += 1
         return result
 
-    def object_info(self, data: np.array, object_list: dict = None ) -> ObjectInfo:
+    def object_info(self, data: np.array, object_list: dict = None) -> ObjectInfo:
 
         return ObjectInfo(
             object_type=self._object_type(data),
