@@ -61,7 +61,7 @@ class PadBuilder(BaseObjectBuilder):
             object_info=self._object_info(),
             indicators=self._indicators(),
             sensor=self.sensor(),
-           # link=self.format_reader.names(self.data)
+            #link=self.format_reader.names(self.data)
         )
 
 
@@ -83,22 +83,30 @@ class PadBuilder(BaseObjectBuilder):
 class ClusterBuilder(BaseObjectBuilder):
 
     def __init__(self,
-                 format_reader: FormatReader
+                 format_reader: FormatReader,
+                 data,
                  ):
         self.format_reader = format_reader
+        self.data = data
         super().__init__(format_reader=format_reader)
 
     def build_object(self) -> Object:
-        pass
+        return ClusterDO(
+            name=self.format_reader.names(self.data)['Cluster'],
+            object_info=self._object_info(),
+            indicators=self._indicators(),
+            sensor=self.sensor(),
+            # link=self.format_reader.names(self.data)
+        )
 
     def sensor(self) -> Sensor:
-        pass
+        return Sensor(self.error)
 
     def _object_info(self) -> ObjectInfo:
-        pass
+        return self.format_reader.object_info(self.data)
 
     def _indicators(self) -> Indicators:
-        pass
+        return Indicators(indicators={})
 
     def _create_record(self) -> ObjectRecord:
         pass
@@ -123,9 +131,11 @@ class DomainModelBuilder(ObjectBuilder):
 
         domain_model.append(self._create_wells(data))
         domain_model.append(self._create_pads(data))
+        domain_model.append(self._create_clusters(data))
+   #     self._create_links()
 
 
-        return self.object_list
+        return domain_model
 
     def sensor(self) -> Sensor:
         pass
@@ -145,7 +155,7 @@ class DomainModelBuilder(ObjectBuilder):
                 format_reader=self.format_reader,
                 data=data_temp).build_object()
             self.object_id += 1
-            self.object_list[str(well.name)] = ObjectRecord.create(object=well,
+            self.object_list[self.object_id] = ObjectRecord.create(object=well,
                                                                    type_of_object='Well')
             wells.append(well)
         return wells
@@ -160,8 +170,42 @@ class DomainModelBuilder(ObjectBuilder):
                 format_reader=self.format_reader,
                 data=data_temp).build_object()
             self.object_id += 1
-            self.object_list[str(pad.name)] = ObjectRecord.create(object=pad,
+            self.object_list[self.object_id] = ObjectRecord.create(object=pad,
                                                                    type_of_object='Pad')
             pads.append(pad)
         return pads
 
+    def _create_clusters(self, data):
+        self.object_id = 200000
+        clusters = []
+        pad_names = data['Название ДНС'].unique()
+        for name in pad_names:
+            data_temp = data.loc[data['Название ДНС'] == name].to_numpy()
+            cluster = ClusterBuilder(
+                format_reader=self.format_reader,
+                data=data_temp).build_object()
+            self.object_id += 1
+            self.object_list[self.object_id] = ObjectRecord.create(object=cluster,
+                                                                   type_of_object='Cluster')
+            clusters.append(cluster)
+        return clusters
+
+    def _create_links(self):
+        for object_record in self.object_list.values():
+            link = self._find_objects(object_record)
+            object_record.object.link = link
+
+
+    def _find_objects(self, object_record: ObjectRecord) -> list:
+        link = []
+        link_list = object_record.object.object_info.link_list
+        type_of_object = object_record.type_of_object
+        for key in link_list:
+            if key != type_of_object:
+                for value in link_list[key]:
+                    for base_object in self.object_list.values():
+                        if base_object.name[0] == value:
+                            link.append(object_record.object)
+                            break
+
+        return link

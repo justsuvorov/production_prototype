@@ -41,7 +41,7 @@ class SetOfWellsFormatReader(FormatReader):
 
         finally:
 
-            return {'Well': well_name, 'Pad': pad_name, 'ДНС': cluster_name, 'Месторождение': field}
+            return {'Well': well_name, 'Pad': pad_name, 'Cluster': cluster_name, 'Field': field}
 
     def _object_type(self, data: np.array):
         # return df['Характер работы скважины'].tolist()
