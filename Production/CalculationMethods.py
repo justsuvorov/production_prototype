@@ -16,10 +16,11 @@ class SimpleOperations:
         for object in self.domain_model[0]:
             if object.object_info.object_activity:
                 if self.date is not None:
-                    sum += object.indicators[self.indicator_name][self.date]
+                     value = object.indicators[self.indicator_name][self.date]
+                     sum += value
                 else:
                     sum += object.indicators[self.indicator_name]
-        return round(sum, 2)
+        return sum
 
     def avarage_sum(self):
         sum = 0
@@ -39,3 +40,4 @@ class IndicatorsShift:
                  date: int = None,
                  end_interval_date: int = None,
                  ):
+        pass

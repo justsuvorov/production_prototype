@@ -33,7 +33,8 @@ class SetOfWellsFormatReader(FormatReader):
             field = np.unique(df.T[0])
 
         except:
-            print('Corrupted date')
+            print('Corrupted data')
+
             well_name = 'Noname'
             pad_name = 'Noname'
             cluster_name = 'Noname'
@@ -47,14 +48,30 @@ class SetOfWellsFormatReader(FormatReader):
         return str('неф')
 
     def _object_activity(self, data: np.array):
-        activity = data.T[184]
-        shape = activity.shape
-        if shape[0] > 1:
-            return True
-        if activity == 1:
-            return True
-        else:
-            return False
+
+
+       try:
+           activity = data.T[184]
+           shape = activity.shape
+           if shape[0] > 1:
+               return True
+           if activity == 1:
+               return True
+           else:
+               return False
+
+       except:
+            activity = data[184]
+
+            if activity == 1:
+                return True
+            else:
+                return False
+
+
+
+
+
 
 
     def indicators(self, data: np.array):

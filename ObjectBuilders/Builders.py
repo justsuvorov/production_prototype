@@ -125,13 +125,14 @@ class DomainModelBuilder(ObjectBuilder):
         self.object_id = 0
         self.object_list = {}
 
-    def build_object(self) -> Object:
+    def build_object(self, only_wells: bool = None) -> Object:
         domain_model = []
         data = self._data()
 
         domain_model.append(self._create_wells(data))
-        domain_model.append(self._create_pads(data))
-        domain_model.append(self._create_clusters(data))
+        if only_wells is None:
+            domain_model.append(self._create_pads(data))
+            domain_model.append(self._create_clusters(data))
    #     self._create_links()
 
 
@@ -151,13 +152,26 @@ class DomainModelBuilder(ObjectBuilder):
         well_names = data['Скважина'].unique()
         for name in well_names:
             data_temp = data.loc[data['Скважина'] == name].to_numpy()
-            well = WellBuilder(
-                format_reader=self.format_reader,
-                data=data_temp).build_object()
-            self.object_id += 1
-            self.object_list[self.object_id] = ObjectRecord.create(object=well,
-                                                                   type_of_object='Well')
-            wells.append(well)
+            shape = data_temp.shape
+            if shape[0] > 1:
+                for string in data_temp:
+                    well = WellBuilder(
+                        format_reader=self.format_reader,
+                        data=string).build_object()
+                    wells.append(well)
+                    self.object_id += 1
+                    self.object_list[self.object_id] = ObjectRecord.create(object=well,
+                                                                           type_of_object='Well')
+            else:
+                well = WellBuilder(
+                    format_reader=self.format_reader,
+                    data=data_temp).build_object()
+                wells.append(well)
+                self.object_id += 1
+                self.object_list[self.object_id] = ObjectRecord.create(object=well,
+                                                                       type_of_object='Well')
+
+
         return wells
 
     def _create_pads(self, data):
@@ -166,6 +180,7 @@ class DomainModelBuilder(ObjectBuilder):
         pad_names = data['Куст'].unique()
         for name in pad_names:
             data_temp = data.loc[data['Куст'] == name].to_numpy()
+
             pad = PadBuilder(
                 format_reader=self.format_reader,
                 data=data_temp).build_object()

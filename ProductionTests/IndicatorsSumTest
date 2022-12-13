@@ -12,4 +12,4 @@ result = SimpleOperations(domain_model=domain_model,
                           indicator_name='Добыча нефти, тыс. т',
                           date=0,
                           end_interval_date=5).avarage_sum()
-print(result)
+print(domain_model[0][1].object_info.object_activity)

@@ -1,20 +1,29 @@
-# Script by Vladimir Suvorov
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-# Jaya algorithm for optimization problems
+import abc
+from abc import ABC
+from Production.ap_parameters import APParameters
 import random
 import os
-# from numpy import loadtxt
 from Production.goal_function import goal_function
 from Production.Logger import Logger
 
 
-class APJaya:
+class Optimizator(ABC):
+    def __init__(self,
+                 parameters: APParameters ):
+        self.parameters = parameters
+
+    @abc.abstractmethod
+    def __initialization(self):
+        pass
+
+    def algorithm(self, index, outParams=None):
+        pass
+
+class JayaOptimizator:
+
     def __init__(self,
                  kids_number,
-                 parameters
+                 parameters,
                  ):
         self._logger = Logger('log.txt')
         self._log_ = self._logger.log
@@ -44,8 +53,7 @@ class APJaya:
             # self._log_('[APJaya.__initialization begin child]')
             self.kids.append([])
             self.kids_temp.append([])
-
-            for j in range(len(self.parameters.inKeys())):
+            for j in range(len(self.parameters.inValues()[0])):
                 self.kids_temp[i].append(0)
                 if i == 0:
                     self.kids[i].append(
@@ -53,8 +61,7 @@ class APJaya:
                     )
                 else:
                     self.kids[i].append(
-                        self.parameters.inValues()[0][j] +
-                        random.randint(-8, 8) / 2
+                        bool(random.getrandbits(1))
                     )
 
         # self.parameters.inValues() =  self.kids
@@ -65,12 +72,13 @@ class APJaya:
 
     def algorithm(self,
                   index,
-                  outParams
+                  outParams=None,
                   ):
 
         self._log_('[APJaya.algorithm] index: ' + str(index))
         if (index == 0):
             return self.__initialization()
+
         else:
             return self.__algorithm(outParams)
 
@@ -79,6 +87,7 @@ class APJaya:
 
     def __algorithm(self, outParams):
         self._log_('[APJaya.__algorithm]')
+        print(outParams)
         self.__iteration = self.__iteration + 1
         self._resultLog_('Iteration' + str(self.__iteration) + ' completed')
 
@@ -98,7 +107,7 @@ class APJaya:
                 self.goal_function_temp[j] = goal_function(self.results[j])
                 if self.goal_function_temp[j] < self.goal_function[j]:
                     self.goal_function[j] = self.goal_function_temp[j]
-                    for k in range(len(self.parameters.inKeys())):
+                    for k in range(len(self.parameters.inValues()[0])):
                         self.kids[j][k] = self.kids_temp[j][k]
             worst_temp = max(self.goal_function)
             for j in range(self.kids_number):
@@ -110,16 +119,23 @@ class APJaya:
                     self.worst = worst_temp
                     self.worst_kid = self.kids[self.goal_function.index(self.worst)]
         #            self._resultLog_('New worst')
-        self._resultLog_(
-            'Iteration ' + str(self.__iteration) + ' completed. Goal functions are ' + str(self.goal_function))
-        self._resultLog_('Best kid is ' + str(self.goal_function.index(self.best)) + ' ' + str(self.best_kid))
+        #self._resultLog_(
+        #    'Iteration ' + str(self.__iteration) + ' completed. Goal functions are ' + str(self.goal_function))
+        self._resultLog_('Best kid is ' + str(self.goal_function.index(self.best)) )#+ ' ' + str(self.best_kid))
         for j in range(self.kids_number):
-            for k in range(len(self.parameters.inKeys())):
+            for k in range(len(self.parameters.inValues()[0])):
                 r1 = random.random()
                 r2 = random.random()
+                r1 = 1
+                r2 = 1
+
                 self.kids_temp[j][k] = self.kids[j][k] + r1 * (self.best_kid[k] - abs(self.kids[j][k])) - \
                                        r2 * ((self.worst_kid[k] - abs(self.kids[j][k])))
-                self.kids_temp[j][k] = round(self.kids_temp[j][k] * 2) / 2
+                if self.kids_temp[j][k] >= 0:
+                    self.kids_temp[j][k] = True
+                if self.kids_temp[j][k] < 0:
+                    self.kids_temp[j][k] = False
+
         self._log_('[APJaya.__algorithm] completed')
 
         return self.kids_temp

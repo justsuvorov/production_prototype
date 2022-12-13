@@ -1,6 +1,4 @@
-from BaseObject.ObjectStatus import ObjectStatus
-from BaseObject.BaseObject import BaseObject
-import numpy as np
+
 
 class ObjectInfo:
     def __init__(self,
