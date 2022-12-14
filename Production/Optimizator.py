@@ -24,6 +24,7 @@ class JayaOptimizator:
     def __init__(self,
                  kids_number,
                  parameters,
+                 input_paramters = None
                  ):
         self._logger = Logger('log.txt')
         self._log_ = self._logger.log
@@ -45,6 +46,8 @@ class JayaOptimizator:
         self.goal_function = []
         self._initialization_completed = False
         self._log_('[APJaya]: ' + self.__class__.__name__)
+        self.input_paramters = input_paramters
+        self.last_index = 13
 
     def __initialization(self):
         self._log_('[APJaya.__initialization]')
@@ -61,8 +64,9 @@ class JayaOptimizator:
                     )
                 else:
                     self.kids[i].append(
-                        bool(random.getrandbits(1))
+                        random.randint(0, self.last_index)
                     )
+
 
         # self.parameters.inValues() =  self.kids
         self._log_('[APJaya.__initialization] Initialization completed')
@@ -126,15 +130,15 @@ class JayaOptimizator:
             for k in range(len(self.parameters.inValues()[0])):
                 r1 = random.random()
                 r2 = random.random()
-                r1 = 1
-                r2 = 1
+               # r1 = 1
+               # r2 = 1
 
-                self.kids_temp[j][k] = self.kids[j][k] + r1 * (self.best_kid[k] - abs(self.kids[j][k])) - \
-                                       r2 * ((self.worst_kid[k] - abs(self.kids[j][k])))
-                if self.kids_temp[j][k] >= 0:
-                    self.kids_temp[j][k] = True
+                self.kids_temp[j][k] = round(self.kids[j][k] + r1 * (self.best_kid[k] - abs(self.kids[j][k])) - \
+                                       r2 * ((self.worst_kid[k] - abs(self.kids[j][k]))))
                 if self.kids_temp[j][k] < 0:
-                    self.kids_temp[j][k] = False
+                    self.kids_temp[j][k] = 0
+                if self.kids_temp[j][k] > self.last_index:
+                    self.kids_temp[j][k] = self.last_index
 
         self._log_('[APJaya.__algorithm] completed')
 

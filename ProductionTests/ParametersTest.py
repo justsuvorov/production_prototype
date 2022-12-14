@@ -8,34 +8,33 @@ import datetime as dt
 
 domain_model = main()
 
-date_begin = dt.date(year=2022, month=12, day=1)
-date_end = dt.date(year=2022, month=4, day=1)
-time_step = 'month'
-value = 0.65
-
-
+date_start = dt.date(year=2022, month=11, day=1)
+date_begin = dt.date(year=2023, month=1, day=1)
+#date_end = dt.date(year=2023, month=3, day=1)
+time_step = 'Day'
+time_lag_step = 5
+max_objects_per_day = 5
+value = 20
 
 parameters = APParameters(
     inKeys=['ObjectActivity'],
     outKeys=['Добыча нефти, тыс. т', 'FCF'],
     inValues=[[]]
 )
-
-parameters.from_domain_model(domain_model[0])
-print(parameters)
-
+parameters.from_domain_model(domain_model[0], last_index=13)
 
 program = ProductionOnValueBalancer(case=1,
                           domain_model=domain_model,
                           input_parameters=InputParameters(
-                              date_begin = date_begin,
-                              date_end=date_end,
+                              date_begin=date_begin,
+                              #date_end=date_end,
                               time_step=time_step,
                               value=value
                           ),
-                          optimizator=JayaOptimizator(kids_number=10,
-                                                      parameters=parameters),
-                          iterations_count=20,
+                          optimizator=JayaOptimizator(kids_number=7,
+                                                      parameters=parameters
+                                                      ),
+                          iterations_count=30,
                           )
 program.result()
 

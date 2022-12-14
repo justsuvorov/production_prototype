@@ -14,13 +14,14 @@ class SimpleOperations:
     def wells_sum(self):
         sum = 0
         for object in self.domain_model[0]:
-            if object.object_info.object_activity:
-                if self.date is not None:
-                     value = object.indicators[self.indicator_name][self.date]
-                     sum += value
-                else:
-                    sum += object.indicators[self.indicator_name]
-        return sum
+           # if object.object_info.object_activity or not object.object_info.object_activity:
+            if self.date is not None:
+
+                 value = object.indicators[self.indicator_name][self.date]
+                 sum += value
+            else:
+                sum += object.indicators[self.indicator_name]
+        return round(sum,2)
 
     def avarage_sum(self):
         sum = 0
