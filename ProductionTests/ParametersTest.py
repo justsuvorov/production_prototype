@@ -30,9 +30,9 @@ program = ProductionOnValueBalancer(case=1,
                               #date_end=date_end,
                               time_step=time_step,
                               value=value
-                          ),
+                             ),
                           optimizator=JayaOptimizator(kids_number=7,
-                                                      parameters=parameters
+                                                      parameters=parameters,
                                                       ),
                           iterations_count=30,
                           )

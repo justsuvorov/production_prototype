@@ -19,12 +19,13 @@ class Optimizator(ABC):
     def algorithm(self, index, outParams=None):
         pass
 
-class JayaOptimizator:
+
+class JayaOptimizator(Optimizator):
 
     def __init__(self,
                  kids_number,
                  parameters,
-                 input_paramters = None
+                 input_parameters=None
                  ):
         self._logger = Logger('log.txt')
         self._log_ = self._logger.log
@@ -46,7 +47,7 @@ class JayaOptimizator:
         self.goal_function = []
         self._initialization_completed = False
         self._log_('[APJaya]: ' + self.__class__.__name__)
-        self.input_paramters = input_paramters
+        self.input_parameters = input_parameters
         self.last_index = 13
 
     def __initialization(self):
