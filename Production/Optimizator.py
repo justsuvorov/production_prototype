@@ -5,6 +5,7 @@ import random
 import os
 from Production.goal_function import goal_function
 from Production.Logger import Logger
+from Production.GoalFunction import GoalFunction
 
 
 class Optimizator(ABC):
@@ -20,11 +21,13 @@ class Optimizator(ABC):
         pass
 
 
-class JayaOptimizator(Optimizator):
+class JayaOptimizator:
 
     def __init__(self,
                  kids_number,
                  parameters,
+                 goal_function: GoalFunction,
+
                  input_parameters=None
                  ):
         self._logger = Logger('log.txt')
@@ -49,6 +52,7 @@ class JayaOptimizator(Optimizator):
         self._log_('[APJaya]: ' + self.__class__.__name__)
         self.input_parameters = input_parameters
         self.last_index = 13
+        self.goal_function_main = goal_function
 
     def __initialization(self):
         self._log_('[APJaya.__initialization]')
@@ -78,8 +82,9 @@ class JayaOptimizator(Optimizator):
     def algorithm(self,
                   index,
                   outParams=None,
+                  last_index=None,
                   ):
-
+        self.last_index = last_index
         self._log_('[APJaya.algorithm] index: ' + str(index))
         if (index == 0):
             return self.__initialization()
@@ -99,7 +104,7 @@ class JayaOptimizator(Optimizator):
         self.results = outParams
         if self._initialization_completed == False:
             for j in range(self.kids_number):
-                self.goal_function.append(goal_function(self.results[j]))
+                self.goal_function.append(self.goal_function_main.value(results=self.results[j]))
                 self.goal_function_temp.append(0)
             self.best = min(self.goal_function)
             self.best_kid = self.kids[self.goal_function.index(self.best)]
@@ -109,7 +114,7 @@ class JayaOptimizator(Optimizator):
 
         else:
             for j in range(self.kids_number):
-                self.goal_function_temp[j] = goal_function(self.results[j])
+                self.goal_function_temp[j] = self.goal_function_main.value(results=self.results[j])
                 if self.goal_function_temp[j] < self.goal_function[j]:
                     self.goal_function[j] = self.goal_function_temp[j]
                     for k in range(len(self.parameters.inValues()[0])):

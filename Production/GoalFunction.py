@@ -23,7 +23,7 @@ class GoalFunction:
             for i in range(10):
                 try:
                     obj_num = results[2][i]
-                    if obj_num > 5:
+                    if obj_num > self.parameters.max_objects_per_day:
                         count += obj_num
                 except:
                     obj_num = 0

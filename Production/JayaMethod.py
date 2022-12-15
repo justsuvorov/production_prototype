@@ -105,11 +105,11 @@ class APJaya:
                 if self.goal_function[j] < self.best:
                     self.best = self.goal_function[j]
                     self.best_kid = self.kids[self.goal_function.index(self.best)]
-                #      self._resultLog_('New best')
+                    self._resultLog_('New best')
                 if worst_temp < self.worst:
                     self.worst = worst_temp
                     self.worst_kid = self.kids[self.goal_function.index(self.worst)]
-        #            self._resultLog_('New worst')
+                    self._resultLog_('New worst')
         self._resultLog_(
             'Iteration ' + str(self.__iteration) + ' completed. Goal functions are ' + str(self.goal_function))
         self._resultLog_('Best kid is ' + str(self.goal_function.index(self.best)) + ' ' + str(self.best_kid))

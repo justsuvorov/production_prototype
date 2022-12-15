@@ -1,12 +1,8 @@
-import abc
-from abc import ABC
 import datetime as dt
 import numpy as np
 from copy import deepcopy
-
-
 import pandas as pd
-
+from Production.Logger import Logger
 from Production.CalculationMethods import *
 from Production.Optimizator import *
 from Production.goal_function import goal_function
@@ -27,7 +23,7 @@ class ProductionOnValueBalancer(Production):
     def __init__(self,
                  case: int,
                  input_parameters: InputParameters,
-                 optimizator: Optimizator,
+                 optimizator,
                  domain_model,
                  iterations_count: int
                  ):
@@ -39,7 +35,12 @@ class ProductionOnValueBalancer(Production):
         self.date1 = None
         self.date2 = None
         self.steps_count = None
-        self.date_start = None
+        self.date_start = 0
+
+        self._logger = Logger('log.txt')
+        self._log_ = self._logger.log
+        self._resultLog = Logger('Balancer_results.txt')
+        self._resultLog_ = self._resultLog.log
 
     def result(self):
 
@@ -54,7 +55,7 @@ class ProductionOnValueBalancer(Production):
 
         if time_step == 'Day':
             self.steps_count = 366
-            self.date1 = (self.input_parameters.date_begin - self.input_parameters.date_start).days
+            self.date1 = (self.input_parameters.date_start - self.input_parameters.date_begin).days
             self._recalculate_indicators(step=30)
             if self.input_parameters.date_end is not None:
                 self.date2 = (self.input_parameters.date_end - self.input_parameters.date_start).days
@@ -64,9 +65,13 @@ class ProductionOnValueBalancer(Production):
 
         if time_step == 'Month':
             self.steps_count = 13
-            self.date1 = (self.input_parameters.date_begin.month - self.input_parameters.date_start.month)
+            a = ((self.input_parameters.date_begin.year -self.input_parameters.date_start.year) * 12) +\
+                self.input_parameters.date_begin.month - self.input_parameters.date_start.month
+            self.date1 = a
             if self.input_parameters.date_end is not None:
-                self.date2 = (self.input_parameters.date_end.month - self.input_parameters.date_start.month)
+                b = ((self.input_parameters.date_end.year - self.input_parameters.date_start.year) * 12) + \
+                    self.input_parameters.date_end.month - self.input_parameters.date_start.month
+                self.date2 = b
             else:
                 self.date2 = self.steps_count
                 print('date2 is the end of the period ')
@@ -119,7 +124,7 @@ class ProductionOnValueBalancer(Production):
     def _calculate_out_params(self, iteration: int, outParams):
         indicator_names = self.optimizer.parameters.outKeys()
         if iteration == 0:
-            new_values = self.optimizer.algorithm(index=0)
+            new_values = self.optimizer.algorithm(index=0, last_index=self.steps_count )
             for i in range(len(new_values)):
                 number_of_turnings = self._count_number_of_obj(new_values[i])
                 updated_model = self._update_domain_model(new_values[i])
@@ -136,7 +141,7 @@ class ProductionOnValueBalancer(Production):
             outParams.pop()
 
         else:
-            new_values = self.optimizer.algorithm(index=1, outParams=outParams)
+            new_values = self.optimizer.algorithm(index=1, outParams=outParams, last_index=self.steps_count )
             for i in range(len(new_values)):
                 updated_model = self._update_domain_model(new_values[i])
                 number_of_turnings = self._count_number_of_obj(new_values[i])
@@ -153,7 +158,7 @@ class ProductionOnValueBalancer(Production):
     def _update_domain_model(self, values):
         updated_model = deepcopy(self.domain_model)
         for j in range(len(updated_model[0])):
-            if self.domain_model[0].object_info.object_activity == False:
+            if updated_model[0][j].object_info.object_activity == False:
           #  s = values[2000]
                 for key in updated_model[0][j].indicators:
                     a = np.zeros(values[j])
