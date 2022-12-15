@@ -45,7 +45,7 @@ class ProductionOnValueBalancer(Production):
     def result(self):
 
         self._discretizate_parameters()
-        self.optimizer.parameters.from_domain_model(self.domain_model[0], last_index=self.steps_count)
+        self.optimizer.parameters.from_domain_model(self.domain_model[0], last_index=self.date2)
         results = self.optimize()
         res = pd.DataFrame(results)
         res.to_excel('res.xlsx')
@@ -55,8 +55,8 @@ class ProductionOnValueBalancer(Production):
 
         if time_step == 'Day':
             self.steps_count = 366
-            self.date1 = (self.input_parameters.date_start - self.input_parameters.date_begin).days
-            self._recalculate_indicators(step=30)
+            self.date1 = (self.input_parameters.date_begin - self.input_parameters.date_start).days
+            self._recalculate_indicators(step=31)
             if self.input_parameters.date_end is not None:
                 self.date2 = (self.input_parameters.date_end - self.input_parameters.date_start).days
             else:
@@ -65,7 +65,7 @@ class ProductionOnValueBalancer(Production):
 
         if time_step == 'Month':
             self.steps_count = 13
-            a = ((self.input_parameters.date_begin.year -self.input_parameters.date_start.year) * 12) +\
+            a = ((self.input_parameters.date_begin.year - self.input_parameters.date_start.year) * 12) +\
                 self.input_parameters.date_begin.month - self.input_parameters.date_start.month
             self.date1 = a
             if self.input_parameters.date_end is not None:
@@ -102,11 +102,15 @@ class ProductionOnValueBalancer(Production):
     def _recalculate_indicators(self, step: int):
         for object in self.domain_model[0]:
             for key in object.indicators:
-                try:
-                    l = (object.indicators[key].size - 1) * step + 1  # total length after interpolation
-                    np.interp(np.arange(l), np.arange(l, step=step), object.indicators[key])  # interpolate
-                except:
-                    print('Cannot recalculate indicators for well ', object.name)
+             try:
+                l = (object.indicators[key].size - 1) * step + 1  # total length after interpolation
+                c = np.array(object.indicators[key]).astype(float)
+                c = c/step
+                a = np.interp(np.arange(l), np.arange(l, step=step), c)  # interpolate
+                object.indicators[key] = a
+
+             except:
+                print('Cannot recalculate indicators for well ', object.name)
 
     def optimize(self):
         outParams = [[]]
@@ -124,7 +128,7 @@ class ProductionOnValueBalancer(Production):
     def _calculate_out_params(self, iteration: int, outParams):
         indicator_names = self.optimizer.parameters.outKeys()
         if iteration == 0:
-            new_values = self.optimizer.algorithm(index=0, last_index=self.steps_count )
+            new_values = self.optimizer.algorithm(index=0, last_index=self.date2)
             for i in range(len(new_values)):
                 number_of_turnings = self._count_number_of_obj(new_values[i])
                 updated_model = self._update_domain_model(new_values[i])
@@ -141,7 +145,7 @@ class ProductionOnValueBalancer(Production):
             outParams.pop()
 
         else:
-            new_values = self.optimizer.algorithm(index=1, outParams=outParams, last_index=self.steps_count )
+            new_values = self.optimizer.algorithm(index=1, outParams=outParams, last_index=self.date2)
             for i in range(len(new_values)):
                 updated_model = self._update_domain_model(new_values[i])
                 number_of_turnings = self._count_number_of_obj(new_values[i])
