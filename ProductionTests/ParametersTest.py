@@ -11,14 +11,17 @@ domain_model = main()
 
 date_start = dt.date(year=2022, month=11, day=1)
 date_begin = dt.date(year=2022, month=12, day=1)
-date_end = dt.date(year=2022, month=12, day=30)
+date_end = dt.date(year=2022, month=12, day=15)
 #date_end = None
 time_step = 'Day'
 time_lag_step = 0
 max_objects_per_day = 5
-value = 20.3
+value = 20.6
 case = 2
 
+a = 200
+b = 60000000
+c = 1
 
 parameters = APParameters(
     inKeys=['ObjectActivity'],
@@ -39,11 +42,15 @@ parameters_of_algorithm = InputParameters(date_begin=date_begin,
 program = ProductionOnValueBalancer(case=case,
                                     domain_model=domain_model,
                                     input_parameters=parameters_of_algorithm,
-                                    optimizator=JayaOptimizator(kids_number=7,
+                                    optimizator=JayaOptimizator(kids_number=50,
                                                                 parameters=parameters,
-                                                                goal_function=GoalFunction(parameters=parameters_of_algorithm),
+                                                                goal_function=GoalFunction(parameters=parameters_of_algorithm,
+                                                                                           a=a,
+                                                                                           b=b,
+                                                                                           c=c,
+                                                                                           ),
                                                                 ),
-                                    iterations_count=30,
+                                    iterations_count=150,
                                     )
 program.result()
 

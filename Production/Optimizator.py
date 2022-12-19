@@ -67,10 +67,18 @@ class JayaOptimizator:
                     self.kids[i].append(
                         self.parameters.inValues()[0][j]
                     )
+
                 else:
-                    self.kids[i].append(
+                    if i == 1:
+                     #   self.kids[i].append(
+                    #       random.choice([0])
+                     #   )
+                       self.kids[i].append(random.randint(0, 15))
+
+                    else:
+                        self.kids[i].append(
                         random.randint(0, self.last_index)
-                    )
+                                            )
 
 
         # self.parameters.inValues() =  self.kids
@@ -97,7 +105,6 @@ class JayaOptimizator:
 
     def __algorithm(self, outParams):
         self._log_('[APJaya.__algorithm]')
-        print(outParams)
         self.__iteration = self.__iteration + 1
         self._resultLog_('Iteration' + str(self.__iteration) + ' completed')
 
@@ -124,14 +131,14 @@ class JayaOptimizator:
                 if self.goal_function[j] < self.best:
                     self.best = self.goal_function[j]
                     self.best_kid = self.kids[self.goal_function.index(self.best)]
-                #      self._resultLog_('New best')
+                    self._resultLog_('New best')
                 if worst_temp < self.worst:
                     self.worst = worst_temp
                     self.worst_kid = self.kids[self.goal_function.index(self.worst)]
         #            self._resultLog_('New worst')
         #self._resultLog_(
         #    'Iteration ' + str(self.__iteration) + ' completed. Goal functions are ' + str(self.goal_function))
-        self._resultLog_('Best kid is ' + str(self.goal_function.index(self.best)) )#+ ' ' + str(self.best_kid))
+        self._resultLog_('Best kid is ' + str(self.goal_function.index(self.best)) + ' ' + str(outParams[(self.goal_function.index(self.best))]))#str(self.best_kid))
         for j in range(self.kids_number):
             for k in range(len(self.parameters.inValues()[0])):
                 r1 = random.random()
@@ -142,6 +149,7 @@ class JayaOptimizator:
                 self.kids_temp[j][k] = round(self.kids[j][k] + r1 * (self.best_kid[k] - abs(self.kids[j][k])) - \
                                        r2 * ((self.worst_kid[k] - abs(self.kids[j][k]))))
                 if self.kids_temp[j][k] < 0:
+                    #self.kids_temp[j][k] = random.choice([0, 1, self.last_index])
                     self.kids_temp[j][k] = 0
                 if self.kids_temp[j][k] > self.last_index:
                     self.kids_temp[j][k] = self.last_index

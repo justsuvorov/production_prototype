@@ -30,7 +30,7 @@ def prepare_data(pathes_list):
 
 def main():
 
-    vbd = Path(r'C:\Users\User\Documents\production_prototype\Input\TestData\VBD.xlsx')
+    vbd = Path(r'C:\Users\User\Documents\production_prototype\Input\TestData\VBD_only good.xlsx')
 
     domain_model = DomainModelBuilder(parser=SetOfWellsParser(data_path=filePath),
                                      format_reader=SetOfWellsFormatReader(),

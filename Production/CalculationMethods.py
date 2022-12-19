@@ -7,7 +7,7 @@ class SimpleOperations:
                  date: int = 0,
                  end_interval_date: int = None,
                  case: int = 1,
-                 end_year_index: int = 365,
+                 end_year_index: int = 366,
                  ):
         self.domain_model = domain_model
         self.indicator_name = indicator_name
@@ -75,7 +75,7 @@ class SimpleOperations:
         sum = 0
         for object in self.domain_model[0]:
             try:
-                value = np.sum(object.indicators[self.indicator_name][:self.end_year_index])
+                value = np.sum(object.indicators[self.indicator_name][0:self.end_year_index])
                 sum += value
             except:
                 print('SimpleOperations. Corrupted data for well ', object.name)

@@ -7,6 +7,7 @@ from Production.CalculationMethods import *
 from Production.Optimizator import *
 from Production.goal_function import goal_function
 from Production.InputParameters import InputParameters
+from Production.ExcelResult import ExcelResult
 
 class Production(ABC):
     def __init__(self,
@@ -47,8 +48,12 @@ class ProductionOnValueBalancer(Production):
         self._discretizate_parameters()
         self.optimizer.parameters.from_domain_model(self.domain_model[0], last_index=self.date2)
         results = self.optimize()
+
         res = pd.DataFrame(results)
         res.to_excel('res.xlsx')
+        domain_model_with_results = self._update_domain_model(results)
+        ExcelResult(domain_model=domain_model_with_results).dataframe()
+
 
     def _discretizate_parameters(self):
         time_step = self.input_parameters.time_step
