@@ -64,7 +64,7 @@ class GoalFunction:
             for i in range(len(results[0])):
                 if (target - results[0][i]) > 0:
                     a += (target - results[0][i]) ** 2
-            b += 0.000000001 * results[1]
+            b = results[1]
             count = 0
             max_index = list(results[2].keys())[-1]
             for i in range(max_index):
