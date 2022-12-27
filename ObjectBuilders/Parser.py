@@ -47,4 +47,4 @@ class SetOfWellsParser(Parser):
         self.data_path = data_path
 
     def data(self) -> pd.DataFrame:
-        return pd.read_excel(self.data_path)
+        return pd.read_excel(self.data_path).loc[1:]

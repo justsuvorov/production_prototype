@@ -67,6 +67,7 @@ class JayaOptimizator:
                     self.kids[i].append(
                         self.parameters.inValues()[0][j]
                     )
+                 # self.kids[i].append(0)
 
                 else:
                     if i == 1:

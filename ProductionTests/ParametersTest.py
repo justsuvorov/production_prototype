@@ -16,10 +16,10 @@ date_end = dt.date(year=2022, month=12, day=15)
 time_step = 'Day'
 time_lag_step = 0
 max_objects_per_day = 5
-value = 20.6
-case = 2
+value = 21.1
+case = 3
 
-a = 200
+a = 500
 b = 60000000
 c = 1
 
@@ -42,7 +42,7 @@ parameters_of_algorithm = InputParameters(date_begin=date_begin,
 program = ProductionOnValueBalancer(case=case,
                                     domain_model=domain_model,
                                     input_parameters=parameters_of_algorithm,
-                                    optimizator=JayaOptimizator(kids_number=50,
+                                    optimizator=JayaOptimizator(kids_number=1,
                                                                 parameters=parameters,
                                                                 goal_function=GoalFunction(parameters=parameters_of_algorithm,
                                                                                            a=a,
@@ -50,7 +50,7 @@ program = ProductionOnValueBalancer(case=case,
                                                                                            c=c,
                                                                                            ),
                                                                 ),
-                                    iterations_count=150,
+                                    iterations_count=1,
                                     )
 program.result()
 

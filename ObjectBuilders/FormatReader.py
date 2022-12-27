@@ -61,12 +61,8 @@ class SetOfWellsFormatReader(FormatReader):
                return False
 
        except:
-            activity = data[184]
-
-            if activity == 1:
                 return True
-            else:
-                return False
+
 
 
 

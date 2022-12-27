@@ -30,10 +30,10 @@ class ExcelResult:
             names.append(self.domain_model[0][i].name)
             for key in self.domain_model[0][i].indicators:
                 if key == 'Добыча нефти, тыс. т':
-                    crude.append(self.domain_model[0][i].indicators[key][0:32])
+                    crude.append(self.domain_model[0][i].indicators[key][0:366])
 
                 if key == 'FCF':
-                    fcf.append(  self.domain_model[0][i].indicators[key][0:32])
+                    fcf.append(  self.domain_model[0][i].indicators[key][0:366])
 
        return names, crude, fcf
 

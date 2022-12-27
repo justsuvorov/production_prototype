@@ -45,6 +45,10 @@ class BaseObject(Object):
     def data(self):
         pass
 
+    def change_activity(self):
+        self.object_info.object_activity = not self.object_info.object_activity
+
+
 
 
 

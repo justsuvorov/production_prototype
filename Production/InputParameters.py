@@ -9,6 +9,7 @@ class InputParameters:
                  date_end: dt.date = None,
                  time_step: str = 'Month',
                  max_objects_per_day: int = 5,
+                 days_per_object: int = 1
                  ):
         self.value = value
         self.date_begin = date_begin
@@ -17,5 +18,6 @@ class InputParameters:
         self.time_lag_step = time_lag_step
         self.date_start = date_start
         self.max_objects_per_day = max_objects_per_day
+        self.days_per_object = days_per_object
 
 

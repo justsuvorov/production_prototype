@@ -11,9 +11,10 @@ from glob import glob
 
 VBD_DIR = Path(r'C:\Users\User\Documents\production_prototype\Input\TestData\VBD')
 
-DATA_DIR = Path(r'C:\Users\User\Documents\production_prototype\Input\TestData')
+DATA_DIR = Path(r'C:\Users\User\Documents\production_prototype\Input\ProductionTests')
 vbd_pathes = [y for x in os.walk(VBD_DIR ) for y in glob(os.path.join(x[0], '*.xls*'))]
 filePath = DATA_DIR/'СВОД_скв._NEW_5лет.xlsx'
+vbd = Path(r'C:\Users\User\Documents\production_prototype\Input\ProductionTests\VBD.xlsx')
 
 
 
@@ -28,9 +29,9 @@ def prepare_data(pathes_list):
     resdata.to_excel('VBD.xlsx')
     return 'VBD.xlsx'
 
-def main():
+def domain_model():
 
-    vbd = Path(r'C:\Users\User\Documents\production_prototype\Input\TestData\VBD_only good.xlsx')
+
 
     domain_model = DomainModelBuilder(parser=SetOfWellsParser(data_path=filePath),
                                      format_reader=SetOfWellsFormatReader(),
@@ -39,6 +40,8 @@ def main():
     vbd_domain_model = DomainModelBuilder(parser=SetOfWellsParser(data_path=vbd),
                                      format_reader=SetOfWellsFormatReader(),
                                      ).build_object(only_wells=True)
+    for object in vbd_domain_model[0]:
+        object.change_activity()
 
     domain_model_full_wells = domain_model[0]+vbd_domain_model[0]
   #  domain_model_full_pads = domain_model[1]+vbd_domain_model[1]
@@ -52,5 +55,3 @@ def main():
 
 
 
-if __name__ == '__main__':
-    main()

@@ -30,6 +30,7 @@ class ProductionOnValueBalancer(Production):
                  ):
         self.case = case
         self.input_parameters = input_parameters
+
         self.optimizer = optimizator
         self.domain_model = domain_model
         self.iterations_count = iterations_count
@@ -43,15 +44,19 @@ class ProductionOnValueBalancer(Production):
         self._resultLog = Logger('Balancer_results.txt')
         self._resultLog_ = self._resultLog.log
 
+        self.vbd_index = None
+
     def result(self):
 
         self._discretizate_parameters()
+
         self.optimizer.parameters.from_domain_model(self.domain_model[0], last_index=self.date2)
+        self._find_first_vbd_well()
         results = self.optimize()
 
         res = pd.DataFrame(results)
         res.to_excel('res.xlsx')
-        domain_model_with_results = self._update_domain_model(results)
+        domain_model_with_results = self._update_domain_model(results, result=True)
         ExcelResult(domain_model=domain_model_with_results).dataframe()
 
 
@@ -124,7 +129,9 @@ class ProductionOnValueBalancer(Production):
            outParams = self._calculate_out_params(iteration=iteration,
                                                   outParams=outParams)
         print(self.optimizer.best)
-        return self.optimizer.best_kid
+        #return self.optimizer.best_kid
+
+        return self.optimizer.kids[0]
 
     def _update_domain_model_activity(self, values):
         for i in range(len(self.domain_model[0])):
@@ -164,12 +171,15 @@ class ProductionOnValueBalancer(Production):
                 outParams[i][2] = number_of_turnings
         return outParams
 
-    def _update_domain_model(self, values):
+    def _update_domain_model(self, values, result: bool = False):
         updated_model = deepcopy(self.domain_model)
         for j in range(len(updated_model[0])):
             if updated_model[0][j].object_info.object_activity == False:
           #  s = values[2000]
+
+                if values[j] == (self.date2) and result: values[j] = self.steps_count+1
                 for key in updated_model[0][j].indicators:
+
                     a = np.zeros(values[j])
                     b = updated_model[0][j].indicators[key]
                     c = np.concatenate((a, b))
@@ -177,8 +187,14 @@ class ProductionOnValueBalancer(Production):
         return updated_model
 
     def _count_number_of_obj(self, values):
-        values = values[1922:]
+        values = values[self.vbd_index:]
         unique, counts = np.unique(values, return_counts=True)
         return(dict(zip(unique, counts)))
 
+
+    def _find_first_vbd_well(self):
+        for i in reversed(range(len(self.domain_model[0]))):
+            if self.domain_model[0][i].object_info.object_activity:
+                self.vbd_index = i
+                break
 

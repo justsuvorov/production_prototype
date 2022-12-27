@@ -11,7 +11,7 @@ class GoalFunction:
         self.a = a
         self.b = b
         self.c = c
-
+        if self.parameters.days_per_object < 1: self.parameters.days_per_object = 1
 
     def value(self, target: float = None, results=None):
         try:
@@ -19,8 +19,6 @@ class GoalFunction:
               return self._array_result(target, results)
         except:
            return self._value_result(target, results)
-
-
 
     def _value_result(self, target: float = None, results=None):
         try:
@@ -31,22 +29,11 @@ class GoalFunction:
             a = target - results[0]
             if a < 0:
                 a = 0
-
             b = results[1]
-            count = 0
-            max_index = list(results[2].keys())[-1]
-            for i in range(max_index):
-                try:
-                    obj_num = results[2][i]
-                    if obj_num > self.parameters.max_objects_per_day:
-                        count += (obj_num - self.parameters.max_objects_per_day)**2
-                except:
-                    obj_num = 0
-
-            g = b - 41762823
-
-
-            goal_function = self.a * a + self.b * (1/g) + self.c * count
+            count = self._calculate_turns_on(results[2])
+            g = b
+            crude = self._calculate_crude_days(results[2])
+            goal_function = self.a * a + self.b * (1/g) + self.c * count + crude
             return round(goal_function, 3)
 
         except:
@@ -60,25 +47,44 @@ class GoalFunction:
             if results is None:
                 results = self.results
             a = 0
-            b = 0
+
             for i in range(len(results[0])):
                 if (target - results[0][i]) > 0:
                     a += (target - results[0][i]) ** 2
             b = results[1]
-            count = 0
-            max_index = list(results[2].keys())[-1]
-            for i in range(max_index):
-                try:
-                    obj_num = results[2][i]
-                    if obj_num > self.parameters.max_objects_per_day:
-                        count += (obj_num - self.parameters.max_objects_per_day) ** 2
-                except:
-                    obj_num = 0
+            count = self._calculate_turns_on(results[2])
+            crude = self._calculate_crude_days(results[2])
+            g = b
 
-            g = b - 41762823
-
-            goal_function = self.a * a + self.b * (1 / g) + self.c * count
+            goal_function = self.a * a + self.b * (1 / g) + self.c * count + crude
             return goal_function
+
         except:
-            print('Not enough data for goal function calculation. Return 1000')
+            print('Not enough data for goal function calculation. Return 10000')
             return 10000
+
+    def _calculate_turns_on(self, results: dict):
+        count = 0
+        # max_index = list(results[2].keys())[-1]
+        results_list = list(results.values())
+        for i in range(len(results)-1):
+            try:
+                obj_num = results_list[i]
+                if obj_num > self.parameters.max_objects_per_day:
+                    count += (obj_num - self.parameters.max_objects_per_day) ** 2
+            except:
+                print('Goal function execption')
+        return count
+
+    def _calculate_crude_days(self, results: dict):
+        keys = list(results.keys())
+        crude = 0
+        values = list(results.values())
+        for i in range(len(results) - self.parameters.days_per_object - 1):
+         #   a = 0
+          #  for j in range(self.parameters.days_per_object):
+
+            if ((keys[i+1]-keys[i]) > self.parameters.days_per_object) and ((values[i+1]+values[i])>self.parameters.max_objects_per_day):
+                crude += 500
+        return crude
+
