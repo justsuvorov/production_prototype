@@ -74,11 +74,15 @@ class JayaOptimizator:
                      #   self.kids[i].append(
                     #       random.choice([0])
                      #   )
-                       self.kids[i].append(random.randint(0, 15))
+                       self.kids[i].append(random.randint(0, self.last_index))
 
                     else:
+                        if self.last_index > 45:
+                            a = self.last_index - 45
+                        else:
+                            a = 0
                         self.kids[i].append(
-                        random.randint(0, self.last_index)
+                        random.randint(a, self.last_index)
                                             )
 
 

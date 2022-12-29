@@ -12,9 +12,9 @@ from pathlib import Path
 
 """ Входные параметры из Excel"""
 
-DATA = Path(r'C:\Users\User\Documents\production_prototype\Input\ProductionTests\оперативное планирование добычи. Ранж по добыче с учетом бригад.xlsm')
-path = os.getcwd()
 
+path = os.getcwd()
+DATA = Path(path+'\оперативное планирование добычи. Ранж по добыче с учетом бригад.xlsm')
 df = pd.read_excel(DATA, sheet_name='Исходные данные', index_col=0)
 """
 date_start = dt.date(year=2022, month=11, day=1)
@@ -56,6 +56,7 @@ parameters = APParameters(
 
 def main():
     parameters_of_algorithm = InputParameters(date_begin=date_begin,
+
                                               date_end=date_end,
                                               time_step=time_step,
                                               value=value,
@@ -76,7 +77,7 @@ def main():
                                                                                                c=c,
                                                                                                ),
                                                                     ),
-                                        iterations_count=30,
+                                        iterations_count=50,
                                         )
     program.result()
 

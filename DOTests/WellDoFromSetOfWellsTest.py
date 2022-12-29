@@ -14,7 +14,7 @@ VBD_DIR = Path(r'C:\Users\User\Documents\production_prototype\Input\TestData\VBD
 DATA_DIR = Path(r'C:\Users\User\Documents\production_prototype\Input\ProductionTests')
 vbd_pathes = [y for x in os.walk(VBD_DIR ) for y in glob(os.path.join(x[0], '*.xls*'))]
 filePath = DATA_DIR/'СВОД_скв._NEW_5лет.xlsx'
-vbd = Path(r'C:\Users\User\Documents\production_prototype\Input\ProductionTests\VBD.xlsx')
+vbd = Path(r'C:\Users\User\Documents\production_prototype\ProductionTests\VBD.xlsx')
 
 
 

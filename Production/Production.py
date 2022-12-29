@@ -49,7 +49,6 @@ class ProductionOnValueBalancer(Production):
     def result(self):
 
         self._discretizate_parameters()
-
         self.optimizer.parameters.from_domain_model(self.domain_model[0], last_index=self.date2)
         self._find_first_vbd_well()
         results = self.optimize()
@@ -57,7 +56,12 @@ class ProductionOnValueBalancer(Production):
         res = pd.DataFrame(results)
         res.to_excel('res.xlsx')
         domain_model_with_results = self._update_domain_model(results, result=True)
-        ExcelResult(domain_model=domain_model_with_results).dataframe()
+
+        ExcelResult(domain_model=domain_model_with_results,
+                    date_start=self.input_parameters.date_start,
+                    vbd_index=self.vbd_index,
+                    result=results,
+                    ).save()
 
 
     def _discretizate_parameters(self):
