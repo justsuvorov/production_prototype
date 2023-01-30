@@ -13,7 +13,6 @@ class ParametersOfAlgorithm:
         self.days_per_object = days_per_object
 
 
-
 class TimeParameters:
     def __init__(self,
                  date_start: dt.datetime = dt.date(year=2022, month=11, day=1),
@@ -27,4 +26,3 @@ class TimeParameters:
         self.date_begin = date_begin
         self.date_end = date_end
         self.time_step = time_step
-

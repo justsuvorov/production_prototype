@@ -12,6 +12,7 @@ from Program.constants import DATA_DIR
 from Program.Production.CalculationMethods import SimpleOperations
 from pathlib import Path
 
+
 class Production(ABC):
     def __init__(self,
                  domain_model: PreparedDomainModel,
@@ -23,7 +24,7 @@ class Production(ABC):
         pass
 
 
-class ProductionOnValueBalancer(Production):
+class OperationalProductionBalancer(Production):
     def __init__(self,
                  case: int,
                  input_parameters: ParametersOfAlgorithm,
@@ -44,8 +45,6 @@ class ProductionOnValueBalancer(Production):
         self.date_start = 0
         self.domain_model = None
 
-
-
         self._logger = Logger('log.txt')
         self._log_ = self._logger.log
         self._resultLog = Logger('Balancer_results.txt')
@@ -57,7 +56,6 @@ class ProductionOnValueBalancer(Production):
         self.result_dates = None
 
     def result(self, path):
-
         constraints = self.__prepare_data()
         result_dates = self.optimize(constraints=constraints)
         self.result_dates = result_dates[0]
@@ -68,7 +66,6 @@ class ProductionOnValueBalancer(Production):
         else:
             res.to_excel('res.xlsx')
         return domain_model_with_results
-
 
     def __prepare_data(self):
         self.domain_model, dates = self.prepared_domain_model.recalculate_indicators()
@@ -84,7 +81,6 @@ class ProductionOnValueBalancer(Production):
         self.shift = self.input_parameters.time_lag_step + self.input_parameters.days_per_object
         return constraints
 
-
     def optimize(self, constraints):
         outParams = [[]]
         for iteration in range(self.iterations_count):
@@ -95,7 +91,6 @@ class ProductionOnValueBalancer(Production):
            if self.optimizer.solution:
             break
         return self.optimizer.best_kid
-
 
     def _update_domain_model_activity(self, values):
         for i in range(len(self.domain_model)):
@@ -117,8 +112,6 @@ class ProductionOnValueBalancer(Production):
                                                          end_interval_date=self.date2,
                                                          indicator_name=indicator_names[j]).calculate())
                 outParams[i].append(number_of_turnings)
-
-
             outParams.pop()
 
         else:
@@ -145,7 +138,6 @@ class ProductionOnValueBalancer(Production):
                 if values[j] == self.date2+1 and result:
                     values[j] = self.steps_count+100
                 for key in updated_model[j].indicators:
-
                     aa = values[j]
                     a = np.zeros(aa)
                     b = updated_model[j].indicators[key]
@@ -157,12 +149,11 @@ class ProductionOnValueBalancer(Production):
     def _count_number_of_obj(self, values):
         values = values[(self.vbd_index+1):]
         unique, counts = np.unique(values, return_counts=True)
-        return(dict(zip(unique, counts)))
 
+        return dict(zip(unique, counts))
 
     def _find_first_vbd_well(self):
         for i in reversed(range(len(self.domain_model))):
             if self.domain_model[i].object_info.object_activity:
                 self.vbd_index = i
                 break
-

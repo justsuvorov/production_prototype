@@ -3,7 +3,7 @@ from Program.DOTests.WellDoFromSetOfWellsTest import *
 from Program.Production.GoalFunction import GoalFunction
 from Program.Production.InputParameters import TimeParameters, ParametersOfAlgorithm
 from Program.Production.Optimizator import GreedyOptimizer
-from Program.Production.Production import ProductionOnValueBalancer
+from Program.Production.Production import OperationalProductionBalancer
 from Program.Production.ap_parameters import APParameters
 from Program.Production.ExcelResult import ExcelResult
 from pathlib import Path
@@ -50,7 +50,7 @@ def main(file_path: str):
         inValues=[[]]
     )
 
-    program = ProductionOnValueBalancer(case=case,
+    program = OperationalProductionBalancer(case=case,
                                         prepared_domain_model=domain_model_wells,
                                         input_parameters=parameters_of_algorithm,
                                         optimizator=GreedyOptimizer(
@@ -72,6 +72,7 @@ def main(file_path: str):
                 dates=time_parameters,
                 # file_path = file_path
                 ).save(path=filepath)
+
 
 if __name__ == '__main__':
     main()
