@@ -2,18 +2,26 @@ from copy import deepcopy
 from Program.Production.InputParameters import TimeParameters
 import datetime as dt
 import numpy as np
+from Program.Production.CalculationMethods import SimpleOperations
+
 
 class PreparedDomainModel:
     def __init__(self,
                  domain_model,
-                 time_parameters: TimeParameters                 
+                 time_parameters: TimeParameters,
+                 find_gap: bool = False
                  ):
         self.domain_model = domain_model
         self.time_parameters = time_parameters
         self.steps_count = None
+        self.find_gap = find_gap
         
     def recalculate_indicators(self):
         domain_model = self.__copy_domain_model()
+        if self.find_gap:
+            SimpleOperations(domain_model=domain_model,
+                             indicator_name='FCF',
+                             ).wells_gap()
 
         time_parameters = self._discretizate_parameters(domain_model=domain_model)
         return domain_model, time_parameters
@@ -75,21 +83,19 @@ class PreparedDomainModel:
 
 
     def _recalculate_indicators(self, step: int, domain_model):
-        aaaa = 0
         for object in domain_model:
             try:
-                aaaa += 1
                 for key in object.indicators:
+                    if key != 'Gap index':
+                        try:
+                            l = (object.indicators[key].size - 1) * step + 1  # total length after interpolation
+                            c = np.array(object.indicators[key]).astype(float)
+                            c = c/step
+                            a = np.interp(np.arange(l), np.arange(l, step=step), c)  # interpolate
+                            object.indicators[key] = a
 
-                    try:
-                        l = (object.indicators[key].size - 1) * step + 1  # total length after interpolation
-                        c = np.array(object.indicators[key]).astype(float)
-                        c = c/step
-                        a = np.interp(np.arange(l), np.arange(l, step=step), c)  # interpolate
-                        object.indicators[key] = a
-
-                    except:
-                        print('Cannot recalculate indicators for well ', object.name)
+                        except:
+                            print('Cannot recalculate indicators for well ', object.name)
             except:
                 print( aaaa)
 

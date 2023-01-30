@@ -157,3 +157,37 @@ class OperationalProductionBalancer(Production):
             if self.domain_model[i].object_info.object_activity:
                 self.vbd_index = i
                 break
+
+
+class CompensatoryProductionBalancer(OperationalProductionBalancer):
+    def __init__(self,
+                 input_parameters: ParametersOfAlgorithm,
+                 optimizator,
+                 prepared_domain_model: PreparedDomainModel,
+                 iterations_count: int,
+
+                 ):
+        super().__init__(
+                 case=4,
+                 input_parameters=input_parameters,
+                 optimizator=optimizator,
+                 prepared_domain_model=prepared_domain_model,
+                 iterations_count=iterations_count
+                        )
+
+        self.date1 = None
+        self.date2 = 366
+        self.steps_count = None
+        self.constraints = None
+        self.date_start = 0
+        self.domain_model = None
+
+        self._logger = Logger('log.txt')
+        self._log_ = self._logger.log
+        self._resultLog = Logger('Balancer_results.txt')
+        self._resultLog_ = self._resultLog.log
+        self.constraints = None
+
+        self.vbd_index = None
+        self.temp_value = 1000
+        self.result_dates = None

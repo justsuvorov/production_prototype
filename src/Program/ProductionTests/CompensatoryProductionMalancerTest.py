@@ -3,11 +3,12 @@ from Program.DOTests.WellDoFromSetOfWellsTest import *
 from Program.Production.GoalFunction import GoalFunction
 from Program.Production.InputParameters import TimeParameters, ParametersOfAlgorithm
 from Program.Production.Optimizator import GreedyOptimizer
-from Program.Production.Production import OperationalProductionBalancer
+from Program.Production.Production import OperationalProductionBalancer, CompensatoryProductionBalancer
 from Program.Production.ap_parameters import APParameters
 from Program.Production.ExcelResult import ExcelResult
 from pathlib import Path
 from Program.Production.PreparedDomainModel import PreparedDomainModel
+from Program.Production.CalculationMethods import SimpleOperations
 
 
 def main(file_path: str):
@@ -18,48 +19,52 @@ def main(file_path: str):
     DATA = filepath / 'оперативное планирование добычи. Ранж по добыче с учетом бригад.xlsm'
     df = pd.read_excel(DATA, sheet_name='Исходные данные', index_col=0)
     time_step = 'Day'
-    value = df['Исходные данные'].loc['Требуемый показатель']
-    case = df['Исходные данные'].loc['СЦЕНАРИЙ']
     date_start = pd.to_datetime(df['Исходные данные'].loc['Текущая дата']).date()
-    date_begin = pd.to_datetime(df['Исходные данные'].loc['Начало периода']).date()
-    date_end = pd.to_datetime(df['Исходные данные'].loc['Конец периода']).date()
     time_lag_step = df['Исходные данные'].loc['Количество дней на включение']
     max_objects_per_day = df['Исходные данные'].loc['Максимальное количество бригад']
     days_per_object = df['Исходные данные'].loc['Количество дней на включение']
 
-    time_parameters = TimeParameters(date_begin=date_begin,
-                                     date_end=date_end,
+    time_parameters = TimeParameters(
                                      time_step=time_step,
                                      current_date=date_start
                                      )
-    parameters_of_algorithm = ParametersOfAlgorithm(
-                                              value=value,
-                                              time_lag_step=time_lag_step,
-                                              max_objects_per_day=max_objects_per_day,
-                                              days_per_object=days_per_object,
-                                              )
+
+    value = SimpleOperations(domain_model=domain_model(file_path=filepath)[0],
+                             indicator_name='Добыча нефти, тыс. т',
+                             end_year_index=59).cumulative_production()
+    print('Comulative production value', value)
 
     domain_model_wells = PreparedDomainModel(domain_model=domain_model(file_path=filepath),
                                              time_parameters=time_parameters,
+                                             find_gap=True,
                                             )
+
+    parameters_of_algorithm = ParametersOfAlgorithm(
+        value=value,
+        time_lag_step=time_lag_step,
+        max_objects_per_day=max_objects_per_day,
+        days_per_object=days_per_object,
+    )
+
+
     parameters_of_optimization = APParameters(
         inKeys=['ObjectActivity'],
         outKeys=['Добыча нефти, тыс. т', 'FCF'],
         inValues=[[]]
     )
 
-    program = OperationalProductionBalancer(case=case,
-                                            prepared_domain_model=domain_model_wells,
-                                            input_parameters=parameters_of_algorithm,
-                                            optimizator=GreedyOptimizer(
-                                                constraints=parameters_of_algorithm,
-                                                parameters=parameters_of_optimization,
-                                                goal_function=GoalFunction(
-                                                    parameters=parameters_of_algorithm,
-                                                                            ),
-                                                                        ),
-                                            iterations_count=200,
-                                            )
+    program = CompensatoryProductionBalancer(
+                                        prepared_domain_model=domain_model_wells,
+                                        input_parameters=parameters_of_algorithm,
+                                        optimizator=GreedyOptimizer(
+                                            constraints=parameters_of_algorithm,
+                                            parameters=parameters_of_optimization,
+                                            goal_function=GoalFunction(
+                                                parameters=parameters_of_algorithm,
+                                            ),
+                                        ),
+                                        iterations_count=200,
+                                        )
 
     domain_model_with_results = program.result(path=filepath)
 

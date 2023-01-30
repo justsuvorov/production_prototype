@@ -5,7 +5,7 @@ class SimpleOperations:
                  domain_model,
                  indicator_name: str ,
                  date: int = 0,
-                 end_interval_date: int = None,
+                 end_interval_date: int = 12,
                  case: int = 1,
                  end_year_index: int = 366,
                  ):
@@ -27,6 +27,9 @@ class SimpleOperations:
 
         if self.case == 3:
             return self.polka_sum()
+
+        if self.case == 4:
+            return self.cumulative_production()
 
 
     def wells_sum(self, date: int = None):

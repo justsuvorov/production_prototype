@@ -16,9 +16,9 @@ class ParametersOfAlgorithm:
 class TimeParameters:
     def __init__(self,
                  date_start: dt.datetime = dt.date(year=2022, month=11, day=1),
-                 current_date: dt.datetime = dt.date(year=2022, month=11, day=1),
+                 current_date: dt.datetime = dt.date(year=2023, month=2, day=1),
                  date_begin: dt.date = dt.date(year=2022, month=11, day=1),
-                 date_end: dt.date = dt.date(year=2022, month=11, day=1),
+                 date_end: dt.date = dt.date(year=2023, month=10, day=31),
                  time_step: str = 'Month',
                  ):
         self.date_start = date_start

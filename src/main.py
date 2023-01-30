@@ -1,5 +1,5 @@
 
-from Program.ProductionTests import OperationalProductionBalancerTest
+from Program.ProductionTests import OperationalProductionBalancerTest, CompensatoryProductionMalancerTest
 import click
 
 #@click.command()
@@ -8,6 +8,7 @@ import click
 path=r'C:\Users\User\Documents\production_prototype\src\program\data'
 def main(path):
 #    BalancerTest.main(path)
-    OperationalProductionBalancerTest.main(path)
+#    OperationalProductionBalancerTest.main(path)
+    CompensatoryProductionMalancerTest.main(path)
 if __name__ == '__main__':
     main(path)
