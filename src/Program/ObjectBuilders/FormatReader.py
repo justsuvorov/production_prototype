@@ -1,8 +1,10 @@
 from abc import ABC
-import pandas as pd
-from constants import MERNames, StringConstants
-from BaseObject.ObjectInfo import ObjectInfo
+
 import numpy as np
+import pandas as pd
+
+from Program.BaseObject.ObjectInfo import ObjectInfo
+
 
 class FormatReader(ABC):
 
@@ -24,6 +26,7 @@ class SetOfWellsFormatReader(FormatReader):
     def __init__(self,
                  indicator_names: list = None):
         self.indicator_names = indicator_names
+        self.count = 0
 
     def names(self, df: np.array):
         try:
@@ -33,7 +36,7 @@ class SetOfWellsFormatReader(FormatReader):
             field = np.unique(df.T[0])
 
         except:
-            print('Corrupted data')
+            print('Corrupted data', df)
 
             well_name = 'Noname'
             pad_name = 'Noname'
@@ -72,19 +75,27 @@ class SetOfWellsFormatReader(FormatReader):
 
     def indicators(self, data: np.array):
         result = {}
-
+        self.count += 1
         self.indicator_names = ['Добыча нефти, тыс. т', 'Добыча жидкости, тыс. т', 'FCF']
         indicators_numbers = [5, 65, 125, 184]
         indicators_numbers1 = [5, 65, 125]
         j = 0
         if data.shape[0] > 1:
             data = data.T
-        else: data = data[0]
+
+        else:
+            try:
+                data = data[0]
+            except:
+                print('Corrupt Well, string ', self.count)
         for i in indicators_numbers1:
-            a = np.arange(i-1, indicators_numbers[j+1]-1)
+            a = np.arange(i - 1, indicators_numbers[j + 1] - 1)
             result[self.indicator_names[j]] = data[a]
             j += 1
         return result
+
+
+
 
     def object_info(self, data: np.array, object_list: dict = None) -> ObjectInfo:
 

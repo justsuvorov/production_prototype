@@ -1,14 +1,14 @@
-from ObjectBuilders.Parser import Parser
+from Program.ObjectBuilders.Parser import Parser
 import pandas
 
-from BaseObject.ObjectStatus import ObjectStatus
-from BaseObject.Indicators import Indicators
-from BaseObject.ObjectInfo import ObjectInfo
-from BaseObject.Sensor import Sensor
+from Program.BaseObject.ObjectStatus import ObjectStatus
+from Program.BaseObject.Indicators import Indicators
+from Program.BaseObject.ObjectInfo import ObjectInfo
+from Program.BaseObject.Sensor import Sensor
 
-from constants import MERNames
+from Program.constants import MERNames
 
-from DomainModel.ObjectList import ObjectRecord
+from Program.DomainModel.ObjectList import ObjectRecord
 
 
 class DomainModel:

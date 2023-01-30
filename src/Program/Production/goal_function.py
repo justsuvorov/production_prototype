@@ -2,8 +2,7 @@
 Created on Fri May 27 16:06:59 2022
 @author: Suvorov
 """
-from Production.CalculationMethods import SimpleOperations
-import numpy as np
+
 
 def goal_function(results, target=None):
     if target is None: target = 482

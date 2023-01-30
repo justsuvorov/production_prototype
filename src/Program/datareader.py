@@ -7,16 +7,16 @@ import os
 import pandas as pd
 
 
-from constants import StringConstants as SC, TFileInput
-from constants import (
+from Program.constants import StringConstants as SC, TFileInput
+from Program.constants import (
     ColumnNames,
     GTMNames,
     MERNames,
     OISNames,
 )
-from constants import ConstantsForCalc as Const
-from utils.parsers import parse_date
-from utils.service import to_numeric
+from Program.constants import ConstantsForCalc as Const
+from Program.utils.parsers import parse_date
+from Program.utils.service import to_numeric
 
 
 

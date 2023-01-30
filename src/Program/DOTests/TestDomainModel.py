@@ -1,6 +1,6 @@
-from DomainModel.DomainModel import DomainModel
-from Well.MerData import MerData
-from ObjectBuilders.Parser import MerParser
+from Program.DomainModel.DomainModel import DomainModel
+from Program.Well.MerData import MerData
+from Program.ObjectBuilders.Parser import MerParser
 from pathlib import Path
 
 DATA_DIR = Path(r'C:\Users\User\Documents\production_prototype\Input\TestData')

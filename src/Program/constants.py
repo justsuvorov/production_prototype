@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 
 
+DATA_DIR = Path(__file__).parent.resolve()/'data'
 
 HOURS_IN_DAY = 24
 DAYS_IN_YEAR = 365
@@ -107,7 +108,6 @@ class MERNames:
     SUBORG_NAME = 'Объединение, принявшее скважину'
     PRODUCTION_GAS_CAP = 'Добыча газа из г/шапки (из совм. скважин), м3 за месяц'
 
-
     STR_NAMES = [WELL, LAYER, WELL_TYPE, DATE]
     FLOAT_NAMES = [OPERATING_TIME_HPM, OIL_PRODUCTION, LIQUID_PRODUCTION]
 
@@ -205,12 +205,14 @@ class DatetimeFormat:
 
 class ConstantsForCalc:
     NMONTHFORGTM = 8  # Количество месяцев для нахождения ГТМов
-    BOUND = ((0.00001, 50), (0.00001, 0.999), (0.00001, 0.999), (5, 100))  # Левые и правые границы параметров кривой Арпса
-    START_POINT_FOR_CURVE_ARPS = np.array([0.737052938, 0.999, 0.020762861, 5.5])  # Стартовая точка для нахождения коэффициентов кривой Арпса
+    BOUND = (
+    (0.00001, 50), (0.00001, 0.999), (0.00001, 0.999), (5, 100))  # Левые и правые границы параметров кривой Арпса
+    START_POINT_FOR_CURVE_ARPS = np.array(
+        [0.737052938, 0.999, 0.020762861, 5.5])  # Стартовая точка для нахождения коэффициентов кривой Арпса
     PART_OIL_PROD = 1 / 5
     N_MONTH_FOR_PREDICT_GAS = 6
     SEARCH_BOX = 3
-    NUMBER_SMOOTHINGS = 7 # Количество сглаживаний скользящим средним
+    NUMBER_SMOOTHINGS = 7  # Количество сглаживаний скользящим средним
     DEFAULT_OPERATING_FACTOR = 0.95
     MIN_MONTHS_FOR_ARPS = 3
 
@@ -238,7 +240,7 @@ class FluidConstans:
     TOP_BORDER = 10000000  # верхняя граница коэффициента для вычисления ХВ по функции "Мовмыги-Черепахи"
     MAX_FEV = 300000
     N_MEAN = 7  # количество периодов по которым берётся среднеарифмитеческое
-    MAX_WC_FOR_LOW_WC_LAYERS = 0.6 # Максимальная обводненность для низвообводненных пластов
+    MAX_WC_FOR_LOW_WC_LAYERS = 0.6  # Максимальная обводненность для низвообводненных пластов
     DEFAULT_BINDING_PERIOD = 3
 
 
@@ -269,28 +271,25 @@ class ConstForGraphs:
 
 
 class FundFormationDates:
-
     fund_formation_excluded = {'ООО "ГПН-Восток"': datetime(2017, 1, 1)}
     BASE_FUND = datetime(2020, 1, 1)
     SUBORG_MAPPING = {
-    'Восток': 'ООО "ГПН-Восток"',
-    'Мессояха': 'АО «Мессояханефтегаз»',
-    'ННГ': 'AO «ГПН-ННГ»',
-    'Оренбург': 'ООО "ГПН-Оренбург"',
-    'Славнефть': 'ПАО_СН_МНГ',
-    'Хантос': 'ООО "ГПН-Хантос"',
-    'Ямал': 'ООО "ГПН - Ямал"'
+        'Восток': 'ООО "ГПН-Восток"',
+        'Мессояха': 'АО «Мессояханефтегаз»',
+        'ННГ': 'AO «ГПН-ННГ»',
+        'Оренбург': 'ООО "ГПН-Оренбург"',
+        'Славнефть': 'ПАО_СН_МНГ',
+        'Хантос': 'ООО "ГПН-Хантос"',
+        'Ямал': 'ООО "ГПН - Ямал"'
     }
 
-class CumulativeConstansts:
 
+class CumulativeConstansts:
     SUBORG = StringConstants.SUBORGANIZATION
     FIELD = StringConstants.FIELD
-    OIL_PRODUCTION_BASE_FUND= 'Накопленная добыча нефти по БД, тыс т'
+    OIL_PRODUCTION_BASE_FUND = 'Накопленная добыча нефти по БД, тыс т'
     OIL_PRODUCTION_GTM = 'Накопленная добыча нефти по ГТМ (01.20-02.22), тыс т'
     SUM_OIL_PRODUCTION = 'Накопленная добыча нефти по БД+ГТМ, тыс т'
-
-
 
 
 class FormationBase:

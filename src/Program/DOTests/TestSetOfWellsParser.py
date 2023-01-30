@@ -1,4 +1,4 @@
-from ObjectBuilders.Parser import SetOfWellsParser
+from Program.ObjectBuilders.Parser import SetOfWellsParser
 from pathlib import Path
 import pandas as pd
 DATA_DIR = Path(r'C:\Users\User\Documents\production_prototype\Input\TestData')
