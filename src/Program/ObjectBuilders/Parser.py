@@ -1,20 +1,10 @@
-from abc import ABC
-from pathlib import Path
-
 import pandas as pd
 
-from Well.MerData import MerData
-#from MerData import MerData
-import pandas
+from Program.Well.MerData import MerData
 
-from Well.WellInfo import WellInfo, ObjectInfo
-from constants import MERNames, StringConstants
-from Well.MerData import MerData
+
+# from MerData import MerData
 #from ObjectStatus import ObjectStatus
-from Well.Well import Well
-
-from Well.WellStatus import WellStatus
-from Well.Sensor import Sensor
 
 class Parser:
 

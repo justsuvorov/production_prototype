@@ -1,28 +1,29 @@
-from BaseObject.BaseObject import BaseObject
-from BaseObject.Sensor import Sensor
-from BaseObject.ObjectInfo import ObjectInfo
-from BaseObject.Indicators import Indicators
-from Well.WellInfo import WellInfo
-from DomainModel import DomainModel
+from Program.BaseObject.BaseObject import BaseObject
+from Program.BaseObject.Sensor import Sensor
+from Program.BaseObject.ObjectInfo import ObjectInfo
+from Program.BaseObject.Indicators import Indicators
+from Program.Well.WellInfo import WellInfo
+from Program.DomainModel import DomainModel
 
 
-class WellDO(BaseObject):
+class PadDO(BaseObject):
     def __init__(self,
                  name: str,
                  object_info: ObjectInfo,
                  indicators: Indicators,
                  sensor: Sensor,
-                 link=None,
-                 well_info: WellInfo = None
+                 link: list = None,
+                 pad_info: WellInfo = None
                  ) -> None:
             super().__init__(
                  name=name,
                  object_info=object_info,
                  indicators=indicators,
                  sensor=sensor,
-                 link=link
+                 link=link,
             )
-            self.wellInfo = well_info
+            self.pad_info = pad_info
+
 
     def build(self):
         pass

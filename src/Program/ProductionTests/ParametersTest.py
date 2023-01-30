@@ -1,9 +1,6 @@
-from DOTests.WellDoFromSetOfWellsTest import main
-from Production.GoalFunction import GoalFunction
-from Production.ap_parameters import APParameters
-from Production.CalculationMethods import *
-from Production.Production import *
-from Production.Optimizator import *
+from Program.DOTests.WellDoFromSetOfWellsTest import main
+from Program.Production.GoalFunction import GoalFunction
+from Program.Production.ap_parameters import APParameters
 import datetime as dt
 
 

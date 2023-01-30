@@ -1,14 +1,16 @@
 import pandas as pd
 
-from ObjectBuilders.BuilderInterface import *
-from ObjectBuilders.FormatReader import FormatReader
-from BaseObject.Object import Object
-from BaseObject.ObjectInfo import ObjectInfo
-from BaseObject.Indicators import Indicators
-from BaseObject.Sensor import Sensor
-from DomainModel.ObjectList import ObjectRecord
-from ObjectBuilders.Parser import Parser
-from constants import MERNames
+from Program.BaseObject.Indicators import Indicators
+from Program.BaseObject.Object import Object
+from Program.BaseObject.ObjectInfo import ObjectInfo
+from Program.BaseObject.Sensor import Sensor
+from Program.DomainModel.ObjectList import ObjectRecord
+from Program.ObjectBuilders.FormatReader import FormatReader
+from Program.ObjectBuilders.Parser import Parser
+from Program.ObjectBuilders.BuilderInterface import BaseObjectBuilder, ObjectBuilder
+from Program.DomainModel.WellDO import WellDO
+from Program.DomainModel.PadDO import PadDO
+from Program.DomainModel.Cluster import ClusterDO
 
 
 class WellBuilder(BaseObjectBuilder):
@@ -27,7 +29,7 @@ class WellBuilder(BaseObjectBuilder):
            object_info=self._object_info(),
            indicators=self._indicators(),
            sensor=self.sensor(),
-       #    link=self.format_reader.names(self.data)
+           link=self.format_reader.names(self.data)
        )
 
     def sensor(self) -> Sensor:
@@ -61,7 +63,7 @@ class PadBuilder(BaseObjectBuilder):
             object_info=self._object_info(),
             indicators=self._indicators(),
             sensor=self.sensor(),
-            #link=self.format_reader.names(self.data)
+            link=self.format_reader.names(self.data)
         )
 
 
@@ -96,7 +98,7 @@ class ClusterBuilder(BaseObjectBuilder):
             object_info=self._object_info(),
             indicators=self._indicators(),
             sensor=self.sensor(),
-            # link=self.format_reader.names(self.data)
+            link=self.format_reader.names(self.data)
         )
 
     def sensor(self) -> Sensor:

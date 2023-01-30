@@ -1,4 +1,4 @@
-from Production.Logger import Logger
+from Program.Production.Logger import Logger
 #from numpy import loadtxt
 
 """
@@ -113,12 +113,12 @@ class APParameters:
         for object in objects:
             self.__inValues[0].append(object.object_info.object_activity)
 
-    def from_domain_model(self,objects: list, last_index):
+    def from_domain_model(self, objects: list, last_index):
         for object in objects:
             self.__inValues[0].append(object.object_info.object_activity)
         for i in range(len(self.__inValues[0])):
             if not self.__inValues[0][i]:
-                self.__inValues[0][i] = last_index
+                self.__inValues[0][i] = last_index+1
             else:
                 self.__inValues[0][i] = 0
 

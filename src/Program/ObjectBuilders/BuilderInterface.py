@@ -1,15 +1,11 @@
 import abc
-from ObjectBuilders.FormatReader import FormatReader
-from BaseObject.Object import Object
-from BaseObject.ObjectInfo import ObjectInfo
-from BaseObject.Indicators import Indicators
-from BaseObject.Sensor import Sensor
+from Program.ObjectBuilders.FormatReader import FormatReader
+from Program.BaseObject.Object import Object
+from Program.BaseObject.ObjectInfo import ObjectInfo
+from Program.BaseObject.Indicators import Indicators
+from Program.BaseObject.Sensor import Sensor
 from abc import ABC
-from DomainModel.ObjectList import ObjectRecord
-from DomainModel.WellDO import WellDO
-from DomainModel.PadDO import PadDO
-from DomainModel.Cluster import ClusterDO
-from BaseObject.Hierarchy import Hierarchy
+from Program.DomainModel.ObjectList import ObjectRecord
 
 
 class ObjectBuilder(ABC):

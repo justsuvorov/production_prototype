@@ -1,5 +1,5 @@
 import pandas as pd
-import datareader as DR
+from Program import datareader as DR
 from pathlib import Path
 
 class MerData:

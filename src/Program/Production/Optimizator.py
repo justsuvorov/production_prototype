@@ -1,11 +1,12 @@
 import abc
 from abc import ABC
-from Production.ap_parameters import APParameters
+from Program.Production.ap_parameters import APParameters
 import random
 import os
-from Production.goal_function import goal_function
-from Production.Logger import Logger
-from Production.GoalFunction import GoalFunction
+from Program.Production.Logger import Logger
+from Program.Production.GoalFunction import GoalFunction
+#import pulp as lp
+from math import floor
 
 
 class Optimizator(ABC):
@@ -17,8 +18,105 @@ class Optimizator(ABC):
     def __initialization(self):
         pass
 
-    def algorithm(self, index, outParams=None):
+    def algorithm(self, index, outParams = None, last_index = None):
         pass
+"""
+class CbcOptimizator(Optimizator):
+    def __init__(self,
+                 parameters: APParameters,
+                 goal_function: GoalFunction,
+                 domain_model,
+                 input_parameters = None):
+        self.parameters = parameters
+        self.goal_function = goal_function
+        self.domain_model = domain_model
+        self.input_parameters = input_parameters
+        self.kids = []
+
+    def __initialization(self):
+        model= lp.LpProblem("Balancer", lp.LoMinimize)
+        X = lp.LpVariable(self.parameters.inValues())
+        model =+ X ==2
+        return model
+
+    def algorithm(self):
+        solver = lp.PULP_CBC_CMD()
+        model = self.__initialization()
+        return model.solve(solver)
+"""
+class GreedyOptimizer():
+    def __init__(self,
+                 parameters: APParameters,
+                 constraints,
+                 goal_function: GoalFunction
+                 ):
+        self.parameters = parameters
+        self.constraints = constraints
+        self.goal_function = goal_function
+        self.max_objects = None
+        self.best_kid = []
+        self.results = None
+        self.last_index = 0
+        self.object_count = 0
+        self.shift = 0
+        self.best = None
+        self.solution = False
+
+
+    def __initialization(self):
+        self.best_kid.append([])
+        self.max_objects = self.constraints.max_objects_per_day * \
+                           (self.constraints.date_end - self.constraints.current_date -
+                            self.constraints.time_lag_step)/(1 + self.constraints.days_per_object)
+
+        for j in range(len(self.parameters.inValues()[0])):
+            self.best_kid[0].append(self.parameters.inValues()[0][j])
+
+        return self.best_kid
+
+    def algorithm(self,
+                  index,
+                  outParams=None,
+                  last_index=0,
+                  constraints=None
+                  ):
+        if constraints is not None:
+            self.constraints = constraints
+        if index == 0:
+            return self.__initialization()
+        if index == 1:
+            if outParams is not None:
+                self.results = outParams
+            else:
+                print('No results in optimizator')
+            self.last_index = last_index
+            return self.__algorithm()
+
+    def __algorithm(self):
+
+        self.best = self.goal_function.value(results=self.results)
+
+        if self.best != 0 and self.object_count < self.max_objects:
+            self.object_count += 1
+            a = floor(self.object_count / self.constraints.max_objects_per_day)  # максимальный сдвиг с учетом бригад
+
+            self.shift = a * self.constraints.days_per_object  # максимальный сдвиг с учетом ремонта
+
+            for i in range(self.last_index, self.last_index + self.object_count):
+                shift = self.shift-self.constraints.days_per_object*floor((i-self.last_index)/self.constraints.max_objects_per_day)
+                self.best_kid[0][i] = self.constraints.date_end - shift
+        else:
+            self.solution = True
+
+        return self.best_kid
+
+
+
+
+
+
+
+
 
 
 class JayaOptimizator:
@@ -52,6 +150,7 @@ class JayaOptimizator:
         self._log_('[APJaya]: ' + self.__class__.__name__)
         self.input_parameters = input_parameters
         self.last_index = 13
+        self.first_index = 0
         self.goal_function_main = goal_function
 
     def __initialization(self):
@@ -63,27 +162,28 @@ class JayaOptimizator:
             self.kids_temp.append([])
             for j in range(len(self.parameters.inValues()[0])):
                 self.kids_temp[i].append(0)
+                """
                 if i == 0:
                     self.kids[i].append(
                         self.parameters.inValues()[0][j]
                     )
                  # self.kids[i].append(0)
+                """
+                #else:
+                if i == 0:
+                 #   self.kids[i].append(
+                #       random.choice([0])
+                 #   )
+                  self.kids[i].append(random.choice([random.randint(self.first_index, self.last_index), self.last_index]))
 
                 else:
-                    if i == 1:
-                     #   self.kids[i].append(
-                    #       random.choice([0])
-                     #   )
-                       self.kids[i].append(random.randint(0, self.last_index))
-
+                    if self.last_index > 20:
+                        a = self.last_index - 20
                     else:
-                        if self.last_index > 45:
-                            a = self.last_index - 45
-                        else:
-                            a = 0
-                        self.kids[i].append(
-                        random.randint(a, self.last_index)
-                                            )
+                        a = 0
+                    self.kids[i].append(random.choice([
+                    random.randint(a, self.last_index)
+                                        ,self.last_index]))
 
 
         # self.parameters.inValues() =  self.kids
@@ -96,8 +196,10 @@ class JayaOptimizator:
                   index,
                   outParams=None,
                   last_index=None,
+
                   ):
         self.last_index = last_index
+
         self._log_('[APJaya.algorithm] index: ' + str(index))
         if (index == 0):
             return self.__initialization()

@@ -1,30 +1,28 @@
-from BaseObject.BaseObject import BaseObject
-from BaseObject.Sensor import Sensor
-from BaseObject.ObjectInfo import ObjectInfo
-from BaseObject.Indicators import Indicators
-from BaseObject.ObjectStatus import ObjectStatus
-from Well.WellInfo import WellInfo
-from DomainModel import DomainModel
-import pandas as pd
+from Program.BaseObject.BaseObject import BaseObject
+from Program.BaseObject.Sensor import Sensor
+from Program.BaseObject.ObjectInfo import ObjectInfo
+from Program.BaseObject.Indicators import Indicators
+from Program.Well.WellInfo import WellInfo
+from Program.DomainModel import DomainModel
 
-class PumpDO(BaseObject):
+
+class ClusterDO(BaseObject):
     def __init__(self,
                  name: str,
                  object_info: ObjectInfo,
                  indicators: Indicators,
                  sensor: Sensor,
-                 pump_info: WellInfo = None,
-                 link: list = None
+                 link: list = None,
+                 cluster_info: WellInfo = None
                  ) -> None:
             super().__init__(
                  name=name,
                  object_info=object_info,
                  indicators=indicators,
-                 sensor=sensor,
                  link=link,
-
+                 sensor=sensor,
             )
-            self.pump_info = pump_info
+            self.cluster_info = cluster_info
 
     def build(self):
         pass

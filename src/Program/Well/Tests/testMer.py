@@ -1,5 +1,5 @@
 from Well.MerData import MerData
-from ObjectBuilders.Parser import MerParser
+from Program.Well.WellFromMer import WellFromMer
 from pathlib import Path
 
 DATA_DIR = Path(r'C:\Users\User\Documents\production_prototype\Input\TestData')
@@ -12,5 +12,15 @@ mer = MerData(dataPath=DATA_DIR)
 #dict_data = mer.data_dict()
 #df = mer.dataframe()
 #dataList = mer.data_list()
-domain = MerParser(merData=mer).data()
+domain = WellFromMer(merData=mer).wells_collection()
 print(domain)
+"""
+
+domainModel = DomainModel(
+hierarchy = Hierarchy(
+
+        )
+)
+
+parser.fromMer(domainModel = domainModel) #Возвращает коллекцию с нужными данными
+"""
