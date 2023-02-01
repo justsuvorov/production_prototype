@@ -5,10 +5,11 @@ from Program.Production.InputParameters import TimeParameters, ParametersOfAlgor
 from Program.Production.Optimizator import GreedyOptimizer
 from Program.Production.Production import OperationalProductionBalancer, CompensatoryProductionBalancer
 from Program.Production.ap_parameters import APParameters
-from Program.Production.ExcelResult import ExcelResult
+from Program.Production.ExcelResult import ExcelResult, ExcelResultPotential
 from pathlib import Path
 from Program.Production.PreparedDomainModel import PreparedDomainModel
 from Program.Production.CalculationMethods import SimpleOperations
+import pickle
 
 
 def main(file_path: str):
@@ -28,16 +29,23 @@ def main(file_path: str):
                                      time_step=time_step,
                                      current_date=date_start
                                      )
-
+    """
     value = SimpleOperations(domain_model=domain_model(file_path=filepath)[0],
                              indicator_name='Добыча нефти, тыс. т',
-                             end_year_index=59).cumulative_production()
-    print('Comulative production value', value)
-
+                             end_year_index=12,
+                             end_interval_date=12,
+                             date=0).cumulative_production(active=True)
+    """
+    value = 9140.95
+    #print('Comulative production value', value)
+    """
     domain_model_wells = PreparedDomainModel(domain_model=domain_model(file_path=filepath),
                                              time_parameters=time_parameters,
                                              find_gap=True,
                                             )
+    """
+    with open('data.pickle', 'rb') as f:
+        domain_model_wells = pickle.load(f)
 
     parameters_of_algorithm = ParametersOfAlgorithm(
         value=value,
@@ -45,7 +53,6 @@ def main(file_path: str):
         max_objects_per_day=max_objects_per_day,
         days_per_object=days_per_object,
     )
-
 
     parameters_of_optimization = APParameters(
         inKeys=['ObjectActivity'],
@@ -68,8 +75,8 @@ def main(file_path: str):
 
     domain_model_with_results = program.result(path=filepath)
 
-    ExcelResult(domain_model=domain_model_with_results,
-                production = program,
+    ExcelResultPotential(domain_model=domain_model_with_results,
+                production=program,
                 results='Only sum',
                 dates=time_parameters,
                 # file_path = file_path

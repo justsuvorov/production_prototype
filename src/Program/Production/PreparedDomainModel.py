@@ -97,5 +97,5 @@ class PreparedDomainModel:
                         except:
                             print('Cannot recalculate indicators for well ', object.name)
             except:
-                print( aaaa)
+                print()
 

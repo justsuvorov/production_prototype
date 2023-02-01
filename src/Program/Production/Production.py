@@ -11,7 +11,7 @@ from Program.Production.ExcelResult import ExcelResult
 from Program.constants import DATA_DIR
 from Program.Production.CalculationMethods import SimpleOperations
 from pathlib import Path
-
+from math import floor
 
 class Production(ABC):
     def __init__(self,
@@ -52,15 +52,21 @@ class OperationalProductionBalancer(Production):
         self.constraints = None
 
         self.vbd_index = None
+        self.initial_vbd_index = None
         self.temp_value = 1000
         self.result_dates = None
 
     def result(self, path):
         constraints = self.__prepare_data()
+        self.initial_vbd_index = self.vbd_index
+
+
         result_dates = self.optimize(constraints=constraints)
         self.result_dates = result_dates[0]
+        self.vbd_index = self.initial_vbd_index
         domain_model_with_results = self._update_domain_model(result_dates[0], result=True)
-        res = pd.DataFrame(result_dates[0])
+
+        res = pd.DataFrame(result_dates)
         if path is not None:
             res.to_excel(path/'res.xlsx')
         else:
@@ -78,7 +84,15 @@ class OperationalProductionBalancer(Production):
         constraints.date_begin = dates['date1']
         constraints.current_date = dates['current_date']
         self._find_first_vbd_well()
+        print('VBD index', self.vbd_index)
         self.shift = self.input_parameters.time_lag_step + self.input_parameters.days_per_object
+        if self.case == 4:
+            self.input_parameters.value = SimpleOperations(case=self.case,
+                                                           domain_model=self.domain_model,
+                                                           date=self.date1,
+                                                           end_interval_date=self.date2,
+                                                           indicator_name='Добыча нефти, тыс. т').cumulative_production(
+                                                                                                                 active=True)
         return constraints
 
     def optimize(self, constraints):
@@ -96,23 +110,34 @@ class OperationalProductionBalancer(Production):
         for i in range(len(self.domain_model)):
             self.domain_model[i].object_info.object_activity = values[i]
 
-    def _calculate_out_params(self, iteration: int, outParams, constraints):
+    def _calculate_out_params(self, iteration: int, outParams, constraints, first_iteration: bool = True):
         indicator_names = self.optimizer.parameters.outKeys()
         if iteration == 0:
+
             #new_values = self.optimizer.algorithm(index=0, last_index=self.date2, constraints=self.constraints)
             new_values = self.optimizer.algorithm(index=0, last_index=self.vbd_index, constraints=constraints)
             for i in range(len(new_values)):
                 number_of_turnings = self._count_number_of_obj(new_values[i])
                 updated_model = self._update_domain_model(new_values[i])
-                outParams.append([])
-                for j in range(len(self.optimizer.parameters.outKeys())):
-                    outParams[i].append(SimpleOperations(case=self.case,
-                                                         domain_model=updated_model,
-                                                         date=self.date1,
-                                                         end_interval_date=self.date2,
-                                                         indicator_name=indicator_names[j]).calculate())
-                outParams[i].append(number_of_turnings)
-            outParams.pop()
+                if first_iteration:
+                    outParams.append([])
+                    for j in range(len(self.optimizer.parameters.outKeys())):
+                        outParams[i].append(SimpleOperations(case=self.case,
+                                                             domain_model=updated_model,
+                                                             date=self.date1,
+                                                             end_interval_date=self.date2,
+                                                             indicator_name=indicator_names[j]).calculate())
+                    outParams[i].append(number_of_turnings)
+                    outParams.pop()
+                else:
+                    for j in range(len(self.optimizer.parameters.outKeys())):
+                        outParams[i][j] = SimpleOperations(case=self.case,
+                                                           domain_model=updated_model,
+                                                           date=self.date1,
+                                                           end_interval_date=self.date2,
+                                                           indicator_name=indicator_names[j]).calculate()
+                    outParams[i][2] = number_of_turnings
+
 
         else:
             #new_values = self.optimizer.algorithm(index=1, outParams=outParams, last_index=self.date2)
@@ -135,14 +160,22 @@ class OperationalProductionBalancer(Production):
         updated_model = deepcopy(self.domain_model)
         for j in range(self.vbd_index, len(updated_model)):
             if not updated_model[j].object_info.object_activity:
-                if values[j] == self.date2+1 and result:
-                    values[j] = self.steps_count+100
+                try:
+                    if values[j] == self.date2+1 and result:
+                       values[j] = self.steps_count+100
+                except:
+                    pass
+                    print('Update model exception')
                 for key in updated_model[j].indicators:
-                    aa = values[j]
-                    a = np.zeros(aa)
-                    b = updated_model[j].indicators[key]
-                    c = np.concatenate((a, b))
-                    updated_model[j].indicators[key] = c
+                    if key != 'Gap index':
+                        try:
+                            aa = values[j]
+                        except:
+                            aa = 0
+                        a = np.zeros(aa)
+                        b = updated_model[j].indicators[key]
+                        c = np.concatenate((a, b))
+                        updated_model[j].indicators[key] = c
 
         return updated_model
 
@@ -173,21 +206,76 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                  optimizator=optimizator,
                  prepared_domain_model=prepared_domain_model,
                  iterations_count=iterations_count
-                        )
-
-        self.date1 = None
-        self.date2 = 366
-        self.steps_count = None
-        self.constraints = None
-        self.date_start = 0
-        self.domain_model = None
-
-        self._logger = Logger('log.txt')
-        self._log_ = self._logger.log
-        self._resultLog = Logger('Balancer_results.txt')
-        self._resultLog_ = self._resultLog.log
-        self.constraints = None
-
+                )
         self.vbd_index = None
-        self.temp_value = 1000
         self.result_dates = None
+
+
+    def optimize(self, constraints):
+        outParams = [[]]
+        temp_value = True
+        first_iteration = True
+        available_wells = True
+        for i in range(12):
+            if not available_wells:
+                break
+
+            k = 0
+            if i * 30.43 < constraints.current_date: #среднее количество дней в месяце
+                continue
+            self._turn_off_nrf_wells(i, temp_value=temp_value)
+            temp_value = False
+            constraints.date_end = floor(i * 30.43 + 31)
+            constraints.current_date = floor(i * 30.43)
+            if self.vbd_index >= len(self.domain_model):
+                break
+            self.optimizer.solution = False
+            for iteration in range(0, self.iterations_count):
+                k += 1
+                print('iteration index: ' + str(iteration))
+                outParams = self._calculate_out_params(iteration=iteration,
+                                                       outParams=outParams,
+                                                       constraints=constraints,
+                                                       first_iteration=first_iteration)
+
+                if (self.vbd_index >= len(self.domain_model)) or self.optimizer.solution:
+                    self.vbd_index = self.vbd_index + k
+                    break
+            self.vbd_index = self.vbd_index + k
+            #solution.append(self.optimizer.best_kid[0])
+            first_iteration = False
+            if (self.vbd_index >= len(self.domain_model)):
+                available_wells = False
+
+        #self.prepare_results(solution)
+        #return self.prepare_results(solution)
+        return self.optimizer.best_kid
+
+    def _turn_off_nrf_wells(self, i: int, temp_value: bool = False):
+        sum = 0
+        for object in self.domain_model:
+            if temp_value:
+                if object.indicators['Gap index'] <= i:
+                    sum += 1
+                    for key in object.indicators:
+                        if key != 'Gap index':
+                            aa = floor(i*30.43)
+                            a = np.zeros(365-aa)
+                            b = object.indicators[key][0:aa]
+                            c = np.concatenate((b,a))
+                            object.indicators[key] = c
+            else:
+                if object.indicators['Gap index'] == i:
+                    for key in object.indicators:
+                        if key != 'Gap index':
+                            aa = floor(i * 30.43)
+                            a = np.zeros(365 - aa)
+                            b = object.indicators[key][0:aa]
+                            c = np.concatenate((b, a))
+                            object.indicators[key] = c
+                    sum += 1
+        print('Выключено', sum, 'скважин')
+
+    def prepare_results(self, solution):
+        pass
+

@@ -106,12 +106,20 @@ class SimpleOperations:
                 print('SimpleOperations. Corrupted data for well ', object.name)
         return self.domain_model
 
-    def cumulative_production(self):
+    def cumulative_production(self, active=False):
         sum = 0
+
         for object in self.domain_model:
             try:
-                if object.object_info.object_activity:
-                    sum += integrate.simpson(y=object.indicators[self.indicator_name][self.date:self.end_interval_date])
+                    if not active:
+                        sum += integrate.trapezoid(dx=1, y=object.indicators[self.indicator_name][self.date:self.end_interval_date])
+                    else:
+                        if object.object_info.object_activity:
+                            sum += integrate.trapezoid(dx=1,
+                                                       y=object.indicators[self.indicator_name][
+                                                         self.date:self.end_interval_date+1])
+
+
             except:
                 print('SimpleOperations. Corrupted data for well ', object.name)
         sum = round(sum,2)

@@ -122,6 +122,8 @@ class APParameters:
             else:
                 self.__inValues[0][i] = 0
 
+    def from_results(self, results: list):
+        self.__inValues[0] = results.copy()
 
 
 

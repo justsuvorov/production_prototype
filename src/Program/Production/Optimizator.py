@@ -64,14 +64,16 @@ class GreedyOptimizer():
 
 
     def __initialization(self):
-        self.best_kid.append([])
+
+        self.object_count = 0
         self.max_objects = self.constraints.max_objects_per_day * \
                            (self.constraints.date_end - self.constraints.current_date -
                             self.constraints.time_lag_step)/(1 + self.constraints.days_per_object)
-
-        for j in range(len(self.parameters.inValues()[0])):
-            self.best_kid[0].append(self.parameters.inValues()[0][j])
-
+        print('Initialization')
+        if self.best_kid == []:
+            self.best_kid.append([])
+            for j in range(len(self.parameters.inValues()[0])):
+                self.best_kid[0].append(self.parameters.inValues()[0][j])
         return self.best_kid
 
     def algorithm(self,
@@ -95,18 +97,21 @@ class GreedyOptimizer():
     def __algorithm(self):
 
         self.best = self.goal_function.value(results=self.results)
-
         if self.best != 0 and self.object_count < self.max_objects:
-            self.object_count += 1
-            a = floor(self.object_count / self.constraints.max_objects_per_day)  # максимальный сдвиг с учетом бригад
+                self.object_count += 1
+                a = floor(self.object_count / self.constraints.max_objects_per_day)  # максимальный сдвиг с учетом бригад
+                self.shift = a * self.constraints.days_per_object  # максимальный сдвиг с учетом ремонта
+                try:
+                    for i in range(self.last_index, self.last_index + self.object_count):
+                        shift = self.shift-self.constraints.days_per_object*floor((i-self.last_index)/self.constraints.max_objects_per_day)
+                        self.best_kid[0][i] = self.constraints.date_end - shift
+                except:
+                    print('No wells avaliable')
+                    self.solution = True
 
-            self.shift = a * self.constraints.days_per_object  # максимальный сдвиг с учетом ремонта
-
-            for i in range(self.last_index, self.last_index + self.object_count):
-                shift = self.shift-self.constraints.days_per_object*floor((i-self.last_index)/self.constraints.max_objects_per_day)
-                self.best_kid[0][i] = self.constraints.date_end - shift
         else:
             self.solution = True
+
 
         return self.best_kid
 
