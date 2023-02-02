@@ -247,25 +247,28 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             first_iteration = False
             if self.vbd_index >= len(self.domain_model):
                 available_wells = False
-
-        res2 = pd.DataFrame(self.turn_off_nrf_wells.values())
+        print(self.turn_off_nrf_wells)
+        res2 = pd.DataFrame.from_dict(self.turn_off_nrf_wells)
+        res2 = pd.DataFrame(self.turn_off_nrf_wells)
         res2.to_excel('res2.xlsx')
-        print(self.turn_off_nrf_wells.values())
+        print(self.turn_off_nrf_wells)
         return self.optimizer.best_kid
 
     def _turn_off_nrf_wells(self, i: int, temp_value: bool = False):
         sum = 0
         for object in self.domain_model:
+            if sum > 250:
+                break
             if temp_value:
                 if object.indicators['Gap index'] <= i:
                     sum += 1
-                    self.turn_off_nrf_wells['object.name'] = floor(i * 30.43)
+                    self.turn_off_nrf_wells[str(object.name)] = floor(i * 30.43)
                     for key in object.indicators:
                         if key != 'Gap index':
                             aa = floor(i*30.43)
                             a = np.zeros(365-aa)
                             b = object.indicators[key][0:aa]
-                            c = np.concatenate((b,a))
+                            c = np.concatenate((b, a))
                             object.indicators[key] = c
             else:
                 if object.indicators['Gap index'] == i:
