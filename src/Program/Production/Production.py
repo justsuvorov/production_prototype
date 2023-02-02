@@ -67,6 +67,7 @@ class OperationalProductionBalancer(Production):
         domain_model_with_results = self._update_domain_model(result_dates[0], result=True)
 
         res = pd.DataFrame(result_dates)
+
         if path is not None:
             res.to_excel(path/'res.xlsx')
         else:
@@ -209,6 +210,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                 )
         self.vbd_index = None
         self.result_dates = None
+        self.turn_off_nrf_wells = {}
 
 
     def optimize(self, constraints):
@@ -239,16 +241,16 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                                                        first_iteration=first_iteration)
 
                 if (self.vbd_index >= len(self.domain_model)) or self.optimizer.solution:
-                    self.vbd_index = self.vbd_index + k
+                    self.vbd_index = self.vbd_index + k - 2
                     break
-            self.vbd_index = self.vbd_index + k
-            #solution.append(self.optimizer.best_kid[0])
+
             first_iteration = False
-            if (self.vbd_index >= len(self.domain_model)):
+            if self.vbd_index >= len(self.domain_model):
                 available_wells = False
 
-        #self.prepare_results(solution)
-        #return self.prepare_results(solution)
+        res2 = pd.DataFrame(self.turn_off_nrf_wells.values())
+        res2.to_excel('res2.xlsx')
+        print(self.turn_off_nrf_wells.values())
         return self.optimizer.best_kid
 
     def _turn_off_nrf_wells(self, i: int, temp_value: bool = False):
@@ -257,6 +259,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             if temp_value:
                 if object.indicators['Gap index'] <= i:
                     sum += 1
+                    self.turn_off_nrf_wells['object.name'] = floor(i * 30.43)
                     for key in object.indicators:
                         if key != 'Gap index':
                             aa = floor(i*30.43)
@@ -266,6 +269,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                             object.indicators[key] = c
             else:
                 if object.indicators['Gap index'] == i:
+                    self.turn_off_nrf_wells['object.name'] = floor(i * 30.43)
                     for key in object.indicators:
                         if key != 'Gap index':
                             aa = floor(i * 30.43)

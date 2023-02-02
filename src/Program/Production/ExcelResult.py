@@ -165,6 +165,8 @@ class ExcelResultPotential:
         if self.results == 'Only sum':
             df[0].sum(axis=0).to_excel(DATA_DIR / 'Production_results_sum.xlsx')
             df[2].transpose().sum(axis=1).to_excel(path / 'VBD_sum_results.xlsx')
+            df[1].sum(axis=1).to_excel(DATA_DIR / 'Economic_results_base_sum.xlsx')
+            df[3].transpose().sum(axis=1).to_excel(DATA_DIR / 'Economic_results_vbd.xlsx')
         if self.results == 'Full':
             df[0].to_excel(DATA_DIR/'Production_results_base.xlsx')
             df[0].sum(axis=0).to_excel(DATA_DIR/'Production_results_sum.xlsx')
