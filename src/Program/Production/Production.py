@@ -45,10 +45,9 @@ class OperationalProductionBalancer(Production):
         self.date_start = 0
         self.domain_model = None
 
-        self._logger = Logger('log.txt')
+        self._logger = Logger('Balancer.txt')
         self._log_ = self._logger.log
-        self._resultLog = Logger('Balancer_results.txt')
-        self._resultLog_ = self._resultLog.log
+
         self.constraints = None
 
         self.vbd_index = None
@@ -85,7 +84,7 @@ class OperationalProductionBalancer(Production):
         constraints.date_begin = dates['date1']
         constraints.current_date = dates['current_date']
         self._find_first_vbd_well()
-        print('VBD index', self.vbd_index)
+        self._log_('VBD index', self.vbd_index)
         self.shift = self.input_parameters.time_lag_step + self.input_parameters.days_per_object
         if self.case == 4:
             self.input_parameters.value = SimpleOperations(case=self.case,
@@ -94,12 +93,13 @@ class OperationalProductionBalancer(Production):
                                                            end_interval_date=self.date2,
                                                            indicator_name='Добыча нефти, тыс. т').cumulative_production(
                                                                                                                  active=True)
+        self._log_('Data prepared')
         return constraints
 
     def optimize(self, constraints):
         outParams = [[]]
         for iteration in range(self.iterations_count):
-           print('iteration index: ' + str(iteration))
+           self._log_('iteration index: ' + str(iteration))
            outParams = self._calculate_out_params(iteration=iteration,
                                                   outParams=outParams,
                                                   constraints=constraints)
@@ -154,7 +154,7 @@ class OperationalProductionBalancer(Production):
                                                        end_interval_date=self.date2,
                                                        indicator_name=indicator_names[j]).calculate()
                 outParams[i][2] = number_of_turnings
-        print(outParams)
+        self._log_(outParams)
         return outParams
 
     def _update_domain_model(self, values, result: bool = False):
@@ -166,7 +166,7 @@ class OperationalProductionBalancer(Production):
                        values[j] = self.steps_count+100
                 except:
                     pass
-                    print('Update model exception')
+                    self._log_('Update model exception')
                 for key in updated_model[j].indicators:
                     if key != 'Gap index':
                         try:
@@ -234,7 +234,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             self.optimizer.solution = False
             for iteration in range(0, self.iterations_count):
                 k += 1
-                print('iteration index: ' + str(iteration))
+                self._log_('iteration index: ' + str(iteration))
                 outParams = self._calculate_out_params(iteration=iteration,
                                                        outParams=outParams,
                                                        constraints=constraints,
@@ -247,15 +247,15 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             first_iteration = False
             if self.vbd_index >= len(self.domain_model):
                 available_wells = False
-        print(self.turn_off_nrf_wells)
-        res2 = pd.DataFrame.from_dict(self.turn_off_nrf_wells)
-        res2 = pd.DataFrame(self.turn_off_nrf_wells)
+        res2 = pd.Series(data=self.turn_off_nrf_wells)
+        #res2 = pd.DataFrame(self.turn_off_nrf_wells)
         res2.to_excel('res2.xlsx')
-        print(self.turn_off_nrf_wells)
+
         return self.optimizer.best_kid
 
     def _turn_off_nrf_wells(self, i: int, temp_value: bool = False):
         sum = 0
+
         for object in self.domain_model:
             if sum > 250:
                 break
@@ -272,7 +272,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                             object.indicators[key] = c
             else:
                 if object.indicators['Gap index'] == i:
-                    self.turn_off_nrf_wells['object.name'] = floor(i * 30.43)
+                    self.turn_off_nrf_wells[str(object.name)] = floor(i * 30.43)
                     for key in object.indicators:
                         if key != 'Gap index':
                             aa = floor(i * 30.43)
@@ -281,7 +281,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                             c = np.concatenate((b, a))
                             object.indicators[key] = c
                     sum += 1
-        print('Выключено', sum, 'скважин')
+        self._log_('Выключено '+ str(sum)+ ' скважин')
 
     def prepare_results(self, solution):
         pass

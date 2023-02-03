@@ -61,19 +61,23 @@ class GreedyOptimizer():
         self.shift = 0
         self.best = None
         self.solution = False
+        self._logger = Logger('Optimizator.txt')
+        self._log_ = self._logger.log
 
 
     def __initialization(self):
-
+        self._log_('Initialization')
         self.object_count = 0
         self.max_objects = self.constraints.max_objects_per_day * \
                            (self.constraints.date_end - self.constraints.current_date -
                             self.constraints.time_lag_step)/(1 + self.constraints.days_per_object)
-        print('Initialization')
+
         if self.best_kid == []:
             self.best_kid.append([])
             for j in range(len(self.parameters.inValues()[0])):
                 self.best_kid[0].append(self.parameters.inValues()[0][j])
+        self._log_('Initialization completed')
+        self._log_('Calculation')
         return self.best_kid
 
     def algorithm(self,
@@ -90,7 +94,7 @@ class GreedyOptimizer():
             if outParams is not None:
                 self.results = outParams
             else:
-                print('No results in optimizator')
+                self._log_('No results in optimizator')
             self.last_index = last_index
             return self.__algorithm()
 
@@ -98,6 +102,7 @@ class GreedyOptimizer():
 
         self.best = self.goal_function.value(results=self.results)
         if self.best != 0 and self.object_count < self.max_objects:
+
                 self.object_count += 1
                 a = floor(self.object_count / self.constraints.max_objects_per_day)  # максимальный сдвиг с учетом бригад
                 self.shift = a * self.constraints.days_per_object  # максимальный сдвиг с учетом ремонта
@@ -106,11 +111,11 @@ class GreedyOptimizer():
                         shift = self.shift-self.constraints.days_per_object*floor((i-self.last_index)/self.constraints.max_objects_per_day)
                         self.best_kid[0][i] = self.constraints.date_end - shift
                 except:
-                    print('No wells avaliable')
                     self.solution = True
 
         else:
             self.solution = True
+            self._log_('Solution')
 
 
         return self.best_kid
