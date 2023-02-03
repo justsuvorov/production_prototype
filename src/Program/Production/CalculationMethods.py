@@ -95,12 +95,14 @@ class SimpleOperations:
         for object in self.domain_model:
             try:
                 sum = []
-                for i in range(self.end_year_index):
+                for i in range(self.end_year_index+1):
                     value = np.sum(object.indicators[self.indicator_name][0:i])
                     sum.append(value)
                     if i != 0 and sum[i] < sum[i-1]:
                         break
-                object.indicators['Gap index'] = i
+
+                    else:
+                        object.indicators['Gap index'] = i
 
             except:
                 print('SimpleOperations. Corrupted data for well ', object.name)

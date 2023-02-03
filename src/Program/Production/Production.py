@@ -94,7 +94,7 @@ class OperationalProductionBalancer(Production):
         self._log_('VBD index', self.vbd_index)
         self.shift = self.input_parameters.time_lag_step + self.input_parameters.days_per_object
         if self.case == 4:
-            self.input_parameters.value = 1.2 * SimpleOperations(case=self.case,
+            self.input_parameters.value = 1.005 * SimpleOperations(case=self.case,
                                                            domain_model=self.domain_model,
                                                            date=self.date1,
                                                            end_interval_date=self.date2,
@@ -267,7 +267,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             if sum >= self.input_parameters.max_nrf_object:
                 break
             if temp_value:
-                if object.indicators['Gap index'] <= (i-1):
+                if object.indicators['Gap index'] <= (i):
                     sum += 1
                     self.turn_off_nrf_wells[str(object.name)] = floor(i * 30.43)
                     for key in object.indicators:
@@ -278,7 +278,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                             c = np.concatenate((b, a))
                             object.indicators[key] = c
             else:
-                if object.indicators['Gap index'] == (i-1):
+                if object.indicators['Gap index'] == (i):
                     self.turn_off_nrf_wells[str(object.name)] = floor(i * 30.43)
                     for key in object.indicators:
                         if key != 'Gap index':
