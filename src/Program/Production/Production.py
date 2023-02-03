@@ -267,7 +267,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             if sum >= self.input_parameters.max_nrf_object:
                 break
             if temp_value:
-                if object.indicators['Gap index'] <= i:
+                if object.indicators['Gap index'] <= (i-1):
                     sum += 1
                     self.turn_off_nrf_wells[str(object.name)] = floor(i * 30.43)
                     for key in object.indicators:
@@ -278,7 +278,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                             c = np.concatenate((b, a))
                             object.indicators[key] = c
             else:
-                if object.indicators['Gap index'] == i:
+                if object.indicators['Gap index'] == (i-1):
                     self.turn_off_nrf_wells[str(object.name)] = floor(i * 30.43)
                     for key in object.indicators:
                         if key != 'Gap index':

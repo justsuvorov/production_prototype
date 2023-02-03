@@ -156,24 +156,24 @@ class ExcelResultPotential:
         df[3].index = vbd_names
         return df
 
-    def save(self, path = None):
+    def save(self, path=None):
         if path is not None:
             path = path
         else:
             path = DATA_DIR
         df = self.dataframe()
         if self.results == 'Only sum':
-            df[0].sum(axis=0).to_excel(DATA_DIR / 'Production_results_sum.xlsx')
+            df[0].sum(axis=0).to_excel(path / 'Production_results_sum.xlsx')
             df[2].transpose().sum(axis=1).to_excel(path / 'VBD_sum_results.xlsx')
-            df[1].transpose().sum(axis=1).to_excel(DATA_DIR / 'Economic_results_base_sum.xlsx')
-            df[3].transpose().sum(axis=1).to_excel(DATA_DIR / 'Economic_results_vbd.xlsx')
+            df[1].transpose().sum(axis=1).to_excel(path/ 'Economic_results_base_sum.xlsx')
+            df[3].transpose().sum(axis=1).to_excel(path / 'Economic_results_vbd.xlsx')
         if self.results == 'Full':
-            df[0].to_excel(DATA_DIR/'Production_results_base.xlsx')
-            df[0].sum(axis=0).to_excel(DATA_DIR/'Production_results_sum.xlsx')
-            df[1].to_excel(DATA_DIR/'Economic_results_base.xlsx')
-            df[2].to_excel(DATA_DIR/'Production_results_vbd.xlsx')
+            df[0].to_excel(path/'Production_results_base.xlsx')
+            df[0].sum(axis=0).to_excel(path/'Production_results_sum.xlsx')
+            df[1].to_excel(path/'Economic_results_base.xlsx')
+            df[2].to_excel(path/'Production_results_vbd.xlsx')
             df[2].transpose().sum(axis=1).to_excel(path/'VBD_sum_results.xlsx')
-            df[3].transpose().to_excel(DATA_DIR/'Economic_results_vbd.xlsx')
+            df[3].transpose().to_excel(path/'Economic_results_vbd.xlsx')
         if df[4] is not None:
             df[4].to_excel(path/'Shifts.xlsx')
 
