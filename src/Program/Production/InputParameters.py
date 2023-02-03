@@ -5,12 +5,14 @@ class ParametersOfAlgorithm:
                  value: float,
                  time_lag_step: int = None,
                  max_objects_per_day: int = 5,
-                 days_per_object: int = 1
+                 days_per_object: int = 1,
+                 max_nrf_objects: int = 100
                  ):
         self.value = value
         self.time_lag_step = time_lag_step
         self.max_objects_per_day = max_objects_per_day
         self.days_per_object = days_per_object
+        self.max_nrf_object = max_nrf_objects
 
 
 class TimeParameters:

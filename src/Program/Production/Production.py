@@ -44,6 +44,7 @@ class OperationalProductionBalancer(Production):
         self.constraints = None
         self.date_start = 0
         self.domain_model = None
+        self.turn_off_nrf_wells = {}
 
         self._logger = Logger('Balancer.txt')
         self._log_ = self._logger.log
@@ -68,9 +69,15 @@ class OperationalProductionBalancer(Production):
         res = pd.DataFrame(result_dates)
 
         if path is not None:
-            res.to_excel(path/'res.xlsx')
+            res.to_excel(path/'result_vbd.xlsx')
+            if self.turn_off_nrf_wells != {}:
+                res2 = pd.Series(data=self.turn_off_nrf_wells)
+                res2.to_excel(path/'results_base.xlsx')
+
+
         else:
-            res.to_excel('res.xlsx')
+            res.to_excel('results.xlsx')
+
         return domain_model_with_results
 
     def __prepare_data(self):
@@ -87,12 +94,14 @@ class OperationalProductionBalancer(Production):
         self._log_('VBD index', self.vbd_index)
         self.shift = self.input_parameters.time_lag_step + self.input_parameters.days_per_object
         if self.case == 4:
-            self.input_parameters.value = SimpleOperations(case=self.case,
+            self.input_parameters.value = 1.2 * SimpleOperations(case=self.case,
                                                            domain_model=self.domain_model,
                                                            date=self.date1,
                                                            end_interval_date=self.date2,
                                                            indicator_name='Добыча нефти, тыс. т').cumulative_production(
-                                                                                                                 active=True)
+                                                                                                                active=True)
+            self._log_('Initial cumulative production: ' + str(self.input_parameters.value))
+
         self._log_('Data prepared')
         return constraints
 
@@ -247,9 +256,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             first_iteration = False
             if self.vbd_index >= len(self.domain_model):
                 available_wells = False
-        res2 = pd.Series(data=self.turn_off_nrf_wells)
-        #res2 = pd.DataFrame(self.turn_off_nrf_wells)
-        res2.to_excel('res2.xlsx')
+
 
         return self.optimizer.best_kid
 
@@ -257,7 +264,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
         sum = 0
 
         for object in self.domain_model:
-            if sum > 250:
+            if sum >= self.input_parameters.max_nrf_object:
                 break
             if temp_value:
                 if object.indicators['Gap index'] <= i:

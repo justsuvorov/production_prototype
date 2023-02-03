@@ -24,21 +24,14 @@ def main(file_path: str):
     time_lag_step = df['Исходные данные'].loc['Количество дней на включение']
     max_objects_per_day = df['Исходные данные'].loc['Максимальное количество бригад']
     days_per_object = df['Исходные данные'].loc['Количество дней на включение']
+    max_nrf_objects = df['Исходные данные'].loc['Максимальное количество выводимых объектов']
 
     time_parameters = TimeParameters(
                                      time_step=time_step,
                                      current_date=date_start
                                      )
-    """
-    value = SimpleOperations(domain_model=domain_model(file_path=filepath)[0],
-                             indicator_name='Добыча нефти, тыс. т',
-                             end_year_index=12,
-                             end_interval_date=12,
-                             date=0).cumulative_production(active=True)
-    """
+
     value = 9140.95
-    #print('Comulative production value', value)
-    """
     domain_model_wells = PreparedDomainModel(domain_model=domain_model(file_path=filepath),
                                              time_parameters=time_parameters,
                                              find_gap=True,
@@ -46,12 +39,13 @@ def main(file_path: str):
     """
     with open('data.pickle', 'rb') as f:
         domain_model_wells = pickle.load(f)
-
+    """
     parameters_of_algorithm = ParametersOfAlgorithm(
         value=value,
         time_lag_step=time_lag_step,
         max_objects_per_day=max_objects_per_day,
         days_per_object=days_per_object,
+        max_nrf_objects=max_nrf_objects
     )
 
     parameters_of_optimization = APParameters(
