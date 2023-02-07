@@ -59,8 +59,6 @@ class OperationalProductionBalancer(Production):
     def result(self, path):
         constraints = self.__prepare_data()
         self.initial_vbd_index = self.vbd_index
-
-
         result_dates = self.optimize(constraints=constraints)
         self.result_dates = result_dates[0]
         self.vbd_index = self.initial_vbd_index
@@ -73,10 +71,8 @@ class OperationalProductionBalancer(Production):
             if self.turn_off_nrf_wells != {}:
                 res2 = pd.Series(data=self.turn_off_nrf_wells)
                 res2.to_excel(path/'results_base.xlsx')
+                res.to_excel(path / 'results.xlsx')
 
-
-        else:
-            res.to_excel('results.xlsx')
 
         return domain_model_with_results
 
@@ -95,11 +91,12 @@ class OperationalProductionBalancer(Production):
         self.shift = self.input_parameters.time_lag_step + self.input_parameters.days_per_object
         if self.case == 4:
             self.input_parameters.value = 1.005 * SimpleOperations(case=self.case,
-                                                           domain_model=self.domain_model,
-                                                           date=self.date1,
-                                                           end_interval_date=self.date2,
-                                                           indicator_name='Добыча нефти, тыс. т').cumulative_production(
-                                                                                                                active=True)
+                                                                   domain_model=self.domain_model,
+                                                                   date=self.date1,
+                                                                   end_interval_date=self.date2,
+                                                                   indicator_name='Добыча нефти, тыс. т'
+                                                                   ).cumulative_production(active=True)
+
             self._log_('Initial cumulative production: ' + str(self.input_parameters.value))
 
         self._log_('Data prepared')
@@ -220,6 +217,8 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
         self.vbd_index = None
         self.result_dates = None
         self.turn_off_nrf_wells = {}
+        self.turn_off_max_number = False
+        self.pump_extraction_count = 100
 
 
     def optimize(self, constraints):
@@ -227,6 +226,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
         temp_value = True
         first_iteration = True
         available_wells = True
+        count = self._count_number_of_pumps()
         for i in range(12):
             if not available_wells:
                 break
@@ -234,7 +234,9 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             k = 0
             if i * 30.43 < constraints.current_date: #среднее количество дней в месяце
                 continue
-            self._turn_off_nrf_wells(i, temp_value=temp_value)
+            if (not first_iteration and (self.optimizer.best == 0)) or first_iteration:
+
+                self._turn_off_nrf_wells(i, temp_value=temp_value)
             temp_value = False
             constraints.date_end = floor(i * 30.43 + 31)
             constraints.current_date = floor(i * 30.43)
@@ -262,12 +264,11 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
 
     def _turn_off_nrf_wells(self, i: int, temp_value: bool = False):
         sum = 0
-
         for object in self.domain_model:
-            if sum >= self.input_parameters.max_nrf_object:
+            if sum >= self.input_parameters.max_nrf_object_per_day or sum >= self.pump_extraction_count:
                 break
             if temp_value:
-                if object.indicators['Gap index'] <= (i):
+                if object.indicators['Gap index'] <= i:
                     sum += 1
                     self.turn_off_nrf_wells[str(object.name)] = floor(i * 30.43)
                     for key in object.indicators:
@@ -278,7 +279,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                             c = np.concatenate((b, a))
                             object.indicators[key] = c
             else:
-                if object.indicators['Gap index'] == (i):
+                if object.indicators['Gap index'] == i:
                     self.turn_off_nrf_wells[str(object.name)] = floor(i * 30.43)
                     for key in object.indicators:
                         if key != 'Gap index':
@@ -288,8 +289,22 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                             c = np.concatenate((b, a))
                             object.indicators[key] = c
                     sum += 1
-        self._log_('Выключено '+ str(sum)+ ' скважин')
+        self.pump_extraction_count -= sum
+        self._log_('Выключено ' + str(sum) + ' скважин')
 
     def prepare_results(self, solution):
         pass
+
+    def _count_number_of_pumps(self):
+        fcf = SimpleOperations(domain_model=self.domain_model[self.vbd_index:],
+                               indicator_name='FCF',
+                               case=1,
+                               end_interval_date=self.date2
+                               ).calculate()
+        self.pump_extraction_count = floor(0.5 * fcf/self.input_parameters.pump_extraction_value)
+        if self.pump_extraction_count < 0:
+            self.pump_extraction_count = 0
+            self._log_('No efficient wells')
+        else:
+            self._log_('Максимальное отключение скважин: ' + str(self.pump_extraction_count))
 

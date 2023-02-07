@@ -57,7 +57,7 @@ from pathlib import Path
 
 def main(file_path: str):
     filepath = Path(file_path)
-    DATA = filepath / 'оперативное планирование добычи. Ранж по добыче с учетом бригад.xlsm'
+    DATA = filepath / 'Оперативное планирование добычи.xlsm'
     df = pd.read_excel(DATA, sheet_name='Исходные данные', index_col=0)
 
     # date_end = None

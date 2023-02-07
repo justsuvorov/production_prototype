@@ -8,7 +8,7 @@ from Program.Production.ap_parameters import APParameters
 from Program.Production.ExcelResult import ExcelResult, ExcelResultPotential
 from pathlib import Path
 from Program.Production.PreparedDomainModel import PreparedDomainModel
-from Program.Production.CalculationMethods import SimpleOperations
+
 import pickle
 
 
@@ -17,18 +17,22 @@ def main(file_path: str):
 
     """ Входные параметры из Excel"""
 
-    DATA = filepath / 'оперативное планирование добычи. Ранж по добыче с учетом бригад.xlsm'
+    DATA = filepath / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
     df = pd.read_excel(DATA, sheet_name='Исходные данные', index_col=0)
     time_step = 'Day'
     date_start = pd.to_datetime(df['Исходные данные'].loc['Текущая дата']).date()
     time_lag_step = df['Исходные данные'].loc['Количество дней на включение']
     max_objects_per_day = df['Исходные данные'].loc['Максимальное количество бригад']
     days_per_object = df['Исходные данные'].loc['Количество дней на включение']
-    max_nrf_objects = df['Исходные данные'].loc['Максимальное количество выводимых объектов']
+    max_nrf_objects_per_day = df['Исходные данные'].loc['Максимальное количество выводимых объектов']
+    pump_extraction_value = df['Исходные данные'].loc['Стоимость подъема насоса']
+    type_of_end_date = df['Исходные данные'].loc['Учет экономики календарный год']
+
 
     time_parameters = TimeParameters(
                                      time_step=time_step,
-                                     current_date=date_start
+                                     current_date=date_start,
+                                     type_of_end_date=type_of_end_date
                                      )
 
     value = 9140.95
@@ -45,7 +49,10 @@ def main(file_path: str):
         time_lag_step=time_lag_step,
         max_objects_per_day=max_objects_per_day,
         days_per_object=days_per_object,
-        max_nrf_objects=max_nrf_objects
+        max_nrf_objects_per_day=max_nrf_objects_per_day,
+        pump_extraction_value=pump_extraction_value
+
+
     )
 
     parameters_of_optimization = APParameters(
