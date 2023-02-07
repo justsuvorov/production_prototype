@@ -340,3 +340,4 @@ poetry.toml
 /src/Program/Well/WellStatus.py
 /tmp/program-0.1.0-py3-none-any/program-0.1.0.dist-info/WHEEL
 /src/Program/data/оперативное планирование добычи. Ранж по добыче с учетом бригад.xlsm.txt
+/src/Program/data/

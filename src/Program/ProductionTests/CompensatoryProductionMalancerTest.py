@@ -21,18 +21,22 @@ def main(file_path: str):
     df = pd.read_excel(DATA, sheet_name='Исходные данные', index_col=0)
     time_step = 'Day'
     date_start = pd.to_datetime(df['Исходные данные'].loc['Текущая дата']).date()
+    date_begin = pd.to_datetime(df['Исходные данные'].loc['Начало периода']).date()
+    date_end = pd.to_datetime(df['Исходные данные'].loc['Конец периода']).date()
+
     time_lag_step = df['Исходные данные'].loc['Количество дней на включение']
     max_objects_per_day = df['Исходные данные'].loc['Максимальное количество бригад']
     days_per_object = df['Исходные данные'].loc['Количество дней на включение']
     max_nrf_objects_per_day = df['Исходные данные'].loc['Максимальное количество выводимых объектов']
     pump_extraction_value = df['Исходные данные'].loc['Стоимость подъема насоса']
-    type_of_end_date = df['Исходные данные'].loc['Учет экономики календарный год']
+
 
 
     time_parameters = TimeParameters(
+                                     date_end=date_end,
+                                     date_begin=date_begin,
                                      time_step=time_step,
                                      current_date=date_start,
-                                     type_of_end_date=type_of_end_date
                                      )
 
     value = 9140.95

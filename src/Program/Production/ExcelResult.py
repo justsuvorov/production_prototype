@@ -132,8 +132,8 @@ class ExcelResultPotential(ExcelResult):
         crude_base, crude_vbd, fcf_base, fcf_vbd = self._data()
         crude_vbd = np.array(crude_vbd)
         fcf_vbd = np.array(fcf_vbd)
-        vbd_names = self.names('VBD.xlsx')
         dateline = pd.date_range(start=self.dates.date_start, periods=366)
+        print('Date', self.dates.date_start)
         data = [crude_base, fcf_base, crude_vbd, fcf_vbd]
         df = []
         for table in data:
@@ -146,8 +146,8 @@ class ExcelResultPotential(ExcelResult):
             for x in res:
                 if x < 0: x = 0
             df.append(pd.DataFrame(res))
-        df[2].index = vbd_names
-        df[3].index = vbd_names
+       # df[2].index = vbd_names
+       # df[3].index = vbd_names
         return df
 
     def save(self, path=None):
