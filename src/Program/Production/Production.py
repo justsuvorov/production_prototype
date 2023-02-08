@@ -7,11 +7,10 @@ import pandas as pd
 from Program.Production.Logger import Logger
 from Program.Production.InputParameters import ParametersOfAlgorithm
 from Program.Production.PreparedDomainModel import PreparedDomainModel
-from Program.Production.ExcelResult import ExcelResult
-from Program.constants import DATA_DIR
 from Program.Production.CalculationMethods import SimpleOperations
 from pathlib import Path
 from math import floor
+import os.path
 
 class Production(ABC):
     def __init__(self,
@@ -59,6 +58,8 @@ class OperationalProductionBalancer(Production):
     def result(self, path):
         constraints = self.__prepare_data()
         self.initial_vbd_index = self.vbd_index
+        if not os.path.exists(path/'initial_results.xlsx'):
+            self._save_initial_results(path)
         result_dates = self.optimize(constraints=constraints)
         self.result_dates = result_dates[0]
         self.vbd_index = self.initial_vbd_index
@@ -72,7 +73,6 @@ class OperationalProductionBalancer(Production):
                 res2 = pd.Series(data=self.turn_off_nrf_wells)
                 res2.to_excel(path/'results_base.xlsx')
                 res.to_excel(path / 'results.xlsx')
-
 
         return domain_model_with_results
 
@@ -198,6 +198,23 @@ class OperationalProductionBalancer(Production):
                 self.vbd_index = i
                 break
 
+    def _save_initial_results(self, path):
+        self._log_('Exporting initial results')
+        crude_base =[]
+        fcf_base = []
+        for i in range(self.vbd_index):
+            for key in self.domain_model[i].indicators:
+                if key == 'Добыча нефти, тыс. т':
+                    crude_base.append(self.domain_model[i].indicators[key][0:366])
+                if key == 'FCF':
+                    fcf_base.append(self.domain_model[i].indicators[key][0:366])
+        df = []
+        data = [crude_base, fcf_base]
+        for table in data:
+            df.append(pd.DataFrame(table))
+        with pd.ExcelWriter(path/'initial_results.xlsx') as writer:
+                df[0].sum(axis=0).to_excel(writer, sheet_name='Production_results_sum')
+                df[1].transpose().sum(axis=1).to_excel(writer, sheet_name='Economic_results_base_sum')
 
 class CompensatoryProductionBalancer(OperationalProductionBalancer):
     def __init__(self,
@@ -226,7 +243,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
         temp_value = True
         first_iteration = True
         available_wells = True
-        count = self._count_number_of_pumps()
+        #count = self._count_number_of_pumps()
         for i in range(12):
             if not available_wells:
                 break
@@ -234,8 +251,8 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             k = 0
             if i * 30.43 < constraints.current_date: #среднее количество дней в месяце
                 continue
-            if (not first_iteration and (self.optimizer.best == 0)) or first_iteration:
-
+            if (not first_iteration and (self.optimizer.best == 0) and not self.input_parameters.compensation)\
+                    or first_iteration:
                 self._turn_off_nrf_wells(i, temp_value=temp_value)
             temp_value = False
             constraints.date_end = floor(i * 30.43 + 31)
@@ -259,14 +276,14 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             if self.vbd_index >= len(self.domain_model):
                 available_wells = False
 
-
         return self.optimizer.best_kid
 
     def _turn_off_nrf_wells(self, i: int, temp_value: bool = False):
         sum = 0
         for object in self.domain_model:
-            if sum >= self.input_parameters.max_nrf_object_per_day or sum >= self.pump_extraction_count:
-                break
+           # if sum >= self.input_parameters.max_nrf_object_per_day and self.input_parameters.compensation:#or sum >= self.pump_extraction_count:
+           # if self.input_parameters.compensation:
+           #     break
             if temp_value:
                 if object.indicators['Gap index'] <= i:
                     sum += 1
@@ -294,7 +311,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
 
     def prepare_results(self, solution):
         pass
-
+"""
     def _count_number_of_pumps(self):
         fcf = SimpleOperations(domain_model=self.domain_model[self.vbd_index:],
                                indicator_name='FCF',
@@ -307,4 +324,4 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             self._log_('No efficient wells')
         else:
             self._log_('Максимальное отключение скважин: ' + str(self.pump_extraction_count))
-
+"""

@@ -27,9 +27,9 @@ def main(file_path: str):
     time_lag_step = df['Исходные данные'].loc['Количество дней на включение']
     max_objects_per_day = df['Исходные данные'].loc['Максимальное количество бригад']
     days_per_object = df['Исходные данные'].loc['Количество дней на включение']
-    max_nrf_objects_per_day = df['Исходные данные'].loc['Максимальное количество выводимых объектов']
-    pump_extraction_value = df['Исходные данные'].loc['Стоимость подъема насоса']
-
+    #max_nrf_objects_per_day = df['Исходные данные'].loc['Максимальное количество выводимых объектов']
+    #pump_extraction_value = df['Исходные данные'].loc['Стоимость подъема насоса']
+    compensation = df['Исходные данные'].loc['Полная компенсация накопленной добычи']
 
 
     time_parameters = TimeParameters(
@@ -53,8 +53,9 @@ def main(file_path: str):
         time_lag_step=time_lag_step,
         max_objects_per_day=max_objects_per_day,
         days_per_object=days_per_object,
-        max_nrf_objects_per_day=max_nrf_objects_per_day,
-        pump_extraction_value=pump_extraction_value
+       # max_nrf_objects_per_day=max_nrf_objects_per_day,
+       # pump_extraction_value=pump_extraction_value,
+        compensation=compensation,
 
 
     )

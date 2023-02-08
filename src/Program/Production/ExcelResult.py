@@ -133,7 +133,6 @@ class ExcelResultPotential(ExcelResult):
         crude_vbd = np.array(crude_vbd)
         fcf_vbd = np.array(fcf_vbd)
         dateline = pd.date_range(start=self.dates.date_start, periods=366)
-        print('Date', self.dates.date_start)
         data = [crude_base, fcf_base, crude_vbd, fcf_vbd]
         df = []
         for table in data:
