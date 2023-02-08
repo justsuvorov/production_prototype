@@ -99,10 +99,12 @@ class SimpleOperations:
                     value = np.sum(object.indicators[self.indicator_name][0:i])
                     sum.append(value)
                     if i != 0 and sum[i] < sum[i-1]:
-                        break
-
-                    else:
                         object.indicators['Gap index'] = i
+                        break
+                   # elif i == 0 and value < 0:
+                  #      object.indicators['Gap index'] = 0
+                    else:
+                        object.indicators['Gap index'] = self.end_year_index+1
 
             except:
                 print('SimpleOperations. Corrupted data for well ', object.name)

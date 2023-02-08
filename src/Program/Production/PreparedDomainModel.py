@@ -21,6 +21,7 @@ class PreparedDomainModel:
         if self.find_gap:
             SimpleOperations(domain_model=domain_model,
                              indicator_name='FCF',
+                             end_year_index=59,
                              ).wells_gap()
 
         time_parameters = self._discretizate_parameters(domain_model=domain_model)
