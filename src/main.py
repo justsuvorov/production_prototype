@@ -11,4 +11,4 @@ def main(path):
 #    OperationalProductionBalancerTest.main(path)
     CompensatoryProductionMalancerTest.main(path)
 if __name__ == '__main__':
-    main() # ghg
+    main()
