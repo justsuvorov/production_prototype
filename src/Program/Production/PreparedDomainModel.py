@@ -111,6 +111,7 @@ class PreparedDomainModel:
 
 
     def _recalculate_indicators(self, step: int, domain_model):
+        step = 30.43
         for object in domain_model:
             try:
                 for key in object.indicators:
@@ -119,6 +120,12 @@ class PreparedDomainModel:
                             l = (object.indicators[key].size - 1) * step + 1  # total length after interpolation
                             c = np.array(object.indicators[key]).astype(float)
                             c = c/step
+                            new_arr = (c[1:]-c[:-1])*0.5
+
+                            new_arr  = np.insert(new_arr , -1, 0)
+
+                            c = c - new_arr
+
                             a = np.interp(np.arange(l), np.arange(l, step=step), c)  # interpolate
                             object.indicators[key] = a
 
