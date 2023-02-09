@@ -295,7 +295,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                             c = np.concatenate((b, a))
                             self.domain_model[j].indicators[key] = c
             else:
-                if self.domain_model[j].indicators['Gap index'] == i+1:
+                if self.domain_model[j].indicators['Gap index'] == i:
                     self.turn_off_nrf_wells[str(self.domain_model[j].name)+str(self.domain_model[j].object_info.link_list['Field'])] = floor(i * 30.43)
                     for key in self.domain_model[j].indicators:
                         if key != 'Gap index':

@@ -1,21 +1,27 @@
 from copy import deepcopy
+
+import pandas as pd
+
 from Program.Production.InputParameters import TimeParameters
 import datetime as dt
 import numpy as np
 from Program.Production.CalculationMethods import SimpleOperations
+from pathlib import Path
 
 
 class PreparedDomainModel:
     def __init__(self,
                  domain_model,
                  time_parameters: TimeParameters,
-                 find_gap: bool = False
+                 find_gap: bool = False,
+                 path = None,
                  ):
         self.domain_model = domain_model
         self.time_parameters = time_parameters
         self.steps_count = None
         self.find_gap = find_gap
-        
+        self.path = path
+        self.vbd_index = 3477
     def recalculate_indicators(self):
         domain_model = self.__copy_domain_model()
         if self.find_gap:
@@ -24,8 +30,29 @@ class PreparedDomainModel:
                              end_year_index=59,
                              ).wells_gap()
 
+        else:
+            if self.path != None:
+                filepath = Path(self.path)
+                DATA = filepath / 'СВОД_Скв_NGT.xlsm'
+                domain_model = self.__export_gap(DATA, domain_model)
+
+
         time_parameters = self._discretizate_parameters(domain_model=domain_model)
         return domain_model, time_parameters
+
+    def __export_gap(self, data, domain_model):
+        df = pd.read_excel(data)['GAP'].to_numpy()
+        i = 0
+
+
+        for object in domain_model:
+            if i < (self.vbd_index-1):
+                object.indicators['Gap index'] = df[i]
+                i += 1
+            else:
+                object.indicators['Gap index'] = 60
+        return domain_model
+
 
     def __copy_domain_model(self):
         return deepcopy(self.domain_model[0])

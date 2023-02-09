@@ -42,8 +42,10 @@ def main(file_path: str):
     value = 9140.95
     domain_model_wells = PreparedDomainModel(domain_model=domain_model(file_path=filepath),
                                              time_parameters=time_parameters,
-                                             find_gap=True,
+                                             find_gap=False,
+                                             path=file_path,
                                             )
+
     """
     with open('data.pickle', 'rb') as f:
         domain_model_wells = pickle.load(f)

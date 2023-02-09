@@ -96,15 +96,39 @@ class SimpleOperations:
             try:
                 sum = []
                 for i in range(self.end_year_index+1):
-                    value = np.sum(object.indicators[self.indicator_name][0:i])
-                    sum.append(value)
-                    if i != 0 and sum[i] < sum[i-1]:
-                        object.indicators['Gap index'] = i
+                    k = i
+                    sum.append(np.sum(object.indicators[self.indicator_name][0:k]))
+                    if i==0 and sum[i]<0:
+                        object.indicators['Gap index'] = 0
                         break
+                object.indicators['Gap index'] = sum.index(max(sum))
+                #max_npv = sum[0]
+                #i = 0
+               # for x in sum:
+
+                #    if x > max_npv:
+
+
+                """
+                    if i == 0:
+                        if value < 0:
+                            object.indicators['Gap index'] = i
+                        else:
+                            object.indicators['Gap index'] = self.end_year_index+1
+                    if value > max_npv:
+                        object.indicators['Gap index'] = i
+                """
+
+
+
+                #    sum.append(value)
+                 #   if not(i == 0 or i == 1 or i == 2) and (sum[i] < sum[i-3]):
+                #    if i != 0 and (sum[i] < sum[i-1]):
+               #         object.indicators['Gap index'] = i
                    # elif i == 0 and value < 0:
                   #      object.indicators['Gap index'] = 0
-                    else:
-                        object.indicators['Gap index'] = self.end_year_index+1
+                #    else:
+               #         object.indicators['Gap index'] = self.end_year_index+1
 
             except:
                 print('SimpleOperations. Corrupted data for well ', object.name)

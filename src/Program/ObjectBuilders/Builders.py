@@ -149,10 +149,22 @@ class DomainModelBuilder(ObjectBuilder):
     def _data(self):
         return self.parser.data()
 
-    def _create_wells(self, data):
+    def _create_wells(self, data: pd.DataFrame):
         wells = []
-        well_names = data['Скважина'].unique()
+        #well_names = data['Скважина'].unique()
+        #well_names = data['Скважина']
+        for index, well_data in data.iterrows():
+            data_temp = well_data.to_numpy()
+            well = WellBuilder(
+                format_reader=self.format_reader,
+                data=data_temp).build_object()
+            wells.append(well)
+            self.object_id += 1
+            self.object_list[self.object_id] = ObjectRecord.create(object=well,
+                                                                   type_of_object='Well')
+        """ 
         for name in well_names:
+            
             data_temp = data.loc[data['Скважина'] == name].to_numpy()
             shape = data_temp.shape
             if shape[0] > 1:
@@ -164,14 +176,10 @@ class DomainModelBuilder(ObjectBuilder):
                     self.object_id += 1
                     self.object_list[self.object_id] = ObjectRecord.create(object=well,
                                                                            type_of_object='Well')
+            
             else:
-                well = WellBuilder(
-                    format_reader=self.format_reader,
-                    data=data_temp).build_object()
-                wells.append(well)
-                self.object_id += 1
-                self.object_list[self.object_id] = ObjectRecord.create(object=well,
-                                                                       type_of_object='Well')
+        """
+
 
 
         return wells
