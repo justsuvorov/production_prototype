@@ -18,6 +18,10 @@ def main(file_path: str):
     """ Входные параметры из Excel"""
 
     DATA = filepath / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
+    if os.path.exists(filepath/'СВОД_Скв_NGT.xlsm'):
+        find_gap = False
+    else:
+        find_gap = True
     df = pd.read_excel(DATA, sheet_name='Исходные данные', index_col=0)
     time_step = 'Day'
     date_start = pd.to_datetime(df['Исходные данные'].loc['Текущая дата']).date()
@@ -42,9 +46,9 @@ def main(file_path: str):
     value = 9140.95
     domain_model_wells = PreparedDomainModel(domain_model=domain_model(file_path=filepath),
                                              time_parameters=time_parameters,
-                                             find_gap=False,
+                                             find_gap=find_gap,
                                              path=file_path,
-                                            )
+                                             )
 
     """
     with open('data.pickle', 'rb') as f:

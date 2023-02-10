@@ -14,14 +14,14 @@ class PreparedDomainModel:
                  domain_model,
                  time_parameters: TimeParameters,
                  find_gap: bool = False,
-                 path = None,
+                 path=None,
                  ):
         self.domain_model = domain_model
         self.time_parameters = time_parameters
         self.steps_count = None
         self.find_gap = find_gap
         self.path = path
-        self.vbd_index = 3477
+
     def recalculate_indicators(self):
         domain_model = self.__copy_domain_model()
         if self.find_gap:
@@ -35,18 +35,23 @@ class PreparedDomainModel:
                 filepath = Path(self.path)
                 DATA = filepath / 'СВОД_Скв_NGT.xlsm'
                 domain_model = self.__export_gap(DATA, domain_model)
+            else:
+                raise FileNotFoundError('Нет файла с GAP')
+
 
 
         time_parameters = self._discretizate_parameters(domain_model=domain_model)
         return domain_model, time_parameters
 
     def __export_gap(self, data, domain_model):
-        df = pd.read_excel(data)['GAP'].to_numpy()
+        try:
+            df = pd.read_excel(data)['GAP'].to_numpy()
+        except:
+            raise FileNotFoundError('Нет файла с GAP')
         i = 0
 
-
         for object in domain_model:
-            if i < (self.vbd_index-1):
+            if i < (len(df)):
                 object.indicators['Gap index'] = df[i]
                 i += 1
             else:
