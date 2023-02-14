@@ -28,8 +28,12 @@ def prepare_data(pathes_list):
 
 
 def domain_model(file_path):
-    filePath = file_path/'СВОД_скв._NEW_5лет.xlsx'
-    vbd = file_path/'VBD.xlsx'
+
+    filePath = file_path / 'СВОД_скв._NEW_5лет.xlsm'
+    vbd = file_path / 'VBD.xlsm'
+    print('Прочитан xlsm формат')
+
+
     domain_model = DomainModelBuilder(parser=SetOfWellsParser(data_path=filePath),
                                       format_reader=SetOfWellsFormatReader(),
                                       ).build_object(only_wells=True)

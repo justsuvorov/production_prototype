@@ -58,8 +58,7 @@ class OperationalProductionBalancer(Production):
     def result(self, path):
         constraints = self.__prepare_data()
         self.initial_vbd_index = self.vbd_index
-        if not os.path.exists(path/'initial_results.xlsx'):
-            self._save_initial_results(path)
+        self._save_initial_results(path)
         result_dates = self.optimize(constraints=constraints)
         self.result_dates = result_dates[0]
         self.vbd_index = self.initial_vbd_index

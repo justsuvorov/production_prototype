@@ -29,12 +29,14 @@ class PreparedDomainModel:
                              indicator_name='FCF',
                              end_year_index=59,
                              ).wells_gap()
+            print('ГЭП рассчитан')
 
         else:
             if self.path != None:
                 filepath = Path(self.path)
                 DATA = filepath / 'СВОД_Скв_NGT.xlsm'
                 domain_model = self.__export_gap(DATA, domain_model)
+                print('ГЭП импортирован')
             else:
                 raise FileNotFoundError('Нет файла с GAP')
 
