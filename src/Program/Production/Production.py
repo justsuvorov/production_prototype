@@ -201,19 +201,23 @@ class OperationalProductionBalancer(Production):
         self._log_('Exporting initial results')
         crude_base =[]
         fcf_base = []
+        liquid_base = []
         for i in range(self.vbd_index):
             for key in self.domain_model[i].indicators:
                 if key == 'Добыча нефти, тыс. т':
                     crude_base.append(self.domain_model[i].indicators[key][0:366])
                 if key == 'FCF':
                     fcf_base.append(self.domain_model[i].indicators[key][0:366])
+                if key == 'Добыча жидкости, тыс. т':
+                    liquid_base.append(self.domain_model[i].indicators[key][0:366])
         df = []
-        data = [crude_base, fcf_base]
+        data = [crude_base, fcf_base, liquid_base]
         for table in data:
             df.append(pd.DataFrame(table))
         with pd.ExcelWriter(path/'initial_results.xlsx') as writer:
                 df[0].sum(axis=0).to_excel(writer, sheet_name='Production_results_sum')
                 df[1].transpose().sum(axis=1).to_excel(writer, sheet_name='Economic_results_base_sum')
+                df[2].sum(axis=0).to_excel(writer, sheet_name='Liquid_results_sum')
 
 class CompensatoryProductionBalancer(OperationalProductionBalancer):
     def __init__(self,

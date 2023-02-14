@@ -82,13 +82,16 @@ class ExcelResult:
        crude_vbd = []
        fcf_base = []
        fcf_vbd = []
+       liquid_base = []
+       liquid_vbd = []
        for i in range(self.vbd_index):
             names.append(self.domain_model[i].name)
             for key in self.domain_model[i].indicators:
 
                 if key == 'Добыча нефти, тыс. т':
                     crude_base.append(self.domain_model[i].indicators[key][0:366])
-
+                if key == 'Добыча жидкости, тыс. т':
+                    liquid_base.append(self.domain_model[i].indicators[key][0:366])
                 if key == 'FCF':
                     fcf_base.append(  self.domain_model[i].indicators[key][0:366])
        for i in range(self.vbd_index+1, l):
@@ -96,11 +99,14 @@ class ExcelResult:
             for key in self.domain_model[i].indicators:
                 if key == 'Добыча нефти, тыс. т':
                     crude_vbd.append(self.domain_model[i].indicators[key][0:366])
-
+                if key == 'Добыча жидкости, тыс. т':
+                    liquid_vbd.append(self.domain_model[i].indicators[key][0:366])
                 if key == 'FCF':
                     fcf_vbd.append(self.domain_model[i].indicators[key][0:366])
 
-       return crude_base, crude_vbd, fcf_base, fcf_vbd
+
+
+       return crude_base, crude_vbd, fcf_base, fcf_vbd, liquid_base,liquid_vbd
 
 
     def names(self, filename: str):
@@ -129,11 +135,11 @@ class ExcelResultPotential(ExcelResult):
             results=results
                         )
     def dataframe(self):
-        crude_base, crude_vbd, fcf_base, fcf_vbd = self._data()
+        crude_base, crude_vbd, fcf_base, fcf_vbd, liquid_base, liquid_vbd = self._data()
         crude_vbd = np.array(crude_vbd)
         fcf_vbd = np.array(fcf_vbd)
         dateline = pd.date_range(start=self.dates.date_start, periods=366)
-        data = [crude_base, fcf_base, crude_vbd, fcf_vbd]
+        data = [crude_base, crude_vbd, fcf_base, fcf_vbd, liquid_base, liquid_vbd]
         df = []
         for table in data:
             df.append(pd.DataFrame(table, columns=dateline))
@@ -160,17 +166,21 @@ class ExcelResultPotential(ExcelResult):
 
             if self.results == 'Only sum':
                 df[0].sum(axis=0).to_excel(writer, sheet_name='Production_results_sum')
-                df[2].transpose().sum(axis=1).to_excel(writer, sheet_name='VBD_sum_results')
-                df[1].transpose().sum(axis=1).to_excel(writer, sheet_name='Economic_results_base_sum')
+                df[1].transpose().sum(axis=1).to_excel(writer, sheet_name='VBD_sum_results')
+                df[2].transpose().sum(axis=1).to_excel(writer, sheet_name='Economic_results_base_sum')
                 df[3].transpose().sum(axis=1).to_excel(writer, sheet_name='Economic_results_vbd')
+                df[4].transpose().sum(axis=1).to_excel(writer, sheet_name='Liquid_results_base')
+                df[5].transpose().sum(axis=1).to_excel(writer, sheet_name='Liquid_results_vbd')
             if self.results == 'Full':
                 df[0].to_excel(writer, sheet_name='Production_results_base')
                 df[0].sum(axis=0).to_excel(writer, sheet_name='Production_results_sum')
-                df[1].to_excel(writer, sheet_name='Economic_results_base')
-                df[2].to_excel(writer, sheet_name='Production_results_vbd')
-                df[2].transpose().sum(axis=1).to_excel(writer, sheet_name='VBD_sum_results')
+                df[2].to_excel(writer, sheet_name='Economic_results_base')
+                df[1].to_excel(writer, sheet_name='Production_results_vbd')
+                df[1].transpose().sum(axis=1).to_excel(writer, sheet_name='VBD_sum_results')
                 df[3].transpose().to_excel(writer, sheet_name='Economic_results_vbd')
-            if df[4] is not None:
-                df[4].to_excel(writer, sheet_name='Shifts')
+                df[4].transpose().sum(axis=1).to_excel(writer, sheet_name='Liquid_results_base')
+                df[5].transpose().sum(axis=1).to_excel(writer, sheet_name='Liquid_results_vbd')
+            if df[6] is not None:
+                df[6].to_excel(writer, sheet_name='Shifts')
         print('Program completed')
 
