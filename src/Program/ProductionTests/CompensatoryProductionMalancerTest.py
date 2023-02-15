@@ -62,8 +62,6 @@ def main(file_path: str):
        # max_nrf_objects_per_day=max_nrf_objects_per_day,
        # pump_extraction_value=pump_extraction_value,
         compensation=compensation,
-
-
     )
 
     parameters_of_optimization = APParameters(

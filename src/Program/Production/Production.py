@@ -219,6 +219,7 @@ class OperationalProductionBalancer(Production):
                 df[1].transpose().sum(axis=1).to_excel(writer, sheet_name='Economic_results_base_sum')
                 df[2].sum(axis=0).to_excel(writer, sheet_name='Liquid_results_sum')
 
+
 class CompensatoryProductionBalancer(OperationalProductionBalancer):
     def __init__(self,
                  input_parameters: ParametersOfAlgorithm,
@@ -313,17 +314,4 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
 
     def prepare_results(self, solution):
         pass
-"""
-    def _count_number_of_pumps(self):
-        fcf = SimpleOperations(domain_model=self.domain_model[self.vbd_index:],
-                               indicator_name='FCF',
-                               case=1,
-                               end_interval_date=self.date2
-                               ).calculate()
-        self.pump_extraction_count = floor(0.5 * fcf/self.input_parameters.pump_extraction_value)
-        if self.pump_extraction_count < 0:
-            self.pump_extraction_count = 0
-            self._log_('No efficient wells')
-        else:
-            self._log_('Максимальное отключение скважин: ' + str(self.pump_extraction_count))
-"""
+

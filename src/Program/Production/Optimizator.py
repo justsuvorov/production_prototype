@@ -117,16 +117,7 @@ class GreedyOptimizer():
             self.solution = True
             self._log_('Solution')
 
-
         return self.best_kid
-
-
-
-
-
-
-
-
 
 
 class JayaOptimizator:
@@ -185,7 +176,6 @@ class JayaOptimizator:
                 #       random.choice([0])
                  #   )
                   self.kids[i].append(random.choice([random.randint(self.first_index, self.last_index), self.last_index]))
-
                 else:
                     if self.last_index > 20:
                         a = self.last_index - 20
@@ -194,8 +184,6 @@ class JayaOptimizator:
                     self.kids[i].append(random.choice([
                     random.randint(a, self.last_index)
                                         ,self.last_index]))
-
-
         # self.parameters.inValues() =  self.kids
         self._log_('[APJaya.__initialization] Initialization completed')
         self._resultLog_('Initialization completed')
@@ -209,11 +197,9 @@ class JayaOptimizator:
 
                   ):
         self.last_index = last_index
-
         self._log_('[APJaya.algorithm] index: ' + str(index))
         if (index == 0):
             return self.__initialization()
-
         else:
             return self.__algorithm(outParams)
 
@@ -224,7 +210,6 @@ class JayaOptimizator:
         self._log_('[APJaya.__algorithm]')
         self.__iteration = self.__iteration + 1
         self._resultLog_('Iteration' + str(self.__iteration) + ' completed')
-
         self.results = outParams
         if self._initialization_completed == False:
             for j in range(self.kids_number):
@@ -270,7 +255,6 @@ class JayaOptimizator:
                     self.kids_temp[j][k] = 0
                 if self.kids_temp[j][k] > self.last_index:
                     self.kids_temp[j][k] = self.last_index
-
         self._log_('[APJaya.__algorithm] completed')
 
         return self.kids_temp

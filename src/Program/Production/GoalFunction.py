@@ -59,7 +59,6 @@ class GoalFunction:
             if results is None:
                 results = self.results
             a = 0
-
             for i in range(len(results[0])):
                 if (target - results[0][i]) > 0:
                  a += (target - results[0][i])
@@ -67,7 +66,6 @@ class GoalFunction:
             count = self._calculate_turns_on(results[2])
           #  crude = self._calculate_crude_days(results[2])
             g = b - 10**(floor(10**6 * log10(b))/(10**6))
-
             goal_function = self.a * a + self.b * (1 / g) + self.c * count #+ crude
 
             return goal_function

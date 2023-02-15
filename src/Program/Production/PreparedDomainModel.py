@@ -1,7 +1,5 @@
 from copy import deepcopy
-
 import pandas as pd
-
 from Program.Production.InputParameters import TimeParameters
 import datetime as dt
 import numpy as np
@@ -39,9 +37,6 @@ class PreparedDomainModel:
                 print('ГЭП импортирован')
             else:
                 raise FileNotFoundError('Нет файла с GAP')
-
-
-
         time_parameters = self._discretizate_parameters(domain_model=domain_model)
         return domain_model, time_parameters
 
@@ -51,7 +46,6 @@ class PreparedDomainModel:
         except:
             raise FileNotFoundError('Нет файла с GAP')
         i = 0
-
         for object in domain_model:
             if i < (len(df)):
                 object.indicators['Gap index'] = df[i]
@@ -128,14 +122,10 @@ class PreparedDomainModel:
                             c = np.array(object.indicators[key]).astype(float)
                             c = c/step
                             new_arr = (c[1:]-c[:-1])*0.5
-
                             new_arr  = np.insert(new_arr , -1, 0)
-
                             c = c - new_arr
-
                             a = np.interp(np.arange(l), np.arange(l, step=step), c)  # interpolate
                             object.indicators[key] = a
-
                         except:
                             print('Cannot recalculate indicators for well ', object.name)
             except:

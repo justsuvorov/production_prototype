@@ -18,7 +18,6 @@ class SimpleOperations:
 
     def calculate(self):
 
-
         if self.case == 1:
             return self.wells_sum()
 
@@ -88,9 +87,7 @@ class SimpleOperations:
 
         return sum
 
-
     def wells_gap(self):
-        gap = []
 
         for object in self.domain_model:
             try:
@@ -102,33 +99,6 @@ class SimpleOperations:
                         object.indicators['Gap index'] = 0
                         break
                 object.indicators['Gap index'] = sum.index(max(sum))
-                #max_npv = sum[0]
-                #i = 0
-               # for x in sum:
-
-                #    if x > max_npv:
-
-
-                """
-                    if i == 0:
-                        if value < 0:
-                            object.indicators['Gap index'] = i
-                        else:
-                            object.indicators['Gap index'] = self.end_year_index+1
-                    if value > max_npv:
-                        object.indicators['Gap index'] = i
-                """
-
-
-
-                #    sum.append(value)
-                 #   if not(i == 0 or i == 1 or i == 2) and (sum[i] < sum[i-3]):
-                #    if i != 0 and (sum[i] < sum[i-1]):
-               #         object.indicators['Gap index'] = i
-                   # elif i == 0 and value < 0:
-                  #      object.indicators['Gap index'] = 0
-                #    else:
-               #         object.indicators['Gap index'] = self.end_year_index+1
 
             except:
                 print('SimpleOperations. Corrupted data for well ', object.name)
@@ -136,22 +106,18 @@ class SimpleOperations:
 
     def cumulative_production(self, active=False):
         sum = 0
-
         for object in self.domain_model:
             try:
                     if not active:
-                        sum += integrate.trapezoid(dx=1, y=object.indicators[self.indicator_name][self.date:self.end_interval_date])
+                        sum += integrate.trapezoid(dx=1,
+                                                   y=object.indicators[self.indicator_name][self.date:self.end_interval_date])
                     else:
                         if object.object_info.object_activity:
                             sum += integrate.trapezoid(dx=1,
                                                        y=object.indicators[self.indicator_name][
                                                          self.date:self.end_interval_date+1])
 
-
             except:
                 print('SimpleOperations. Corrupted data for well ', object.name)
         sum = round(sum,2)
         return sum
-
-
-
