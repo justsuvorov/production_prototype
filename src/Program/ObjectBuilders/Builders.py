@@ -66,7 +66,6 @@ class PadBuilder(BaseObjectBuilder):
             link=self.format_reader.names(self.data)
         )
 
-
     def sensor(self) -> Sensor:
         return Sensor(self.error)
 
@@ -81,6 +80,7 @@ class PadBuilder(BaseObjectBuilder):
 
     def _padinfo(self):
         pass
+
 
 class ClusterBuilder(BaseObjectBuilder):
 
@@ -115,6 +115,7 @@ class ClusterBuilder(BaseObjectBuilder):
 
     def _padinfo(self):
         pass
+
 
 class DomainModelBuilder(ObjectBuilder):
     def __init__(self,
@@ -179,8 +180,6 @@ class DomainModelBuilder(ObjectBuilder):
             
             else:
         """
-
-
 
         return wells
 

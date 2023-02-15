@@ -16,7 +16,7 @@ class BaseObject(Object):
                  object_info: ObjectInfo,
                  indicators: Indicators,
                  sensor: Sensor,
-                 link: list = None,
+                 link: dict = None,
                  ) -> None:
         self.name = name
         self.object_info = object_info

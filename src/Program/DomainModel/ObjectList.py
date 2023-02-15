@@ -1,11 +1,12 @@
 from Program.BaseObject.Sensor import Sensor
+from Program.BaseObject.Object import Object
 
 
 class ObjectRecord:
     def __init__(self,
                  name: str,
                  type_of_object: str,
-                 object,
+                 object: Object,
                  links: list,
                  status: Sensor
                  ) -> None:
@@ -16,7 +17,7 @@ class ObjectRecord:
         self.status = status.status
 
     @classmethod
-    def create(cls, object, type_of_object: str):
+    def create(cls, object: Object, type_of_object: str):
         return cls(name=object.name,
                    type_of_object=type_of_object,
                    object=object,

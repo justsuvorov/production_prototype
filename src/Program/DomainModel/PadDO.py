@@ -12,7 +12,7 @@ class PadDO(BaseObject):
                  object_info: ObjectInfo,
                  indicators: Indicators,
                  sensor: Sensor,
-                 link: list = None,
+                 link: dict = None,
                  pad_info: WellInfo = None
                  ) -> None:
             super().__init__(

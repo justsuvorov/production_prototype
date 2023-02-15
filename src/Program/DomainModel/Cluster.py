@@ -12,7 +12,7 @@ class ClusterDO(BaseObject):
                  object_info: ObjectInfo,
                  indicators: Indicators,
                  sensor: Sensor,
-                 link: list = None,
+                 link: dict = None,
                  cluster_info: WellInfo = None
                  ) -> None:
             super().__init__(

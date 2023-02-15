@@ -52,7 +52,6 @@ class SetOfWellsFormatReader(FormatReader):
 
     def _object_activity(self, data: np.array):
 
-
        try:
            activity = data.T[184]
            shape = activity.shape
@@ -65,13 +64,6 @@ class SetOfWellsFormatReader(FormatReader):
 
        except:
                 return True
-
-
-
-
-
-
-
 
     def indicators(self, data: np.array):
         result = {}
@@ -93,9 +85,6 @@ class SetOfWellsFormatReader(FormatReader):
             result[self.indicator_names[j]] = data[a]
             j += 1
         return result
-
-
-
 
     def object_info(self, data: np.array, object_list: dict = None) -> ObjectInfo:
 
