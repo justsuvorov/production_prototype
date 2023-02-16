@@ -9,7 +9,6 @@ import pandas as pd
 from Program.BaseObject.Object import Object
 
 
-
 class BaseObject(Object):
     def __init__(self,
                  name: str,
@@ -29,14 +28,6 @@ class BaseObject(Object):
                          link=link
                          )
 
-  #  @abstractmethod
-  #  def init_from_config(cls, id: str,  *args):
-  #      "Создание default объектов через config файл"
-
-  #  @abstractmethod
-  #  def init_from_df(cls, data: pd.DataFrame,  *args):
-  #      "Создание объектов из датафрейма"
-
     @abstractmethod
     def build(self):
         pass
@@ -47,9 +38,3 @@ class BaseObject(Object):
 
     def change_activity(self):
         self.object_info.object_activity = not self.object_info.object_activity
-
-
-
-
-
-

@@ -54,7 +54,6 @@ class PreparedDomainModel:
                 object.indicators['Gap index'] = 60
         return domain_model
 
-
     def __copy_domain_model(self):
         return deepcopy(self.domain_model[0])
         
@@ -109,7 +108,6 @@ class PreparedDomainModel:
         current_date = (self.time_parameters.current_date - self.time_parameters.date_start).days
 
         return {'date1': date1, 'date2': date2,  'steps_count': steps_count, 'current_date': current_date}
-
 
     def _recalculate_indicators(self, step: int, domain_model):
         step = 30.43

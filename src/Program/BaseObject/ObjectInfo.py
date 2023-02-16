@@ -3,7 +3,6 @@
 class ObjectInfo:
     def __init__(self,
                  object_type: list,
-
                  object_activity,
                  link_list: dict = None
                  ):
@@ -11,9 +10,9 @@ class ObjectInfo:
         self.object_activity = object_activity
         self.link_list = link_list
 
-
     def build(self):
         pass
+
 
 class ObjectActivity:
     def __init__(self,

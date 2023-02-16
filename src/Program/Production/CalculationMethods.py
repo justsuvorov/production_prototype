@@ -41,7 +41,6 @@ class SimpleOperations:
         else:
             for object in self.domain_model:
                 try:
-
                         value = object.indicators[self.indicator_name][date]
                         sum += value
                 except:
@@ -95,7 +94,7 @@ class SimpleOperations:
                 for i in range(self.end_year_index+1):
                     k = i
                     sum.append(np.sum(object.indicators[self.indicator_name][0:k]))
-                    if i==0 and sum[i]<0:
+                    if i == 0 and sum[i] < 0:
                         object.indicators['Gap index'] = 0
                         break
                 object.indicators['Gap index'] = sum.index(max(sum))
@@ -108,16 +107,16 @@ class SimpleOperations:
         sum = 0
         for object in self.domain_model:
             try:
-                    if not active:
+                if not active:
+                    sum += integrate.trapezoid(dx=1,
+                                               y=object.indicators[self.indicator_name][self.date:self.end_interval_date])
+                else:
+                    if object.object_info.object_activity:
                         sum += integrate.trapezoid(dx=1,
-                                                   y=object.indicators[self.indicator_name][self.date:self.end_interval_date])
-                    else:
-                        if object.object_info.object_activity:
-                            sum += integrate.trapezoid(dx=1,
-                                                       y=object.indicators[self.indicator_name][
-                                                         self.date:self.end_interval_date+1])
+                                                   y=object.indicators[self.indicator_name][
+                                                     self.date:self.end_interval_date+1])
 
             except:
                 print('SimpleOperations. Corrupted data for well ', object.name)
-        sum = round(sum,2)
+        sum = round(sum, 2)
         return sum

@@ -24,7 +24,8 @@ class FormatReader(ABC):
 class SetOfWellsFormatReader(FormatReader):
 
     def __init__(self,
-                 indicator_names: list = None):
+                 indicator_names: list = None
+                 ):
         self.indicator_names = indicator_names
         self.count = 0
 
@@ -55,15 +56,14 @@ class SetOfWellsFormatReader(FormatReader):
        try:
            activity = data.T[184]
            shape = activity.shape
-           if shape[0] > 1:
-               return True
-           if activity == 1:
-               return True
+           if (shape[0] > 1) or (activity == 1):
+               a = True
            else:
-               return False
-
+               a = False
        except:
-                return True
+           a = True
+       finally:
+            return a
 
     def indicators(self, data: np.array):
         result = {}
@@ -148,6 +148,6 @@ class MerFormatReader(FormatReader):
     def object_info(self, data: np.array) -> ObjectInfo:
         return ObjectInfo(
             object_type=self._object_type(data),
-            link=[]
+            link_list={}
           #  link=[df['Куст'].unique()[0], df['Месторождение'].unique()[0]]
         )

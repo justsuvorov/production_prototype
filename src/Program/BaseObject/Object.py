@@ -12,7 +12,7 @@ class Object(ABC):
     def __init__(self,
                  name: str,
                  sensor: Sensor,
-                 link: list = None):
+                 link: dict = None):
         self.name = name
         self.sensor = sensor
         self.link = link

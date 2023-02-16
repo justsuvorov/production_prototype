@@ -6,14 +6,16 @@ class ParametersOfAlgorithm:
                  time_lag_step: int = None,
                  max_objects_per_day: int = 5,
                  days_per_object: int = 1,
-                 max_nrf_objects_per_day: int= 100,
-                 pump_extraction_value: float =0.1,
+                 cluster_min_liquid: float = 4,
+                 max_nrf_objects_per_day: int = 100,
+                 pump_extraction_value: float = 0.1,
                  compensation: bool = True,
                  ):
         self.value = value
         self.time_lag_step = time_lag_step
         self.max_objects_per_day = max_objects_per_day
         self.days_per_object = days_per_object
+        self.cluster_min_liquid = cluster_min_liquid
         #self.max_nrf_object_per_day = max_nrf_objects_per_day
         #self.pump_extraction_value = pump_extraction_value
         self.compensation = compensation

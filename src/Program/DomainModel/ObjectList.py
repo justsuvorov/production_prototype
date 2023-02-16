@@ -18,7 +18,7 @@ class ObjectRecord:
 
     @classmethod
     def create(cls, object: Object, type_of_object: str):
-        return cls(name=object.name,
+        return cls(name=str(object.name)+str(object.object_info.link_list['Field']),
                    type_of_object=type_of_object,
                    object=object,
                    links=object.link,

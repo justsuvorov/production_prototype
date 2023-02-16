@@ -226,7 +226,6 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                  optimizator,
                  prepared_domain_model: PreparedDomainModel,
                  iterations_count: int,
-
                  ):
         super().__init__(
                  case=4,
@@ -251,7 +250,6 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
         for i in range(12):
             if not available_wells:
                 break
-
             k = 0
             if i * 30.43 < constraints.current_date: #среднее количество дней в месяце
                 continue
