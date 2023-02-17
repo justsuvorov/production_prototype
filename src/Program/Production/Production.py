@@ -162,14 +162,15 @@ class OperationalProductionBalancer(Production):
     def _update_indicators(self, object, values, vbd: bool = True):
         for key in object.indicators:
             if key != 'Gap index':
-                aa = values
-                a = np.zeros(aa)
+
                 if vbd:
+                    a = np.zeros(values)
                     b = object.indicators[key]
                     c = np.concatenate((a, b))
 
                 else:
-                    b = object.indicators[key][0:aa]
+                    a = np.zeros(365-values)
+                    b = object.indicators[key][0:values]
                     c = np.concatenate((b, a))
                 object.indicators[key] = c
 
@@ -277,7 +278,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                         sum += 1
                         self.turn_off_nrf_wells[
                             str(wells[j].name) + str(wells[j].object_info.link_list['Field'])] = floor(i * 30.43)
-                        values = np.zeros(365 - floor(i * 30.43))
+                        values = floor(i * 30.43)
                         self._update_indicators(object=wells[j], values=values, vbd=False)
 
             else:
@@ -285,7 +286,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                     if self.__check_clusters(wells[j]):
                         self.turn_off_nrf_wells[
                             str(wells[j].name) + str(wells[j].object_info.link_list['Field'])] = floor(i * 30.43)
-                        values = np.zeros(365 - floor(i * 30.43))
+                        values = floor(i * 30.43)
                         self._update_indicators(object=wells[j], values=values, vbd=False)
                         sum += 1
             # self.pump_extraction_count -= sum
