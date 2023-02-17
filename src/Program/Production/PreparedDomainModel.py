@@ -22,8 +22,10 @@ class PreparedDomainModel:
 
     def recalculate_indicators(self):
         domain_model = self.__copy_domain_model()
+        wells = domain_model[0]
+        clusters = domain_model[1]
         if self.find_gap:
-            SimpleOperations(domain_model=domain_model,
+            SimpleOperations(domain_model=wells,
                              indicator_name='FCF',
                              end_year_index=59,
                              ).wells_gap()
@@ -33,29 +35,32 @@ class PreparedDomainModel:
             if self.path != None:
                 filepath = Path(self.path)
                 DATA = filepath / 'СВОД_Скв_NGT.xlsm'
-                domain_model = self.__export_gap(DATA, domain_model)
+                domain_model[0] = self.__export_gap(data=DATA, wells=wells)
                 print('ГЭП импортирован')
             else:
                 raise FileNotFoundError('Нет файла с GAP')
-        time_parameters = self._discretizate_parameters(domain_model=domain_model)
-        return domain_model, time_parameters
+        time_parameters = self._discretizate_parameters(domain_model=wells)
+        prepared_domain_model = {}
+        prepared_domain_model['Wells'] = wells
+        prepared_domain_model['Clusters'] = clusters
+        return prepared_domain_model, time_parameters
 
-    def __export_gap(self, data, domain_model):
+    def __export_gap(self, data, wells):
         try:
             df = pd.read_excel(data)['GAP'].to_numpy()
         except:
             raise FileNotFoundError('Нет файла с GAP')
         i = 0
-        for object in domain_model:
+        for object in wells:
             if i < (len(df)):
                 object.indicators['Gap index'] = df[i]
                 i += 1
             else:
                 object.indicators['Gap index'] = 60
-        return domain_model
+        return wells
 
     def __copy_domain_model(self):
-        return deepcopy(self.domain_model[0])
+        return deepcopy(self.domain_model)
         
     def _discretizate_parameters(self, domain_model):
         time_step = self.time_parameters.time_step

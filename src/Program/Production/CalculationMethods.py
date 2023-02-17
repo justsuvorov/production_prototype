@@ -67,7 +67,7 @@ class SimpleOperations:
             sum = self.fcf()
         else:
             sum = []
-            period = self.end_interval_date+1 - self.date
+            period = self.end_interval_date - self.date
             date = self.date
             for i in range(period):
                 sum.append(self.wells_sum(date=date))

@@ -30,7 +30,7 @@ class WellBuilder(BaseObjectBuilder):
            object_info=self._object_info(),
            indicators=self._indicators(),
            sensor=self.sensor(),
-           link=self.format_reader.names(self.data)
+           link={}
        )
 
     def sensor(self) -> Sensor:
@@ -221,6 +221,8 @@ class DomainModelBuilder(ObjectBuilder):
                 for well in wells_names:
                     if well in self.object_list.keys():
                         cluster.link['Wells'].append(self.object_list[well].object)
+                        self.object_list[well].object.link['Clusters'] = []
+                        self.object_list[well].object.link['Clusters'].append(cluster)
 
         return clusters
 

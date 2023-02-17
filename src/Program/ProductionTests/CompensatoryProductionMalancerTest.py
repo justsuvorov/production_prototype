@@ -35,7 +35,21 @@ def main(file_path: str):
     #pump_extraction_value = df['Исходные данные'].loc['Стоимость подъема насоса']
     compensation = df['Исходные данные'].loc['Полная компенсация накопленной добычи']
 
+    if df['Исходные данные'].loc['Учет ограничений по ДНС']:
+        try:
+            cluster_min_liquid = pd.read_excel(filepath / 'Ограничения.xlsx',
+                                               sheet_name='Минимальный Qж на ДНС', index_col=0)
+            print('Файл с ограничениями прочитан.')
+        except FileNotFoundError:
+            print('Нет файла с ограничениями по ДНС.')
+            cluster_min_liquid = 0
 
+        except ValueError:
+            print('Ошибка в чтении файла ограничений. Ограничения отключены')
+            cluster_min_liquid = 0
+
+    else:
+        cluster_min_liquid = 0
     time_parameters = TimeParameters(
                                      date_end=date_end,
                                      date_begin=date_begin,
@@ -61,6 +75,7 @@ def main(file_path: str):
         days_per_object=days_per_object,
        # max_nrf_objects_per_day=max_nrf_objects_per_day,
        # pump_extraction_value=pump_extraction_value,
+        cluster_min_liquid=cluster_min_liquid,
         compensation=compensation,
     )
 
@@ -85,7 +100,7 @@ def main(file_path: str):
 
     domain_model_with_results = program.result(path=filepath)
 
-    ExcelResultPotential(domain_model=domain_model_with_results,
+    ExcelResultPotential(domain_model=domain_model_with_results['Wells'],
                 production=program,
                 results='Only sum',
                 dates=time_parameters,

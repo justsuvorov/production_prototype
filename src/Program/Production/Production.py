@@ -43,6 +43,7 @@ class OperationalProductionBalancer(Production):
         self.constraints = None
         self.date_start = 0
         self.domain_model = None
+        self.clusters = None
         self.turn_off_nrf_wells = {}
 
         self._logger = Logger('Balancer.txt')
@@ -81,7 +82,7 @@ class OperationalProductionBalancer(Production):
         self.steps_count = dates['steps_count']
         self.date1 = dates['date1']
         self.date2 = dates['date2']
-        self.optimizer.parameters.from_domain_model(objects=self.domain_model, last_index=self.date2)
+        self.optimizer.parameters.from_domain_model(objects=self.domain_model['Wells'], last_index=self.date2)
         constraints.date_end = dates['date2']
         constraints.date_begin = dates['date1']
         constraints.current_date = dates['current_date']
@@ -90,7 +91,7 @@ class OperationalProductionBalancer(Production):
         self.shift = self.input_parameters.time_lag_step + self.input_parameters.days_per_object
         if self.case == 4:
             self.input_parameters.value = 1.005 * SimpleOperations(case=self.case,
-                                                                   domain_model=self.domain_model,
+                                                                   domain_model=self.domain_model['Wells'],
                                                                    date=self.date1,
                                                                    end_interval_date=self.date2,
                                                                    indicator_name='Добыча нефти, тыс. т'
@@ -113,8 +114,8 @@ class OperationalProductionBalancer(Production):
         return self.optimizer.best_kid
 
     def _update_domain_model_activity(self, values):
-        for i in range(len(self.domain_model)):
-            self.domain_model[i].object_info.object_activity = values[i]
+        for i in range(len(self.domain_model['Wells'])):
+            self.domain_model['Wells'][i].object_info.object_activity = values[i]
 
     def _calculate_out_params(self, iteration: int, outParams, constraints, first_iteration: bool = True):
         indicator_names = self.optimizer.parameters.outKeys()
@@ -129,16 +130,17 @@ class OperationalProductionBalancer(Production):
                     outParams.append([])
                     for j in range(len(self.optimizer.parameters.outKeys())):
                         outParams[i].append(SimpleOperations(case=self.case,
-                                                             domain_model=updated_model,
+                                                             domain_model=updated_model['Wells'],
                                                              date=self.date1,
                                                              end_interval_date=self.date2,
                                                              indicator_name=indicator_names[j]).calculate())
                     outParams[i].append(number_of_turnings)
+
                     outParams.pop()
                 else:
                     for j in range(len(self.optimizer.parameters.outKeys())):
                         outParams[i][j] = SimpleOperations(case=self.case,
-                                                           domain_model=updated_model,
+                                                           domain_model=updated_model['Wells'],
                                                            date=self.date1,
                                                            end_interval_date=self.date2,
                                                            indicator_name=indicator_names[j]).calculate()
@@ -154,7 +156,7 @@ class OperationalProductionBalancer(Production):
 
                 for j in range(len(self.optimizer.parameters.outKeys())):
                     outParams[i][j] = SimpleOperations(case=self.case,
-                                                       domain_model=updated_model,
+                                                       domain_model=updated_model['Wells'],
                                                        date=self.date1,
                                                        end_interval_date=self.date2,
                                                        indicator_name=indicator_names[j]).calculate()
@@ -164,24 +166,24 @@ class OperationalProductionBalancer(Production):
 
     def _update_domain_model(self, values, result: bool = False):
         updated_model = deepcopy(self.domain_model)
-        for j in range(self.vbd_index, len(updated_model)):
-            if not updated_model[j].object_info.object_activity:
+        for j in range(self.vbd_index, len(updated_model['Wells'])):
+            if not updated_model['Wells'][j].object_info.object_activity:
                 try:
                     if values[j] == self.date2+1 and result:
                        values[j] = self.steps_count+100
                 except:
                     pass
                     self._log_('Update model exception')
-                for key in updated_model[j].indicators:
+                for key in updated_model['Wells'][j].indicators:
                     if key != 'Gap index':
                         try:
                             aa = values[j]
                         except:
                             aa = 0
                         a = np.zeros(aa)
-                        b = updated_model[j].indicators[key]
+                        b = updated_model['Wells'][j].indicators[key]
                         c = np.concatenate((a, b))
-                        updated_model[j].indicators[key] = c
+                        updated_model['Wells'][j].indicators[key] = c
 
         return updated_model
 
@@ -192,8 +194,8 @@ class OperationalProductionBalancer(Production):
         return dict(zip(unique, counts))
 
     def _find_first_vbd_well(self):
-        for i in reversed(range(len(self.domain_model))):
-            if self.domain_model[i].object_info.object_activity:
+        for i in reversed(range(len(self.domain_model['Wells']))):
+            if self.domain_model['Wells'][i].object_info.object_activity:
                 self.vbd_index = i
                 break
 
@@ -202,14 +204,15 @@ class OperationalProductionBalancer(Production):
         crude_base =[]
         fcf_base = []
         liquid_base = []
+        wells = self.domain_model['Wells']
         for i in range(self.vbd_index):
-            for key in self.domain_model[i].indicators:
+            for key in wells[i].indicators:
                 if key == 'Добыча нефти, тыс. т':
-                    crude_base.append(self.domain_model[i].indicators[key][0:366])
+                    crude_base.append(wells[i].indicators[key][0:366])
                 if key == 'FCF':
-                    fcf_base.append(self.domain_model[i].indicators[key][0:366])
+                    fcf_base.append(wells[i].indicators[key][0:366])
                 if key == 'Добыча жидкости, тыс. т':
-                    liquid_base.append(self.domain_model[i].indicators[key][0:366])
+                    liquid_base.append(wells[i].indicators[key][0:366])
         df = []
         data = [crude_base, fcf_base, liquid_base]
         for table in data:
@@ -258,7 +261,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             temp_value = False
             constraints.date_end = floor(i * 30.43 + 31)
             constraints.current_date = floor(i * 30.43)
-            if self.vbd_index >= len(self.domain_model):
+            if self.vbd_index >= len(self.domain_model['Wells']):
                 break
             self.optimizer.solution = False
             for iteration in range(0, self.iterations_count):
@@ -269,47 +272,68 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                                                        constraints=constraints,
                                                        first_iteration=first_iteration)
 
-                if (self.vbd_index >= len(self.domain_model)) or self.optimizer.solution:
+                if (self.vbd_index >= len(self.domain_model['Wells'])) or self.optimizer.solution:
                     self.vbd_index = self.vbd_index + k - 2
                     break
 
             first_iteration = False
-            if self.vbd_index >= len(self.domain_model):
+            if self.vbd_index >= len(self.domain_model['Wells']):
                 available_wells = False
 
         return self.optimizer.best_kid
 
     def _turn_off_nrf_wells(self, i: int, temp_value: bool = False):
         sum = 0
+        wells = self.domain_model['Wells']
         for j in range(self.initial_vbd_index):
            # if sum >= self.input_parameters.max_nrf_object_per_day and self.input_parameters.compensation:#or sum >= self.pump_extraction_count:
            # if self.input_parameters.compensation:
            #     break
+
             if temp_value:
-                if self.domain_model[j].indicators['Gap index'] <= i:
-                    sum += 1
-                    self.turn_off_nrf_wells[str(self.domain_model[j].name)+str(self.domain_model[j].object_info.link_list['Field'])] = floor(i * 30.43)
-                    for key in self.domain_model[j].indicators:
-                        if key != 'Gap index':
-                            aa = floor(i*30.43)
-                            a = np.zeros(365-aa)
-                            b = self.domain_model[j].indicators[key][0:aa]
-                            c = np.concatenate((b, a))
-                            self.domain_model[j].indicators[key] = c
+                if wells[j].indicators['Gap index'] <= i:
+                    if self.__check_clusters(wells[j]):
+                        sum += 1
+                        self.turn_off_nrf_wells[str(wells[j].name)+str(wells[j].object_info.link_list['Field'])] = floor(i * 30.43)
+                        for key in wells[j].indicators:
+                            if key != 'Gap index':
+                                aa = floor(i*30.43)
+                                a = np.zeros(365-aa)
+                                b = wells[j].indicators[key][0:aa]
+                                c = np.concatenate((b, a))
+                                wells[j].indicators[key] = c
             else:
-                if self.domain_model[j].indicators['Gap index'] == i:
-                    self.turn_off_nrf_wells[str(self.domain_model[j].name)+str(self.domain_model[j].object_info.link_list['Field'])] = floor(i * 30.43)
-                    for key in self.domain_model[j].indicators:
-                        if key != 'Gap index':
-                            aa = floor(i * 30.43)
-                            a = np.zeros(365 - aa)
-                            b = self.domain_model[j].indicators[key][0:aa]
-                            c = np.concatenate((b, a))
-                            self.domain_model[j].indicators[key] = c
-                    sum += 1
-        #self.pump_extraction_count -= sum
+                if wells[j].indicators['Gap index'] == i:
+                    if self.__check_clusters(wells[j]):
+                        self.turn_off_nrf_wells[str(wells[j].name)+str(wells[j].object_info.link_list['Field'])] = floor(i * 30.43)
+                        for key in wells[j].indicators:
+                            if key != 'Gap index':
+                                aa = floor(i * 30.43)
+                                a = np.zeros(365 - aa)
+                                b = wells[j].indicators[key][0:aa]
+                                c = np.concatenate((b, a))
+                                wells[j].indicators[key] = c
+                        sum += 1
+            #self.pump_extraction_count -= sum
         self._log_('Выключено ' + str(sum) + ' скважин')
 
     def prepare_results(self, solution):
         pass
+
+    def __check_clusters(self, well) -> bool:
+        result = True
+        if isinstance(self.input_parameters.cluster_min_liquid, pd.DataFrame):
+            cluster = well.link['Clusters'][0]
+            wells = cluster.link['Wells']
+            liquid_values = SimpleOperations(case=3,
+                                             domain_model=wells,
+                                             end_interval_date=365,
+                                             indicator_name='Добыча жидкости, тыс. т').calculate()
+
+            try:
+                if min(liquid_values) <= self.input_parameters.cluster_min_liquid['Дебит жидкости, тыс. т.'].loc[cluster.name[0]]:
+                    result = False
+            except:
+                pass
+        return result
 
