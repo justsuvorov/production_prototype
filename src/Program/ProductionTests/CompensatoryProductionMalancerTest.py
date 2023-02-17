@@ -1,4 +1,3 @@
-import pandas as pd
 from Program.DOTests.WellDoFromSetOfWellsTest import *
 from Program.Production.GoalFunction import GoalFunction
 from Program.Production.GuiInputInterface import ExcelInterface
@@ -8,9 +7,6 @@ from Program.Production.ap_parameters import APParameters
 from Program.Production.ExcelResult import ExcelResult, ExcelResultPotential
 from pathlib import Path
 from Program.Production.PreparedDomainModel import PreparedDomainModel
-
-import pickle
-
 
 def main(file_path: str):
     filepath = Path(file_path)
@@ -30,22 +26,19 @@ def main(file_path: str):
                                              find_gap=find_gap,
                                              path=file_path,
                                              )
-    """
-    with open('data.pickle', 'rb') as f:
-        domain_model_wells = pickle.load(f)
-    """
+
     program = CompensatoryProductionBalancer(
-                                        prepared_domain_model=domain_model_wells,
-                                        input_parameters=parameters_of_algorithm,
-                                        optimizator=GreedyOptimizer(
-                                            constraints=parameters_of_algorithm,
-                                            parameters=parameters_of_optimization,
-                                            goal_function=GoalFunction(
-                                                parameters=parameters_of_algorithm,
-                                            ),
-                                        ),
-                                        iterations_count=200,
-                                        )
+                                            prepared_domain_model=domain_model_wells,
+                                            input_parameters=parameters_of_algorithm,
+                                            optimizator=GreedyOptimizer(
+                                                constraints=parameters_of_algorithm,
+                                                parameters=parameters_of_optimization,
+                                                goal_function=GoalFunction(
+                                                    parameters=parameters_of_algorithm,
+                                                                          ),
+                                                                        ),
+                                            iterations_count=200,
+                                            )
 
     domain_model_with_results = program.result(path=filepath)
 
@@ -54,7 +47,6 @@ def main(file_path: str):
                         production=program,
                         results='Only sum',
                         dates=time_parameters,
-                        # file_path = file_path
                         ).save(path=filepath)
 
 if __name__ == '__main__':

@@ -184,3 +184,26 @@ class ExcelResultPotential(ExcelResult):
                 df[6].to_excel(writer, sheet_name='Shifts')
         print('Program completed')
 
+
+    @staticmethod
+    def save_initial_results(domain_model, path, vbd_index: int):
+        crude_base = []
+        fcf_base = []
+        liquid_base = []
+        wells = domain_model['Wells']
+        for i in range(vbd_index):
+            for key in wells[i].indicators:
+                if key == 'Добыча нефти, тыс. т':
+                    crude_base.append(wells[i].indicators[key][0:366])
+                if key == 'FCF':
+                    fcf_base.append(wells[i].indicators[key][0:366])
+                if key == 'Добыча жидкости, тыс. т':
+                    liquid_base.append(wells[i].indicators[key][0:366])
+        df = []
+        data = [crude_base, fcf_base, liquid_base]
+        for table in data:
+            df.append(pd.DataFrame(table))
+        with pd.ExcelWriter(path / 'initial_results.xlsx') as writer:
+            df[0].sum(axis=0).to_excel(writer, sheet_name='Production_results_sum')
+            df[1].transpose().sum(axis=1).to_excel(writer, sheet_name='Economic_results_base_sum')
+            df[2].sum(axis=0).to_excel(writer, sheet_name='Liquid_results_sum')

@@ -8,9 +8,11 @@ from Program.Production.Logger import Logger
 from Program.Production.InputParameters import ParametersOfAlgorithm
 from Program.Production.PreparedDomainModel import PreparedDomainModel
 from Program.Production.CalculationMethods import SimpleOperations
+from Program.Production.ExcelResult import ExcelResultPotential
 from pathlib import Path
 from math import floor
 import os.path
+
 
 class Production(ABC):
     def __init__(self,
@@ -19,7 +21,7 @@ class Production(ABC):
         self.domain_model = domain_model
 
     @abc.abstractmethod
-    def result(self):
+    def result(self, path):
         pass
 
 
@@ -58,23 +60,21 @@ class OperationalProductionBalancer(Production):
 
     def result(self, path):
         constraints = self.__prepare_data()
-        self.initial_vbd_index = self.vbd_index
         self._save_initial_results(path)
-        result_dates = self.optimize(constraints=constraints)
-        self.result_dates = result_dates[0]
+        self.result_dates = self.optimize(constraints=constraints)[0]
         self.vbd_index = self.initial_vbd_index
-        domain_model_with_results = self._update_domain_model(result_dates[0], result=True)
+        return self.__export_results(path=path)
 
-        res = pd.DataFrame(result_dates)
-
-        if path is not None:
-            res.to_excel(path/'result_vbd.xlsx')
-            if self.turn_off_nrf_wells != {}:
-                res2 = pd.Series(data=self.turn_off_nrf_wells)
-                res2.to_excel(path/'results_base.xlsx')
-                res.to_excel(path / 'results.xlsx')
-
-        return domain_model_with_results
+    def optimize(self, constraints):
+        outParams = [[]]
+        for iteration in range(self.iterations_count):
+            self._log_('iteration index: ' + str(iteration))
+            outParams = self._calculate_out_params(iteration=iteration,
+                                                   outParams=outParams,
+                                                   constraints=constraints)
+            if self.optimizer.solution:
+                break
+        return self.optimizer.best_kid
 
     def __prepare_data(self):
         self.domain_model, dates = self.prepared_domain_model.recalculate_indicators()
@@ -98,30 +98,14 @@ class OperationalProductionBalancer(Production):
                                                                    ).cumulative_production(active=True)
 
             self._log_('Initial cumulative production: ' + str(self.input_parameters.value))
-
+        self.initial_vbd_index = self.vbd_index
         self._log_('Data prepared')
         return constraints
-
-    def optimize(self, constraints):
-        outParams = [[]]
-        for iteration in range(self.iterations_count):
-           self._log_('iteration index: ' + str(iteration))
-           outParams = self._calculate_out_params(iteration=iteration,
-                                                  outParams=outParams,
-                                                  constraints=constraints)
-           if self.optimizer.solution:
-            break
-        return self.optimizer.best_kid
-
-    def _update_domain_model_activity(self, values):
-        for i in range(len(self.domain_model['Wells'])):
-            self.domain_model['Wells'][i].object_info.object_activity = values[i]
 
     def _calculate_out_params(self, iteration: int, outParams, constraints, first_iteration: bool = True):
         indicator_names = self.optimizer.parameters.outKeys()
         if iteration == 0:
-
-            #new_values = self.optimizer.algorithm(index=0, last_index=self.date2, constraints=self.constraints)
+            # new_values = self.optimizer.algorithm(index=0, last_index=self.date2, constraints=self.constraints)
             new_values = self.optimizer.algorithm(index=0, last_index=self.vbd_index, constraints=constraints)
             for i in range(len(new_values)):
                 number_of_turnings = self._count_number_of_obj(new_values[i])
@@ -148,8 +132,9 @@ class OperationalProductionBalancer(Production):
 
 
         else:
-            #new_values = self.optimizer.algorithm(index=1, outParams=outParams, last_index=self.date2)
-            new_values = self.optimizer.algorithm(index=1, outParams=outParams, last_index=self.vbd_index, constraints=constraints)
+            # new_values = self.optimizer.algorithm(index=1, outParams=outParams, last_index=self.date2)
+            new_values = self.optimizer.algorithm(index=1, outParams=outParams, last_index=self.vbd_index,
+                                                  constraints=constraints)
             for i in range(len(new_values)):
                 updated_model = self._update_domain_model(new_values[i])
                 number_of_turnings = self._count_number_of_obj(new_values[i])
@@ -168,27 +153,29 @@ class OperationalProductionBalancer(Production):
         updated_model = deepcopy(self.domain_model)
         for j in range(self.vbd_index, len(updated_model['Wells'])):
             if not updated_model['Wells'][j].object_info.object_activity:
-                try:
-                    if values[j] == self.date2+1 and result:
-                       values[j] = self.steps_count+100
-                except:
-                    pass
-                    self._log_('Update model exception')
-                for key in updated_model['Wells'][j].indicators:
-                    if key != 'Gap index':
-                        try:
-                            aa = values[j]
-                        except:
-                            aa = 0
-                        a = np.zeros(aa)
-                        b = updated_model['Wells'][j].indicators[key]
-                        c = np.concatenate((a, b))
-                        updated_model['Wells'][j].indicators[key] = c
+                if values[j] == self.date2 + 1 and result:
+                    values[j] = self.steps_count + 100
+                self._update_indicators(object=updated_model['Wells'][j], values=values[j], vbd=True)
 
         return updated_model
 
+    def _update_indicators(self, object, values, vbd: bool = True):
+        for key in object.indicators:
+            if key != 'Gap index':
+                aa = values
+                a = np.zeros(aa)
+                if vbd:
+                    b = object.indicators[key]
+                    c = np.concatenate((a, b))
+
+                else:
+                    b = object.indicators[key][0:aa]
+                    c = np.concatenate((b, a))
+                object.indicators[key] = c
+
+
     def _count_number_of_obj(self, values):
-        values = values[(self.vbd_index+1):]
+        values = values[(self.vbd_index + 1):]
         unique, counts = np.unique(values, return_counts=True)
 
         return dict(zip(unique, counts))
@@ -201,26 +188,23 @@ class OperationalProductionBalancer(Production):
 
     def _save_initial_results(self, path):
         self._log_('Exporting initial results')
-        crude_base =[]
-        fcf_base = []
-        liquid_base = []
-        wells = self.domain_model['Wells']
-        for i in range(self.vbd_index):
-            for key in wells[i].indicators:
-                if key == 'Добыча нефти, тыс. т':
-                    crude_base.append(wells[i].indicators[key][0:366])
-                if key == 'FCF':
-                    fcf_base.append(wells[i].indicators[key][0:366])
-                if key == 'Добыча жидкости, тыс. т':
-                    liquid_base.append(wells[i].indicators[key][0:366])
-        df = []
-        data = [crude_base, fcf_base, liquid_base]
-        for table in data:
-            df.append(pd.DataFrame(table))
-        with pd.ExcelWriter(path/'initial_results.xlsx') as writer:
-                df[0].sum(axis=0).to_excel(writer, sheet_name='Production_results_sum')
-                df[1].transpose().sum(axis=1).to_excel(writer, sheet_name='Economic_results_base_sum')
-                df[2].sum(axis=0).to_excel(writer, sheet_name='Liquid_results_sum')
+        ExcelResultPotential.save_initial_results(domain_model=self.domain_model,
+                                                  vbd_index=self.vbd_index,
+                                                  path=path
+                                                  )
+
+    def __export_results(self, path):
+        domain_model_with_results = self._update_domain_model(self.result_dates, result=True)
+        res = pd.DataFrame(self.result_dates)
+
+        if path is not None:
+            res.to_excel(path / 'result_vbd.xlsx')
+            if self.turn_off_nrf_wells != {}:
+                res2 = pd.Series(data=self.turn_off_nrf_wells)
+                res2.to_excel(path / 'results_base.xlsx')
+                res.to_excel(path / 'results.xlsx')
+
+        return domain_model_with_results
 
 
 class CompensatoryProductionBalancer(OperationalProductionBalancer):
@@ -231,32 +215,32 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                  iterations_count: int,
                  ):
         super().__init__(
-                 case=4,
-                 input_parameters=input_parameters,
-                 optimizator=optimizator,
-                 prepared_domain_model=prepared_domain_model,
-                 iterations_count=iterations_count
-                )
+            case=4,
+            input_parameters=input_parameters,
+            optimizator=optimizator,
+            prepared_domain_model=prepared_domain_model,
+            iterations_count=iterations_count
+        )
         self.vbd_index = None
         self.result_dates = None
         self.turn_off_nrf_wells = {}
         self.turn_off_max_number = False
         self.pump_extraction_count = 100
 
-
     def optimize(self, constraints):
         outParams = [[]]
         temp_value = True
         first_iteration = True
         available_wells = True
-        #count = self._count_number_of_pumps()
+        # count = self._count_number_of_pumps()
         for i in range(12):
             if not available_wells:
                 break
             k = 0
-            if i * 30.43 < constraints.current_date: #среднее количество дней в месяце
+            if i * 30.43 < constraints.current_date:  # среднее количество дней в месяце
                 continue
-            if (not self.input_parameters.compensation or (not first_iteration and (self.optimizer.best == 0)) and self.input_parameters.compensation )  or first_iteration:
+            if (not self.input_parameters.compensation or (not first_iteration and (
+                    self.optimizer.best == 0)) and self.input_parameters.compensation) or first_iteration:
                 self._turn_off_nrf_wells(i, temp_value=temp_value)
             temp_value = False
             constraints.date_end = floor(i * 30.43 + 31)
@@ -286,39 +270,26 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
         sum = 0
         wells = self.domain_model['Wells']
         for j in range(self.initial_vbd_index):
-           # if sum >= self.input_parameters.max_nrf_object_per_day and self.input_parameters.compensation:#or sum >= self.pump_extraction_count:
-           # if self.input_parameters.compensation:
-           #     break
 
             if temp_value:
                 if wells[j].indicators['Gap index'] <= i:
                     if self.__check_clusters(wells[j]):
                         sum += 1
-                        self.turn_off_nrf_wells[str(wells[j].name)+str(wells[j].object_info.link_list['Field'])] = floor(i * 30.43)
-                        for key in wells[j].indicators:
-                            if key != 'Gap index':
-                                aa = floor(i*30.43)
-                                a = np.zeros(365-aa)
-                                b = wells[j].indicators[key][0:aa]
-                                c = np.concatenate((b, a))
-                                wells[j].indicators[key] = c
+                        self.turn_off_nrf_wells[
+                            str(wells[j].name) + str(wells[j].object_info.link_list['Field'])] = floor(i * 30.43)
+                        values = np.zeros(365 - floor(i * 30.43))
+                        self._update_indicators(object=wells[j], values=values, vbd=False)
+
             else:
                 if wells[j].indicators['Gap index'] == i:
                     if self.__check_clusters(wells[j]):
-                        self.turn_off_nrf_wells[str(wells[j].name)+str(wells[j].object_info.link_list['Field'])] = floor(i * 30.43)
-                        for key in wells[j].indicators:
-                            if key != 'Gap index':
-                                aa = floor(i * 30.43)
-                                a = np.zeros(365 - aa)
-                                b = wells[j].indicators[key][0:aa]
-                                c = np.concatenate((b, a))
-                                wells[j].indicators[key] = c
+                        self.turn_off_nrf_wells[
+                            str(wells[j].name) + str(wells[j].object_info.link_list['Field'])] = floor(i * 30.43)
+                        values = np.zeros(365 - floor(i * 30.43))
+                        self._update_indicators(object=wells[j], values=values, vbd=False)
                         sum += 1
-            #self.pump_extraction_count -= sum
+            # self.pump_extraction_count -= sum
         self._log_('Выключено ' + str(sum) + ' скважин')
-
-    def prepare_results(self, solution):
-        pass
 
     def __check_clusters(self, well) -> bool:
         result = True
@@ -329,11 +300,10 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                                              domain_model=wells,
                                              end_interval_date=365,
                                              indicator_name='Добыча жидкости, тыс. т').calculate()
-
             try:
-                if min(liquid_values) <= self.input_parameters.cluster_min_liquid['Дебит жидкости, тыс. т.'].loc[cluster.name[0]]:
+                if min(liquid_values) <= self.input_parameters.cluster_min_liquid['Дебит жидкости, тыс. т.'].loc[
+                    cluster.name[0]]:
                     result = False
             except:
                 pass
         return result
-
