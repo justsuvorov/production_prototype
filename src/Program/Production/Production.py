@@ -302,8 +302,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                                              end_interval_date=365,
                                              indicator_name='Добыча жидкости, тыс. т').calculate()
             try:
-                if min(liquid_values) <= self.input_parameters.cluster_min_liquid['Дебит жидкости, тыс. т.'].loc[
-                    cluster.name[0]]:
+                if min(liquid_values) <= self.input_parameters.cluster_min_liquid['Дебит жидкости, тыс. т.'].loc[cluster.name[0]]:
                     result = False
             except:
                 pass
