@@ -107,7 +107,10 @@ class OperationalProductionBalancer(Production):
         if iteration == 0:
             # new_values = self.optimizer.algorithm(index=0, last_index=self.date2, constraints=self.constraints)
             new_values = self.optimizer.algorithm(index=0, last_index=self.vbd_index, constraints=constraints)
+
             for i in range(len(new_values)):
+               # if self.input_parameters.constraints_from_file:
+               #     new_values[i] = self.__update_values(new_values[i])
                 number_of_turnings = self._count_number_of_obj(new_values[i])
                 updated_model = self._update_domain_model(new_values[i])
                 if first_iteration:
@@ -136,6 +139,8 @@ class OperationalProductionBalancer(Production):
             new_values = self.optimizer.algorithm(index=1, outParams=outParams, last_index=self.vbd_index,
                                                   constraints=constraints)
             for i in range(len(new_values)):
+             #   if self.input_parameters.constraints_from_file:
+             #       new_values[i] = self.__update_values(new_values[i])
                 updated_model = self._update_domain_model(new_values[i])
                 number_of_turnings = self._count_number_of_obj(new_values[i])
 
@@ -206,8 +211,22 @@ class OperationalProductionBalancer(Production):
                 res.to_excel(path / 'results.xlsx')
 
         return domain_model_with_results
+"""
+    def __update_values(self, values):
+        groups = len(self.input_parameters.crew_constraints)
+        constraints = self.input_parameters.crew_constraints
+        if self.optimizer.solution:
+            self.temp_dict = {}
 
 
+        for i in range(self.initial_vbd_index, len(values)):
+            if not self.domain_model['Wells'][i].object_info.object_activity:
+
+                constraints[self.domain_model['Wells'][j].object_info.link_list['Field'][0]]
+
+        return updated_model
+
+"""
 class CompensatoryProductionBalancer(OperationalProductionBalancer):
     def __init__(self,
                  input_parameters: ParametersOfAlgorithm,
@@ -277,7 +296,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                     if self.__check_clusters(wells[j]):
                         sum += 1
                         self.turn_off_nrf_wells[
-                            str(wells[j].name) + str(wells[j].object_info.link_list['Field'])] = floor(i * 30.43)
+                            str(wells[j].name[0]) + ' || ' + str(wells[j].object_info.link_list['Field'][0])] = floor(i * 30.43)
                         values = floor(i * 30.43)
                         self._update_indicators(object=wells[j], values=values, vbd=False)
 
@@ -285,7 +304,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                 if wells[j].indicators['Gap index'] == i:
                     if self.__check_clusters(wells[j]):
                         self.turn_off_nrf_wells[
-                            str(wells[j].name) + str(wells[j].object_info.link_list['Field'])] = floor(i * 30.43)
+                            str(wells[j].name[0]) + ' || ' + str(wells[j].object_info.link_list['Field'][0])] = floor(i * 30.43)
                         values = floor(i * 30.43)
                         self._update_indicators(object=wells[j], values=values, vbd=False)
                         sum += 1

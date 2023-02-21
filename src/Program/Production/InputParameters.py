@@ -10,6 +10,8 @@ class ParametersOfAlgorithm:
                  max_nrf_objects_per_day: int = 100,
                  pump_extraction_value: float = 0.1,
                  compensation: bool = True,
+                 constraints_from_file: bool = False,
+                 crew_constraints: dict = {'No constraints': 'No constraints'}
                  ):
         self.value = value
         self.time_lag_step = time_lag_step
@@ -19,6 +21,8 @@ class ParametersOfAlgorithm:
         #self.max_nrf_object_per_day = max_nrf_objects_per_day
         #self.pump_extraction_value = pump_extraction_value
         self.compensation = compensation
+        self.constraints_from_file = constraints_from_file
+        self.crew_constraints = crew_constraints
 
 
 class TimeParameters:

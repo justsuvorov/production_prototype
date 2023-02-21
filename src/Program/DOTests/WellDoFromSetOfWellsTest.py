@@ -2,6 +2,8 @@ import os
 from glob import glob
 from pathlib import Path
 
+import pandas as pd
+
 from Program.ObjectBuilders.Builders import *
 from Program.ObjectBuilders.FormatReader import SetOfWellsFormatReader
 from Program.ObjectBuilders.Parser import SetOfWellsParser
@@ -14,7 +16,7 @@ vbd_pathes = [y for x in os.walk(VBD_DIR) for y in glob(os.path.join(x[0], '*.xl
 filePath = DATA_DIR / 'СВОД_скв._NEW_5лет.xlsx'
 vbd = DATA_DIR / 'VBD.xlsx'
 
-
+"""
 def prepare_data(pathes_list):
     data = []
     for i in range(len(pathes_list)):
@@ -24,14 +26,37 @@ def prepare_data(pathes_list):
     for i in range(len(pathes_list) - 1):
         resdata = pd.concat([resdata, data[i + 1]])
     resdata.to_excel('VBD.xlsx')
-    return 'VBD.xlsx'
+    return 'VBD_ranged.xlsx'
+"""
+def prepare_data(file_path):
+    vbd_initial = file_path / 'VBD.xlsm'
+    df_origin = pd.read_excel(vbd_initial)
+    df = df_origin.iloc[1:]
+    pd.options.mode.chained_assignment = None
+    df['FCF'] = df.iloc[:, 125:137].sum(axis=1)
+    df['Qsum'] = df.iloc[:, 5:17].sum(axis=1)
+    df['FCF/Q'] = df['FCF']/df['Qsum']
 
+    resdata = df.sort_values(by=['FCF/Q'], ascending=False)
+    resdata = resdata.shift()
+
+   # self.indicator_names = ['Добыча нефти, тыс. т', 'Добыча жидкости, тыс. т', 'FCF']
+   # indicators_numbers = [5, 65, 125, 184]
+   # indicators_numbers1 = [5, 65, 125]
+
+
+    resdata.to_excel(file_path /'VBD_ranged.xlsx', index=False)
+    return file_path /'VBD_ranged.xlsx'
 
 def domain_model(file_path):
 
     filePath = file_path / 'СВОД_скв._NEW_5лет.xlsm'
-    vbd = file_path / 'VBD.xlsm'
+   # vbd_initial = file_path / 'VBD.xlsm'
+    #vbd = prepare_data(file_path=file_path)
     print('Прочитан xlsm формат')
+    vbd = prepare_data(file_path=file_path)
+
+
 
     domain_model = DomainModelBuilder(parser=SetOfWellsParser(data_path=filePath),
                                       format_reader=SetOfWellsFormatReader(),
@@ -51,5 +76,6 @@ def domain_model(file_path):
     # result_domain_model.append(domain_model_full_pads)
     clusters = DomainModelBuilder.merge_clusters(domain_model_full_clusters)
     result_domain_model.append(clusters)
+    os.remove(vbd)
 
     return result_domain_model

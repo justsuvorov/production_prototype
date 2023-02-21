@@ -25,30 +25,18 @@ class ExcelInterface(GUIInterface):
         df = self.__data()
 
         time_lag_step = df['Исходные данные'].loc['Количество дней на включение']
-        max_objects_per_day = df['Исходные данные'].loc['Максимальное количество бригад']
-        days_per_object = df['Исходные данные'].loc['Количество дней на включение']
         compensation = df['Исходные данные'].loc['Полная компенсация накопленной добычи']
-        if df['Исходные данные'].loc['Учет ограничений по ДНС']:
-            try:
-                cluster_min_liquid = pd.read_excel(self.filepath / 'Ограничения.xlsx',
-                                                   sheet_name='Минимальный Qж на ДНС', index_col=0)
-                print('Файл с ограничениями прочитан.')
-            except FileNotFoundError:
-                print('Нет файла с ограничениями по ДНС.')
-                cluster_min_liquid = 0
+        cluster_min_liquid = self.__clusters(df=df)
+        crew_constraints = self.__crew(df=df)
 
-            except ValueError:
-                print('Ошибка в чтении файла ограничений. Ограничения отключены')
-                cluster_min_liquid = 0
-        else:
-            cluster_min_liquid = 0
         return ParametersOfAlgorithm(
                                     value=8000,
                                     time_lag_step=time_lag_step,
-                                    max_objects_per_day=max_objects_per_day,
-                                    days_per_object=days_per_object,
+                                    max_objects_per_day=crew_constraints['max_objects_per_day'],
+                                    days_per_object=crew_constraints['days_per_object'],
                                     cluster_min_liquid=cluster_min_liquid,
                                     compensation=compensation,
+                                    crew_constraints=crew_constraints
                                     )
 
     def time_parameters(self) -> TimeParameters:
@@ -76,3 +64,44 @@ class ExcelInterface(GUIInterface):
         else:
             find_gap = True
         return find_gap
+
+    def __clusters(self, df):
+        if df['Исходные данные'].loc['Учет ограничений по ДНС']:
+            try:
+                cluster_min_liquid = pd.read_excel(self.filepath / 'Ограничения.xlsx',
+                                                   sheet_name='Минимальный Qж на ДНС', index_col=0)
+                print('Файл с ограничениями прочитан.')
+            except FileNotFoundError:
+                print('Нет файла с ограничениями по ДНС.')
+                cluster_min_liquid = 0
+
+            except ValueError:
+                print('Ошибка в чтении файла ограничений. Ограничения отключены')
+                cluster_min_liquid = 0
+        else:
+            cluster_min_liquid = 0
+        return cluster_min_liquid
+
+    def __crew(self, df):
+        constraints_from_file = False
+        max_objects_per_day = df['Исходные данные'].loc['Максимальное количество бригад']
+        days_per_object = df['Исходные данные'].loc['Количество дней на включение']
+        crew_constraints = {'Constraints': "No constraint"}
+        if df['Исходные данные'].loc['Учет ограничений по бригадам из файла']:
+            try:
+                data = pd.read_excel(self.filepath / 'Ограничения.xlsx',
+                                                   sheet_name='Ограничения по бригадам', index_col=0)
+                print('Файл с ограничениями прочитан.')
+                crew_constraints['Кол-во бригад'] = data['Кол-во бригад'].to_dict()
+                max_objects_per_day = data['Кол-во бригад'].sum()
+                days_per_object = df['Исходные данные'].loc['Количество дней на включение']
+                constraints_from_file = True
+
+            except FileNotFoundError:
+                print('Нет файла с ограничениями по ДНС. Приняты общие значения без привязки к месторождениям')
+
+            except ValueError:
+                print('Ошибка в чтении файла ограничений. Приняты общие значения без привязки к месторождениям')
+
+        return {'max_objects_per_day': max_objects_per_day, 'days_per_object': days_per_object,
+                'crew_constraints': crew_constraints, 'constraints_from_file': constraints_from_file}
