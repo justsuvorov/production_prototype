@@ -16,6 +16,9 @@ def main(file_path: str):
     time_parameters = gui.time_parameters()
     parameters_of_algorithm = gui.parameter_of_algorithm()
     find_gap = gui.find_gap()
+    company, field = gui.chosen_objects()
+    filter = {'company': company, 'field': field}
+
     parameters_of_optimization = APParameters(inKeys=['ObjectActivity'],
                                               outKeys=['Добыча нефти, тыс. т', 'FCF'],
                                               inValues=[[]]
@@ -25,6 +28,7 @@ def main(file_path: str):
                                              time_parameters=time_parameters,
                                              find_gap=find_gap,
                                              path=file_path,
+                                             filter=filter
                                              )
 
     program = CompensatoryProductionBalancer(

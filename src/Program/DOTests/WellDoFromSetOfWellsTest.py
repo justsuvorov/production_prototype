@@ -71,11 +71,14 @@ def domain_model(file_path):
     domain_model_full_wells = domain_model[0] + vbd_domain_model[0]
     #domain_model_full_pads = domain_model[1]+vbd_domain_model[1]
     domain_model_full_clusters = domain_model[1]+vbd_domain_model[1]
+    domain_model_full_fields = domain_model[2] + vbd_domain_model[2]
     result_domain_model = []
     result_domain_model.append(domain_model_full_wells)
     # result_domain_model.append(domain_model_full_pads)
-    clusters = DomainModelBuilder.merge_clusters(domain_model_full_clusters)
+    clusters = DomainModelBuilder.merge_objects(domain_model_full_clusters)
+    fields = DomainModelBuilder.merge_objects(domain_model_full_fields)
     result_domain_model.append(clusters)
+    result_domain_model.append(fields)
     os.remove(vbd)
 
     return result_domain_model

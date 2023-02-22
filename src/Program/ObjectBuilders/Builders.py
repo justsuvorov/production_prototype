@@ -12,6 +12,7 @@ from Program.ObjectBuilders.BuilderInterface import BaseObjectBuilder, ObjectBui
 from Program.DomainModel.WellDO import WellDO
 from Program.DomainModel.PadDO import PadDO
 from Program.DomainModel.Cluster import ClusterDO
+from Program.DomainModel.FieldDO import FieldDO
 
 
 class WellBuilder(BaseObjectBuilder):
@@ -119,6 +120,41 @@ class ClusterBuilder(BaseObjectBuilder):
         pass
 
 
+class FieldBuilder(BaseObjectBuilder):
+
+    def __init__(self,
+                 format_reader: FormatReader,
+                 data: np.array,
+                 ):
+        self.format_reader = format_reader
+        self.data = data
+        super().__init__(format_reader=format_reader)
+
+    def build_object(self) -> Object:
+        return FieldDO(
+            name=self.format_reader.names(self.data)['Field'],
+            object_info=self._object_info(),
+            indicators=self._indicators(),
+            sensor=self.sensor(),
+            link={}
+        )
+
+    def sensor(self) -> Sensor:
+        return Sensor(self.error)
+
+    def _object_info(self) -> ObjectInfo:
+        return self.format_reader.object_info(self.data)
+
+    def _indicators(self) -> Indicators:
+        return Indicators(indicators={})
+
+    def _create_record(self) -> ObjectRecord:
+        pass
+
+    def _padinfo(self):
+        pass
+
+
 class DomainModelBuilder(ObjectBuilder):
     def __init__(self,
                  parser: Parser,
@@ -138,6 +174,7 @@ class DomainModelBuilder(ObjectBuilder):
         if only_wells is False or None:
            # domain_model.append(self._create_pads(data))
             domain_model.append(self._create_clusters(data))
+            domain_model.append(self._create_fields(data))
 
         return domain_model
 
@@ -226,8 +263,34 @@ class DomainModelBuilder(ObjectBuilder):
 
         return clusters
 
+    def _create_fields(self, data):
+        self.object_id = 200000
+        fields = []
+        field_names = data['Месторождение'].unique()
+        for name in field_names:
+            data_temp = data.loc[data['Месторождение'] == name].to_numpy()
+            field = FieldBuilder(
+                format_reader=self.format_reader,
+                data=data_temp).build_object()
+            self.object_id += 1
+            self.object_list[str(field.name[0])] = ObjectRecord.create(object=field,
+                                                                         type_of_object='Field')
+            fields.append(field)
+
+        for field in fields:
+            field.link['Wells'] = []
+            for i in range(len(field.object_info.link_list['Field'])):
+                wells_names = field.object_info.link_list['Well']+field.object_info.link_list['Field'][i]
+                for well in wells_names:
+                    if well in self.object_list.keys():
+                        field.link['Wells'].append(self.object_list[well].object)
+                        self.object_list[well].object.link['Fields'] = []
+                        self.object_list[well].object.link['Fields'].append(field)
+
+        return fields
+
     @staticmethod
-    def merge_clusters(clusters):
+    def merge_objects(clusters):
         new_clusters = {}
         temp1 = 0
         for object in clusters:

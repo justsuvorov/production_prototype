@@ -105,3 +105,25 @@ class ExcelInterface(GUIInterface):
 
         return {'max_objects_per_day': max_objects_per_day, 'days_per_object': days_per_object,
                 'crew_constraints': crew_constraints, 'constraints_from_file': constraints_from_file}
+
+    def chosen_objects(self):
+        df = self.__data()
+        try:
+            company = df['Исходные данные'].loc['Выбор ДО']
+            field1 = df['Исходные данные'].loc['Месторождение']
+            if field1 == 'Все месторождения':
+                field = self.__field_names(df=df, company=company)
+            else:
+                field = [field1]
+        except:
+            company = 'All'
+            field = 'All'
+        finally:
+            return company, field
+
+    def __field_names(self, df, company):
+        DATA = self.filepath / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
+        df2 = pd.read_excel(DATA, sheet_name='Словарь ДО')
+        df3 = df2[company].loc[2:29].dropna()
+
+        return df3.values.tolist()

@@ -12,6 +12,7 @@ class PreparedDomainModel:
                  domain_model,
                  time_parameters: TimeParameters,
                  find_gap: bool = False,
+                 filter: dict = {'company': 'All', 'field': 'All'},
                  path=None,
                  ):
         self.domain_model = domain_model
@@ -19,11 +20,13 @@ class PreparedDomainModel:
         self.steps_count = None
         self.find_gap = find_gap
         self.path = path
+        self.filter = filter
 
     def recalculate_indicators(self):
         domain_model = self.__copy_domain_model()
         wells = domain_model[0]
         clusters = domain_model[1]
+        fields = domain_model[2]
         if self.find_gap:
             SimpleOperations(domain_model=wells,
                              indicator_name='FCF',
@@ -39,10 +42,12 @@ class PreparedDomainModel:
                 print('ГЭП импортирован')
             else:
                 raise FileNotFoundError('Нет файла с GAP')
+        wells, clusters, fields = self.__filter_objects(wells=wells, clusters=clusters, fields=fields)
         time_parameters = self._discretizate_parameters(domain_model=wells)
         prepared_domain_model = {}
         prepared_domain_model['Wells'] = wells
         prepared_domain_model['Clusters'] = clusters
+        prepared_domain_model['Fields'] = fields
         return prepared_domain_model, time_parameters
 
     def __export_gap(self, data, wells):
@@ -134,3 +139,32 @@ class PreparedDomainModel:
             except:
                 print()
 
+    def __filter_objects(self, wells, clusters, fields):
+        new_wells = []
+        new_fields = []
+        result_wells =[]
+        new_wells_list = []
+        new_fields_list = []
+
+        if self.filter['field'] != 'All':
+            print('Расчет для ДО: ', self.filter['company'], ' Месторождение: ', self.filter['field'])
+
+
+            for name in self.filter['field']:
+                for field in fields:
+                    if field.name[0] == name:
+                        new_wells_list.append(field.link['Wells'])
+                        new_fields_list.append(field)
+
+            if not new_fields_list:
+                raise print('В исходных данных нет выбранных месторождений!')
+            for item in new_wells_list:
+                new_wells.extend(item)
+            for well in wells:
+                if well in new_wells:
+                    result_wells.append(well)
+
+        else:
+            result_wells = wells
+            new_fields_list = fields
+        return result_wells, clusters, new_fields_list

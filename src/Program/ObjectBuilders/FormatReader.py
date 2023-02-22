@@ -32,7 +32,7 @@ class SetOfWellsFormatReader(FormatReader):
     def names(self, df: np.array):
         try:
             well_name = np.unique(df.T[2])
-            pad_name = np.unique(df.T[3])
+         #   pad_name = np.unique(df.T[3])
             cluster_name = np.unique(df.T[1])
             field = np.unique(df.T[0])
 
@@ -45,7 +45,8 @@ class SetOfWellsFormatReader(FormatReader):
             field = 'Noname'
 
         finally:
-            return {'Well': well_name, 'Pad': pad_name, 'Cluster': cluster_name, 'Field': field}
+            #return {'Well': well_name, 'Pad': pad_name, 'Cluster': cluster_name, 'Field': field}
+            return {'Well': well_name,  'Cluster': cluster_name, 'Field': field}
 
     def _object_type(self, data: np.array):
         # return df['Характер работы скважины'].tolist()
@@ -119,7 +120,7 @@ class MerFormatReader(FormatReader):
                 field = data[1][1]
 
         except:
-            print('Corrupted date')
+            print('Corrupted data')
             well_name = 'Noname'
             pad_name = 'Noname'
             field = 'Noname'
