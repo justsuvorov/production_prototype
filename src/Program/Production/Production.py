@@ -1,4 +1,5 @@
 import abc
+import sys
 from abc import ABC
 import datetime as dt
 import numpy as np
@@ -78,6 +79,7 @@ class OperationalProductionBalancer(Production):
 
     def __prepare_data(self):
         self.domain_model, dates = self.prepared_domain_model.recalculate_indicators()
+        del(self.prepared_domain_model)
         constraints = deepcopy(self.input_parameters)
         self.steps_count = dates['steps_count']
         self.date1 = dates['date1']
@@ -143,7 +145,6 @@ class OperationalProductionBalancer(Production):
              #       new_values[i] = self.__update_values(new_values[i])
                 updated_model = self._update_domain_model(new_values[i])
                 number_of_turnings = self._count_number_of_obj(new_values[i])
-
                 for j in range(len(self.optimizer.parameters.outKeys())):
                     outParams[i][j] = SimpleOperations(case=self.case,
                                                        domain_model=updated_model['Wells'],
@@ -161,7 +162,6 @@ class OperationalProductionBalancer(Production):
                 if values[j] == self.date2 + 1 and result:
                     values[j] = self.steps_count + 100
                 self._update_indicators(object=updated_model['Wells'][j], values=values[j], vbd=True)
-
         return updated_model
 
     def _update_indicators(self, object, values, vbd: bool = True):

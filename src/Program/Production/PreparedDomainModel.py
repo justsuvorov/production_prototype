@@ -48,6 +48,7 @@ class PreparedDomainModel:
         prepared_domain_model['Wells'] = wells
         prepared_domain_model['Clusters'] = clusters
         prepared_domain_model['Fields'] = fields
+
         return prepared_domain_model, time_parameters
 
     def __export_gap(self, data, wells):
@@ -143,12 +144,13 @@ class PreparedDomainModel:
         new_wells = []
         new_fields = []
         result_wells =[]
+        result_clusters = []
+        result_fields = []
         new_wells_list = []
         new_fields_list = []
 
         if self.filter['field'] != 'All':
             print('Расчет для ДО: ', self.filter['company'], ' Месторождение: ', self.filter['field'])
-
 
             for name in self.filter['field']:
                 for field in fields:
@@ -164,7 +166,9 @@ class PreparedDomainModel:
                 if well in new_wells:
                     result_wells.append(well)
 
+
         else:
             result_wells = wells
-            new_fields_list = fields
-        return result_wells, clusters, new_fields_list
+            result_clusters = clusters
+            result_fields = fields
+        return result_wells, result_clusters, result_fields
