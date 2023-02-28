@@ -4,6 +4,8 @@ from Program.constants import DATA_DIR
 from pathlib import Path
 from Program.Production import Production
 from Program.Production.InputParameters import TimeParameters
+from Program.Production.GuiInputInterface import *
+from shutil import copy
 
 
 class ExcelResult:
@@ -125,7 +127,8 @@ class ExcelResultPotential(ExcelResult):
                  domain_model,
                  production: Production,
                  dates: TimeParameters,
-                 results: str = 'Only sum'
+                 results: str = 'Only sum',
+
                  ):
 
         super().__init__(
@@ -134,6 +137,7 @@ class ExcelResultPotential(ExcelResult):
             dates=dates,
             results=results
                         )
+
     def dataframe(self):
         crude_base, crude_vbd, fcf_base, fcf_vbd, liquid_base, liquid_vbd = self._data()
         crude_vbd = np.array(crude_vbd)
@@ -160,6 +164,12 @@ class ExcelResultPotential(ExcelResult):
             path = path
         else:
             path = DATA_DIR
+        if not os.path.isfile(path / 'Балансировка компенсационных мероприятий для НРФ.xlsm'):
+            home_path = os.path.split(path)[0]
+            print(home_path)
+            copy(str(home_path) + '//' + 'Балансировка компенсационных мероприятий для НРФ.xlsm',
+                 str(path) + '//' + 'Балансировка компенсационных мероприятий для НРФ.xlsm')
+
         print('Exporting results...')
         df = self.dataframe()
         with pd.ExcelWriter(path / 'Results.xlsx') as writer:

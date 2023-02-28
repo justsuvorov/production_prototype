@@ -159,7 +159,8 @@ class PreparedDomainModel:
                         new_fields_list.append(field)
 
             if not new_fields_list:
-                raise print('В исходных данных нет выбранных месторождений!')
+                print('В исходных данных нет выбранных месторождений!')
+
             for item in new_wells_list:
                 new_wells.extend(item)
             for well in wells:

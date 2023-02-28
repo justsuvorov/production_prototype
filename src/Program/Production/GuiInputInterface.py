@@ -18,8 +18,12 @@ class GUIInterface(ABC):
 
 class ExcelInterface(GUIInterface):
     def __init__(self,
-                 filepath: Path):
+                 filepath: Path,
+                 ):
         self.filepath = filepath
+        self.companies_names = None
+        self.fields_names = None
+
 
     def parameter_of_algorithm(self) -> ParametersOfAlgorithm:
         df = self.__data()
@@ -106,24 +110,53 @@ class ExcelInterface(GUIInterface):
         return {'max_objects_per_day': max_objects_per_day, 'days_per_object': days_per_object,
                 'crew_constraints': crew_constraints, 'constraints_from_file': constraints_from_file}
 
-    def chosen_objects(self):
+    def chosen_objects(self, iteration_index: int = 0):
         df = self.__data()
+        all_companies_option, all_fields_option = self.calculation_parameters()
         try:
-            company = df['Исходные данные'].loc['Выбор ДО']
-            field1 = df['Исходные данные'].loc['Месторождение']
-            if field1 == 'Все месторождения':
-                field = self.__field_names(df=df, company=company)
+            if not all_companies_option:
+                company = df['Исходные данные'].loc['Выбор ДО']
+                field1 = df['Исходные данные'].loc['Месторождение']
+                if field1 == 'Все месторождения':
+                    field = self.__field_names( company=company)
+                else:
+                    field = [field1]
             else:
-                field = [field1]
+                company = self.companies_names[iteration_index]
+                field = self.__field_names( company=company)
         except:
             company = 'All'
             field = 'All'
+            print('Расчет для всех исходных данных без фильтра')
         finally:
-            return company, field
+            return {'company': company, 'field': field}
 
-    def __field_names(self, df, company):
+    def __field_names(self, company):
         DATA = self.filepath / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
         df2 = pd.read_excel(DATA, sheet_name='Словарь ДО')
         df3 = df2[company].loc[2:29].dropna()
 
         return df3.values.tolist()
+
+    def calculation_parameters(self,):
+        df = self.__data()
+        all_companies_option= df['Исходные данные'].loc['Расчет всех ДО']
+        all_fields_option = df['Исходные данные'].loc['Расчет всех месторождений']
+        return bool(all_companies_option), bool(all_fields_option)
+
+    def iterations(self):
+        iterations = 1
+        all_companies_option, all_fields_option = self.calculation_parameters()
+        if all_companies_option:
+            DATA = self.filepath / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
+            df = pd.read_excel(DATA, sheet_name='Словарь ДО')
+            self.companies_names = df['ДО'].loc[:29].dropna().to_list()
+            iterations += len(self.companies_names) - 1
+        """
+        if all_fields_option and all_companies_option:
+            for name in self.companies_names:
+                self.field_names.append(self.__field_names(name))
+        """
+
+        return iterations
+

@@ -58,9 +58,13 @@ class OperationalProductionBalancer(Production):
         self.initial_vbd_index = None
         self.temp_value = 1000
         self.result_dates = None
+        self.error = False
 
     def result(self, path):
+        self.error = False
         constraints = self.__prepare_data()
+        if self.error:
+            return
         self._save_initial_results(path)
         self.result_dates = self.optimize(constraints=constraints)[0]
         self.vbd_index = self.initial_vbd_index
@@ -79,7 +83,8 @@ class OperationalProductionBalancer(Production):
 
     def __prepare_data(self):
         self.domain_model, dates = self.prepared_domain_model.recalculate_indicators()
-        del(self.prepared_domain_model)
+        if not self.domain_model['Wells']:
+            self.error = True
         constraints = deepcopy(self.input_parameters)
         self.steps_count = dates['steps_count']
         self.date1 = dates['date1']
