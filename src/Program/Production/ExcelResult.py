@@ -106,10 +106,7 @@ class ExcelResult:
                 if key == 'FCF':
                     fcf_vbd.append(self.domain_model[i].indicators[key][0:366])
 
-
-
-       return crude_base, crude_vbd, fcf_base, fcf_vbd, liquid_base,liquid_vbd
-
+       return crude_base, crude_vbd, fcf_base, fcf_vbd, liquid_base, liquid_vbd
 
     def names(self, filename: str):
         df = pd.read_excel(DATA_DIR/filename).loc[1:]
@@ -145,8 +142,14 @@ class ExcelResultPotential(ExcelResult):
         dateline = pd.date_range(start=self.dates.date_start, periods=366)
         data = [crude_base, crude_vbd, fcf_base, fcf_vbd, liquid_base, liquid_vbd]
         df = []
+
         for table in data:
-            df.append(pd.DataFrame(table, columns=dateline))
+            try:
+                df.append(pd.DataFrame(table, columns=dateline))
+            except ValueError:
+
+                df.append(pd.DataFrame(np.zeros_like(crude_base), columns=dateline))
+                print('Отсутствуют скважины ВБД')
         if self.production.result_dates is not None:
             res = np.array(self.production.result_dates[self.vbd_index:])
             res = res - self.production.shift
@@ -164,12 +167,16 @@ class ExcelResultPotential(ExcelResult):
             path = path
         else:
             path = DATA_DIR
+
         if not os.path.isfile(path / 'Балансировка компенсационных мероприятий для НРФ.xlsm'):
             home_path = os.path.split(path)[0]
-            print(home_path)
-            copy(str(home_path) + '//' + 'Балансировка компенсационных мероприятий для НРФ.xlsm',
-                 str(path) + '//' + 'Балансировка компенсационных мероприятий для НРФ.xlsm')
-
+            try:
+                copy(str(home_path) + '//' + 'Балансировка компенсационных мероприятий для НРФ.xlsm',
+                     str(path) + '//' + 'Балансировка компенсационных мероприятий для НРФ.xlsm')
+            except FileNotFoundError:
+                home_path = os.path.split(home_path)[0]
+                copy(str(home_path) + '//' + 'Балансировка компенсационных мероприятий для НРФ.xlsm',
+                     str(path) + '//' + 'Балансировка компенсационных мероприятий для НРФ.xlsm')
         print('Exporting results...')
         df = self.dataframe()
         with pd.ExcelWriter(path / 'Results.xlsx') as writer:

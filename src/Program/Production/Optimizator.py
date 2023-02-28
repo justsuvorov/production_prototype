@@ -109,7 +109,7 @@ class GreedyOptimizer():
                 try:
                     for i in range(self.last_index, self.last_index + self.object_count):
                         shift = self.shift-self.constraints.days_per_object*floor((i-self.last_index)/self.constraints.max_objects_per_day)
-                        self.best_kid[0][i] = self.constraints.date_end - shift
+                        self.best_kid[0][i] = int(self.constraints.date_end - shift)
                 except:
                     self.solution = True
 

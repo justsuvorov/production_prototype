@@ -166,10 +166,10 @@ class OperationalProductionBalancer(Production):
             if not updated_model['Wells'][j].object_info.object_activity:
                 if values[j] == self.date2 + 1 and result:
                     values[j] = self.steps_count + 100
-                self._update_indicators(object=updated_model['Wells'][j], values=values[j], vbd=True)
+                self._update_indicators(object=updated_model['Wells'][j], values=int(values[j]), vbd=True)
         return updated_model
 
-    def _update_indicators(self, object, values, vbd: bool = True):
+    def _update_indicators(self, object, values: int, vbd: bool = True):
         for key in object.indicators:
             if key != 'Gap index':
 
@@ -192,10 +192,12 @@ class OperationalProductionBalancer(Production):
         return dict(zip(unique, counts))
 
     def _find_first_vbd_well(self):
+        self.vbd_index = len(self.domain_model['Wells'])
         for i in reversed(range(len(self.domain_model['Wells']))):
             if self.domain_model['Wells'][i].object_info.object_activity:
                 self.vbd_index = i
                 break
+
 
     def _save_initial_results(self, path):
         self._log_('Exporting initial results')

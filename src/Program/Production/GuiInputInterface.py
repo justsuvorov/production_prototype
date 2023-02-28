@@ -25,13 +25,29 @@ class ExcelInterface(GUIInterface):
         self.fields_names = None
 
 
-    def parameter_of_algorithm(self) -> ParametersOfAlgorithm:
+    def parameter_of_algorithm(self, company_index: int = None, field_index: int = None) -> ParametersOfAlgorithm:
         df = self.__data()
+        all_companies_option, all_fields_option = self.calculation_parameters()
+        if (company_index is None) and (field_index is None) or not (all_companies_option or all_fields_option):
+            time_lag_step = df['Исходные данные'].loc['Количество дней на включение']
+            compensation = df['Исходные данные'].loc['Полная компенсация накопленной добычи']
+            cluster_min_liquid = self.__clusters(df=df)
+            crew_constraints = self.__crew(df=df)
 
-        time_lag_step = df['Исходные данные'].loc['Количество дней на включение']
-        compensation = df['Исходные данные'].loc['Полная компенсация накопленной добычи']
-        cluster_min_liquid = self.__clusters(df=df)
-        crew_constraints = self.__crew(df=df)
+        else:
+            DATA = self.filepath / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
+            df2 = pd.read_excel(DATA, sheet_name='Словарь ДО')
+            i = df2.columns.get_loc(key=self.companies_names[company_index])
+            df3 = df2.iloc[field_index+1, i:(i+4)].dropna()
+            time_lag_step = df3.iloc[3]
+            max_objects_per_day = df3.iloc[1]
+            constraints_from_file = False
+            days_per_object = df3.iloc[2]
+            cluster_min_liquid = self.__clusters(df=df)
+            compensation = df['Исходные данные'].loc['Полная компенсация накопленной добычи']
+            crew = {'Constraints': "No constraint"}
+            crew_constraints = {'max_objects_per_day': max_objects_per_day, 'days_per_object': days_per_object,
+                                'crew_constraints': crew, 'constraints_from_file': constraints_from_file}
 
         return ParametersOfAlgorithm(
                                     value=8000,
@@ -110,20 +126,34 @@ class ExcelInterface(GUIInterface):
         return {'max_objects_per_day': max_objects_per_day, 'days_per_object': days_per_object,
                 'crew_constraints': crew_constraints, 'constraints_from_file': constraints_from_file}
 
-    def chosen_objects(self, iteration_index: int = 0):
+    def chosen_objects(self, company_index: int = 0, field_index: int = 0):
         df = self.__data()
         all_companies_option, all_fields_option = self.calculation_parameters()
         try:
-            if not all_companies_option:
+            if (not all_companies_option) and (not all_fields_option):
                 company = df['Исходные данные'].loc['Выбор ДО']
+                self.companies_names = company
                 field1 = df['Исходные данные'].loc['Месторождение']
+                self.fields_names = field1
                 if field1 == 'Все месторождения':
-                    field = self.__field_names( company=company)
+                    field = self.__field_names(company=company)
                 else:
                     field = [field1]
-            else:
-                company = self.companies_names[iteration_index]
-                field = self.__field_names( company=company)
+            elif all_companies_option and (not all_fields_option):
+                company = self.companies_names[company_index]
+                field = self.__field_names(company=company)
+
+            elif (not all_companies_option) and all_fields_option:
+                company = df['Исходные данные'].loc['Выбор ДО']
+                field = self.__field_names(company=company)[field_index]
+                if isinstance(field, str):
+                    field = [field]
+            elif all_companies_option and all_fields_option:
+                company = self.companies_names[company_index]
+                field = self.__field_names(company=company)[field_index]
+                if isinstance(field, str):
+                    field = [field]
+
         except:
             company = 'All'
             field = 'All'
@@ -134,29 +164,41 @@ class ExcelInterface(GUIInterface):
     def __field_names(self, company):
         DATA = self.filepath / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
         df2 = pd.read_excel(DATA, sheet_name='Словарь ДО')
-        df3 = df2[company].loc[2:29].dropna()
-
+        df3 = df2[company].loc[1:29].dropna()
         return df3.values.tolist()
 
     def calculation_parameters(self,):
         df = self.__data()
-        all_companies_option= df['Исходные данные'].loc['Расчет всех ДО']
+        all_companies_option = df['Исходные данные'].loc['Расчет всех ДО']
         all_fields_option = df['Исходные данные'].loc['Расчет всех месторождений']
         return bool(all_companies_option), bool(all_fields_option)
 
-    def iterations(self):
+    def company_iterations(self):
         iterations = 1
         all_companies_option, all_fields_option = self.calculation_parameters()
+        DATA = self.filepath / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
+
         if all_companies_option:
-            DATA = self.filepath / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
             df = pd.read_excel(DATA, sheet_name='Словарь ДО')
             self.companies_names = df['ДО'].loc[:29].dropna().to_list()
             iterations += len(self.companies_names) - 1
-        """
-        if all_fields_option and all_companies_option:
-            for name in self.companies_names:
-                self.field_names.append(self.__field_names(name))
-        """
+        else:
+            df = self.__data()
+            company = df['Исходные данные'].loc['Выбор ДО']
+            self.companies_names = [company]
 
         return iterations
 
+    def field_iterations(self, company_index: int):
+        iterations = 1
+        all_companies_option, all_fields_option = self.calculation_parameters()
+        if all_fields_option:
+
+            self.fields_names = self.__field_names(company=self.companies_names[company_index])
+            iterations = len(self.fields_names)
+        else:
+            df = self.__data()
+            field = df['Исходные данные'].loc['Месторождение']
+            self.fields_names = [field]
+
+        return iterations

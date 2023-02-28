@@ -13,54 +13,67 @@ def main(file_path: str):
 
     """ Входные параметры из Excel"""
     gui = ExcelInterface(filepath=filepath)
+    all_companies_option, all_fields_option = gui.calculation_parameters()
     time_parameters = gui.time_parameters()
-    parameters_of_algorithm = gui.parameter_of_algorithm()
     find_gap = gui.find_gap()
     imported_domain_model = domain_model(file_path=filepath)
-    for iteration_index in range(gui.iterations()):
+    for company_index in range(gui.company_iterations()):
+        for field_index in range(gui.field_iterations(company_index=company_index)):
+            filter = gui.chosen_objects(company_index=company_index, field_index=field_index)
+            parameters_of_algorithm = gui.parameter_of_algorithm(company_index=company_index, field_index=field_index)
 
-        filter = gui.chosen_objects(iteration_index=iteration_index)
-        parameters_of_optimization = APParameters(inKeys=['ObjectActivity'],
-                                                  outKeys=['Добыча нефти, тыс. т', 'FCF'],
-                                                  inValues=[[]]
-                                                  )
+            parameters_of_optimization = APParameters(inKeys=['ObjectActivity'],
+                                                      outKeys=['Добыча нефти, тыс. т', 'FCF'],
+                                                      inValues=[[]]
+                                                      )
+            domain_model_wells = PreparedDomainModel(domain_model=imported_domain_model,
+                                                     time_parameters=time_parameters,
+                                                     find_gap=find_gap,
+                                                     path=file_path,
+                                                     filter=filter
+                                                     )
 
-        domain_model_wells = PreparedDomainModel(domain_model=imported_domain_model,
-                                                 time_parameters=time_parameters,
-                                                 find_gap=find_gap,
-                                                 path=file_path,
-                                                 filter=filter
-                                                 )
+            try:
+                program = CompensatoryProductionBalancer(
+                                                        prepared_domain_model=domain_model_wells,
+                                                        input_parameters=parameters_of_algorithm,
+                                                        optimizator=GreedyOptimizer(
+                                                            constraints=parameters_of_algorithm,
+                                                            parameters=parameters_of_optimization,
+                                                            goal_function=GoalFunction(
+                                                                parameters=parameters_of_algorithm,
+                                                                                      ),
+                                                                                    ),
+                                                        iterations_count=200,
+                                                        )
 
-     #   try:
-        program = CompensatoryProductionBalancer(
-                                                prepared_domain_model=domain_model_wells,
-                                                input_parameters=parameters_of_algorithm,
-                                                optimizator=GreedyOptimizer(
-                                                    constraints=parameters_of_algorithm,
-                                                    parameters=parameters_of_optimization,
-                                                    goal_function=GoalFunction(
-                                                        parameters=parameters_of_algorithm,
-                                                                              ),
-                                                                            ),
-                                                iterations_count=200,
-                                                )
-        if len(gui.companies_names) > 1:
-            a = str(file_path) + '\\' + str(gui.companies_names[iteration_index]) + '\\'
-            Path(a).mkdir(parents=True, exist_ok=True)
-            result_path = Path(a)
-        else:
-            result_path = filepath
-        domain_model_with_results = program.result(path=result_path)
 
-        ExcelResultPotential(
-                            domain_model=domain_model_with_results['Wells'],
-                            production=program,
-                            results='Only sum',
-                            dates=time_parameters,
-                            ).save(path=result_path)
-       # except:
-      #      print('Невозможно произвести расчет для ', filter['company'])
+                if all_companies_option:
+                    folder = str(file_path) + '\\' + str(gui.companies_names[company_index]) + '\\'
+                    a = folder
+                    Path(folder).mkdir(parents=True, exist_ok=True)
+                    filepath = Path(folder)
+
+                if all_fields_option:
+                    if not all_companies_option:
+                        a = str(file_path) + '\\' + str(gui.companies_names[company_index]) + '\\'
+                    folder = a + '\\' + str(gui.fields_names[field_index]) + '\\'
+                    Path(folder).mkdir(parents=True, exist_ok=True)
+                    filepath = Path(folder)
+
+
+
+                domain_model_with_results = program.result(path=filepath)
+
+                ExcelResultPotential(
+                                    domain_model=domain_model_with_results['Wells'],
+                                    production=program,
+                                    results='Only sum',
+                                    dates=time_parameters,
+                                    ).save(path=filepath)
+            except:
+                print('Невозможно произвести расчет для ', filter['company'], filter['field'])
+
 
 if __name__ == '__main__':
     main()
