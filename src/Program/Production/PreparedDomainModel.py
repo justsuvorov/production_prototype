@@ -166,6 +166,11 @@ class PreparedDomainModel:
             for well in wells:
                 if well in new_wells:
                     result_wells.append(well)
+            for cluster in clusters:
+                for well in result_wells:
+                    if well in cluster.link['Wells'] and cluster not in result_clusters:
+                        result_clusters.append(cluster)
+            result_fields = new_fields_list
 
 
         else:

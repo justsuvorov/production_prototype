@@ -37,12 +37,13 @@ class ExcelInterface(GUIInterface):
         else:
             DATA = self.filepath / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
             df2 = pd.read_excel(DATA, sheet_name='Словарь ДО')
-            i = df2.columns.get_loc(key=self.companies_names[company_index])
-            df3 = df2.iloc[field_index+1, i:(i+4)].dropna()
-            time_lag_step = df3.iloc[3]
-            max_objects_per_day = df3.iloc[1]
+           # i = df2.columns.get_loc(key=self.companies_names[company_index])
+            df3 = df2.loc[df2['Список ДО'] == self.companies_names[company_index]]
+            df3 = df3.loc[df2['Месторождение'] == self.fields_names[field_index]]
+            time_lag_step = df3['ВНР, суток'].iloc[0]
+            max_objects_per_day = df3['Количество бригад'].iloc[0]
             constraints_from_file = False
-            days_per_object = df3.iloc[2]
+            days_per_object = df3['Время ремонта, суток'].iloc[0]
             cluster_min_liquid = self.__clusters(df=df)
             compensation = df['Исходные данные'].loc['Полная компенсация накопленной добычи']
             crew = {'Constraints': "No constraint"}
@@ -164,8 +165,9 @@ class ExcelInterface(GUIInterface):
     def __field_names(self, company):
         DATA = self.filepath / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
         df2 = pd.read_excel(DATA, sheet_name='Словарь ДО')
-        df3 = df2[company].loc[1:29].dropna()
-        return df3.values.tolist()
+        df3 = df2.loc[df2['Список ДО'] == company]
+        field_names = df3['Месторождение'].iloc[1:].values.tolist()
+        return field_names
 
     def calculation_parameters(self,):
         df = self.__data()
@@ -180,7 +182,7 @@ class ExcelInterface(GUIInterface):
 
         if all_companies_option:
             df = pd.read_excel(DATA, sheet_name='Словарь ДО')
-            self.companies_names = df['ДО'].loc[:29].dropna().to_list()
+            self.companies_names = df['ДО'].loc[:15].dropna().to_list()
             iterations += len(self.companies_names) - 1
         else:
             df = self.__data()

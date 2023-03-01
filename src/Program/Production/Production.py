@@ -208,14 +208,21 @@ class OperationalProductionBalancer(Production):
 
     def __export_results(self, path):
         domain_model_with_results = self._update_domain_model(self.result_dates, result=True)
-        res = pd.DataFrame(self.result_dates)
+        names = {}
+        wells = domain_model_with_results['Wells']
+        for j in range(self.vbd_index, len(wells)):
+            names[str(wells[j].name[0]) + ' || ' + str(wells[j].object_info.link_list['Field'][0])] = self.result_dates[j]
+
+        res = pd.Series(data=names)
 
         if path is not None:
             res.to_excel(path / 'result_vbd.xlsx')
-            if self.turn_off_nrf_wells != {}:
-                res2 = pd.Series(data=self.turn_off_nrf_wells)
-                res2.to_excel(path / 'results_base.xlsx')
-                res.to_excel(path / 'results.xlsx')
+            res2 = pd.Series(data=self.turn_off_nrf_wells)
+            res2.to_excel(path / 'results_base.xlsx')
+            #if self.turn_off_nrf_wells != {}:
+            #    res2 = pd.Series(data=self.turn_off_nrf_wells)
+            #    res2.to_excel(path / 'results_base.xlsx')
+                #res.to_excel(path / 'results.xlsx')
 
         return domain_model_with_results
 """

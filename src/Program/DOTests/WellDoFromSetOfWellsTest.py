@@ -79,6 +79,6 @@ def domain_model(file_path):
     fields = DomainModelBuilder.merge_objects(domain_model_full_fields)
     result_domain_model.append(clusters)
     result_domain_model.append(fields)
-    os.remove(vbd)
+
 
     return result_domain_model
