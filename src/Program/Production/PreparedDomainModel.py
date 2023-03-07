@@ -131,7 +131,7 @@ class PreparedDomainModel:
                             c = np.array(object.indicators[key]).astype(float)
                             c = c/step
                             new_arr = (c[1:]-c[:-1])*0.5
-                            new_arr  = np.insert(new_arr , -1, 0)
+                            new_arr = np.insert(new_arr, -1, 0)
                             c = c - new_arr
                             a = np.interp(np.arange(l), np.arange(l, step=step), c)  # interpolate
                             object.indicators[key] = a

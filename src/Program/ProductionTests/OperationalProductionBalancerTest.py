@@ -1,3 +1,5 @@
+import pickle
+
 import pandas as pd
 from Program.DOTests.WellDoFromSetOfWellsTest import *
 from Program.Production.GoalFunction import GoalFunction
@@ -62,6 +64,10 @@ def main(file_path: str):
                                             )
 
     domain_model_with_results = program.result(path=filepath)
+
+
+
+
 
     ExcelResult(domain_model=domain_model_with_results,
                 production = program,

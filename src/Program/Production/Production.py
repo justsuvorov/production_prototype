@@ -9,7 +9,7 @@ from Program.Production.Logger import Logger
 from Program.Production.InputParameters import ParametersOfAlgorithm
 from Program.Production.PreparedDomainModel import PreparedDomainModel
 from Program.Production.CalculationMethods import SimpleOperations
-from Program.Production.ExcelResult import ExcelResultPotential
+from Program.Production.ExcelResult import ExcelResultPotential, QlikExcelResult
 from pathlib import Path
 from math import floor
 import os.path
@@ -60,17 +60,17 @@ class OperationalProductionBalancer(Production):
         self.result_dates = None
         self.error = False
 
-    def result(self, path):
+    def result(self, path, qlik_result: QlikExcelResult = None):
         self.error = False
         constraints = self.__prepare_data()
         if self.error:
             return
-        self._save_initial_results(path)
-        self.result_dates = self.optimize(constraints=constraints)[0]
+        self._save_initial_results(path, qlik_result)
+        self.result_dates = self.optimize(constraints=constraints, qlik_result=qlik_result)[0]
         self.vbd_index = self.initial_vbd_index
-        return self.__export_results(path=path)
+        return self.__export_results(path=path, qlik_result=qlik_result)
 
-    def optimize(self, constraints):
+    def optimize(self, constraints, qlik_result: QlikExcelResult = None ):
         outParams = [[]]
         for iteration in range(self.iterations_count):
             self._log_('iteration index: ' + str(iteration))
@@ -79,6 +79,7 @@ class OperationalProductionBalancer(Production):
                                                    constraints=constraints)
             if self.optimizer.solution:
                 break
+
         return self.optimizer.best_kid
 
     def __prepare_data(self):
@@ -199,20 +200,29 @@ class OperationalProductionBalancer(Production):
                 break
 
 
-    def _save_initial_results(self, path):
+    def _save_initial_results(self, path, qlik_result: QlikExcelResult = None):
         self._log_('Exporting initial results')
         ExcelResultPotential.save_initial_results(domain_model=self.domain_model,
                                                   vbd_index=self.vbd_index,
                                                   path=path
                                                   )
+        if qlik_result is not None:
+            domain_model = deepcopy(self.domain_model)
+            qlik_result.load_data_from_domain_model(domain_model=domain_model,
+                                                    initial_calc=True,
+                                                    cut_index=self.vbd_index)
 
-    def __export_results(self, path):
+
+    def __export_results(self, path, qlik_result: QlikExcelResult = None):
         domain_model_with_results = self._update_domain_model(self.result_dates, result=True)
         names = {}
         wells = domain_model_with_results['Wells']
         for j in range(self.vbd_index, len(wells)):
             names[str(wells[j].name[0]) + ' || ' + str(wells[j].object_info.link_list['Field'][0])] = self.result_dates[j]
-
+        if qlik_result is not None:
+            qlik_result.load_vbd_wells(wells=domain_model_with_results['Wells'],
+                                       vbd_index=self.vbd_index,
+                                       dates=self.result_dates)
         res = pd.Series(data=names)
 
         if path is not None:
@@ -261,7 +271,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
         self.turn_off_max_number = False
         self.pump_extraction_count = 100
 
-    def optimize(self, constraints):
+    def optimize(self, constraints, qlik_result: QlikExcelResult = None):
         outParams = [[]]
         temp_value = True
         first_iteration = True
@@ -275,7 +285,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                 continue
             if (not self.input_parameters.compensation or (not first_iteration and (
                     self.optimizer.best == 0)) and self.input_parameters.compensation) or first_iteration:
-                self._turn_off_nrf_wells(i, temp_value=temp_value)
+                self._turn_off_nrf_wells(i, temp_value=temp_value, qlik_result=qlik_result)
             temp_value = False
             constraints.date_end = floor(i * 30.43 + 31)
             constraints.current_date = floor(i * 30.43)
@@ -300,7 +310,9 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
 
         return self.optimizer.best_kid
 
-    def _turn_off_nrf_wells(self, i: int, temp_value: bool = False):
+    def _turn_off_nrf_wells(self, i: int, temp_value: bool = False, qlik_result: QlikExcelResult = None):
+
+
         sum = 0
         wells = self.domain_model['Wells']
         for j in range(self.initial_vbd_index):
@@ -312,13 +324,18 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                         self.turn_off_nrf_wells[
                             str(wells[j].name[0]) + ' || ' + str(wells[j].object_info.link_list['Field'][0])] = floor(i * 30.43)
                         values = floor(i * 30.43)
+                        if qlik_result is not None:
+                            qlik_result.load_nrf_well(well=wells[j], gap_index = i)
                         self._update_indicators(object=wells[j], values=values, vbd=False)
 
             else:
                 if wells[j].indicators['Gap index'] == i:
                     if self.__check_clusters(wells[j]):
                         self.turn_off_nrf_wells[
-                            str(wells[j].name[0]) + ' || ' + str(wells[j].object_info.link_list['Field'][0])] = floor(i * 30.43)
+                            str(wells[j].name[0]) + ' || ' + str(wells[j].object_info.link_list['Field'][0])] = \
+                            floor(i * 30.43)
+                        if qlik_result is not None:
+                            qlik_result.load_nrf_well(well=wells[j], gap_index = i)
                         values = floor(i * 30.43)
                         self._update_indicators(object=wells[j], values=values, vbd=False)
                         sum += 1
