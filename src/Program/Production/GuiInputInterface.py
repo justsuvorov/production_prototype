@@ -204,3 +204,11 @@ class ExcelInterface(GUIInterface):
             self.fields_names = [field]
 
         return iterations
+
+    def qlik(self) -> bool:
+        df = self.__data()
+        try:
+            export = df['Исходные данные'].loc['Экспорт для Qlik']
+        except:
+            export = True
+        return export

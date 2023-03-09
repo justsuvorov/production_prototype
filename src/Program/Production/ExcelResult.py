@@ -195,7 +195,7 @@ class ExcelResultPotential(ExcelResult):
             path = path
         else:
             path = DATA_DIR
-
+        """
         if not os.path.isfile(path / 'Балансировка компенсационных мероприятий для НРФ.xlsm'):
             home_path = os.path.split(path)[0]
             try:
@@ -205,6 +205,7 @@ class ExcelResultPotential(ExcelResult):
                 home_path = os.path.split(home_path)[0]
                 copy(str(home_path) + '//' + 'Балансировка компенсационных мероприятий для НРФ.xlsm',
                      str(path) + '//' + 'Балансировка компенсационных мероприятий для НРФ.xlsm')
+        """
         print('Exporting results...')
         df = self.dataframe()
         with pd.ExcelWriter(path / 'Results.xlsx') as writer:
@@ -257,6 +258,7 @@ class QlikExcelResult(ResultExport):
                  initial_domain_model: dict = None,
                  domain_model_with_results: dict = None,
                  production: Production = None,
+                 export: bool = True,
                  ):
         self.initial_domain_model = initial_domain_model
         self.domain_model_with_results = domain_model_with_results
@@ -269,6 +271,7 @@ class QlikExcelResult(ResultExport):
         self.fcf_key = 'FCF'
         self.liquid_key = 'Добыча жидкости, тыс. т'
         self.wells = []
+        self.export = export
 
         self.dateline = pd.date_range(start=self.dates.date_start, periods=365)
 
@@ -329,14 +332,15 @@ class QlikExcelResult(ResultExport):
        # return self.data
 
     def save(self, path):
-        company_dict = CompanyDict(path=path).load()
-        data = self.result(company_dict=company_dict)
-        df = pd.DataFrame(self.wells)
-        with pd.ExcelWriter(path / 'qlik_results.xlsx') as writer:
-            data.to_excel(writer, sheet_name='Сводная таблица', index=False)
-            df.to_excel(writer, sheet_name='Таблица скважин', index=False)
+        if self.export:
+            company_dict = CompanyDict(path=path).load()
+            data = self.result(company_dict=company_dict)
+            df = pd.DataFrame(self.wells)
+            with pd.ExcelWriter(path / 'qlik_results.xlsx') as writer:
+                data.to_excel(writer, sheet_name='Сводная таблица', index=False)
+                df.to_excel(writer, sheet_name='Таблица скважин', index=False)
 
-    def result(self, company_dict = None):
+    def result(self, company_dict=None):
 
         list_of_dict = []
         for j in range(len(self.data)):

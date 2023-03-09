@@ -18,7 +18,7 @@ def main(file_path: str):
     time_parameters = gui.time_parameters()
     find_gap = gui.find_gap()
     imported_domain_model = domain_model(file_path=filepath)
-    qlik_result = QlikExcelResult(
+    qlik_result = QlikExcelResult(export=gui.qlik(),
                                   dates=time_parameters)
     for company_index in range(gui.company_iterations()):
         for field_index in range(gui.field_iterations(company_index=company_index)):
@@ -50,18 +50,20 @@ def main(file_path: str):
                                                         iterations_count=200,
                                                         )
 
-                if all_companies_option:
-                    folder = str(file_path) + '\\' + str(gui.companies_names[company_index]) + '\\'
-                    a = folder
-                    Path(folder).mkdir(parents=True, exist_ok=True)
-                    filepath = Path(folder)
-
-                if all_fields_option:
-                    if not all_companies_option:
-                        a = str(file_path) + '\\' + str(gui.companies_names[company_index]) + '\\'
-                    folder = a + '\\' + str(gui.fields_names[field_index]) + '\\'
-                    Path(folder).mkdir(parents=True, exist_ok=True)
-                    filepath = Path(folder)
+                if isinstance(gui.companies_names, str):
+                    gui.companies_names = [gui.companies_names]
+                folder = str(file_path) + '\\' + str(gui.companies_names[company_index]) + '\\'
+                a = folder
+                Path(folder).mkdir(parents=True, exist_ok=True)
+                #filepath = Path(folder)
+                if isinstance(gui.fields_names, str):
+                    gui.fields_names = [gui.fields_names]
+                #if all_fields_option:
+                #    if not all_companies_option:
+                #        a = str(file_path) + '\\' + str(gui.companies_names[company_index]) + '\\'
+                folder = a + '\\' + str(gui.fields_names[field_index]) + '\\'
+                Path(folder).mkdir(parents=True, exist_ok=True)
+                filepath = Path(folder)
 
                 domain_model_with_results = program.result(path=filepath, qlik_result=qlik_result)
 
@@ -73,7 +75,7 @@ def main(file_path: str):
                                     ).save(path=filepath)
 
                 qlik_result.load_data_from_domain_model(domain_model=domain_model_with_results,
-                                )
+                                                        )
                 qlik_result.load_data_from_domain_model(domain_model=domain_model_with_results,
                                                         cut_index=program.vbd_index,
                                                         nrf=True)
