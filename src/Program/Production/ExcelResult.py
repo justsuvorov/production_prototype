@@ -274,6 +274,7 @@ class QlikExcelResult(ResultExport):
         self.export = export
 
         self.dateline = pd.date_range(start=self.dates.date_start, periods=365)
+        self.dateline_export = pd.date_range(start=self.dates.date_start, periods=12, freq='M')
 
     def load_vbd_wells(self, wells: list, vbd_index: int, dates: list):
         try:
@@ -355,9 +356,9 @@ class QlikExcelResult(ResultExport):
                 try:
                     new_dict['ДО'] = company_dict[new_dict['Месторождение']]
                 except:
-                    print('Qlik Result || Месторождения ', new_dict['Месторождение'] , 'нет в списке ДО')
+                    print('Qlik Result || Месторождения ', new_dict['Месторождение'], 'нет в списке ДО')
                     new_dict['ДО'] = ''
-                new_dict['Дата'] = self.dateline[i]
+                new_dict['Дата'] = self.dateline_export[i]
 
                 try:
                     new_dict['Накопленная добычи нефти, исходный профиль, тыс.т.'] = indicators_init[0][i]
