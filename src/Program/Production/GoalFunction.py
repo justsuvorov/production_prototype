@@ -1,10 +1,23 @@
 from math import log10, floor
 from statistics import median
 
+
 class GoalFunction:
+
+    """
+    Целевая функция для оптимизации.
+
+    parameters: параметры оптимизации (настройки алгоритма)
+    results: массив значения выходных параметров по которым вычисляется целевая функция
+    a,b,c : весовые коэффициенты для вычисления целевой функции
+
+    :returns
+    value: значения целевой функции по значениям results
+    """
+
     def __init__(self,
                  parameters,
-                 results = None,
+                 results=None,
                  a: int = 200,
                  b: int = 0,
                  c: int = 0,

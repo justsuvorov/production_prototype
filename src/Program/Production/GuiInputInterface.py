@@ -6,6 +6,13 @@ import os
 import datetime as dt
 
 class GUIInterface(ABC):
+    """
+    Абстрактный класс графического интерфейса.
+
+    :returns
+    parameter_of_algorithm:
+    time_parameters
+    """
     def __init__(self):
         pass
 
@@ -17,6 +24,22 @@ class GUIInterface(ABC):
 
 
 class ExcelInterface(GUIInterface):
+    """
+    класс графического интерфейса Excel. Считывает данные с листа "Исходные данные" и "Словарь ДО". Формирует
+    обекты классов исходных данных для балансировщика
+
+    inputs:
+    filepath: путь к файлу Excel
+
+    :returns
+    parameter_of_algorithm:
+    time_parameters
+    company_iterations: количество расчетов балансировки (ДО)
+    field_iterations: количество расчетов балансировки по месторождениям для выбранного ДО
+    chosen_objects: формирует фильтра для PreparedDomainModel
+    qlik: булева переменная для использования QlikExcelResult
+
+    """
     def __init__(self,
                  filepath: Path,
                  ):

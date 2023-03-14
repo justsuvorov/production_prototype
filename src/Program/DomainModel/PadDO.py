@@ -7,6 +7,18 @@ from Program.DomainModel import DomainModel
 
 
 class PadDO(BaseObject):
+    """
+    Класс куста
+
+    Inputs:
+    name: имя объекта (название)
+    object_info: класс-контейнер основной информации об объекте. Тип, список связей, статус
+    indicators: показатели объекта с описанием сценария. Показатели - словари
+    sensor: класс-логгер ошибок внутри объекта
+    link: словарь ссылок на объекты иерархии
+    pad_info: класс дополнительной информации о кусте
+
+    """
     def __init__(self,
                  name: str,
                  object_info: ObjectInfo,

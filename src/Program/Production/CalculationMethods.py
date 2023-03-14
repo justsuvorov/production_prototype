@@ -1,9 +1,33 @@
 import numpy as np
 from scipy import integrate
+
+
 class SimpleOperations:
+    """
+    Класс простых вычислений показателей для доменной модели.
+
+    inputs:
+    domain_model: доменная модель в виде !!списка!! (list) объектов
+    indicator_name: имя показателя, по которыму выполнить операцию
+    data: дата в виде индекса показателя
+    end_interval_date: дата в виде индекса показателя до которого производить вычисление
+    case: переключатель для метода calculate(). используется в балансировщике.
+            1 - вычисление суммы показателей в дату ("Точка")
+            2 - вычисление среднего за период ("интеграл")
+            3 - вычисление показателей за период  в виде массива("полка")
+            4 - вычисление накопленной суммы показателей (интеграл под кривой)
+    end_year_index : дата в виде индекса окончания года (календарный или скользящий)
+
+    :returns
+    calculate() : метод вызывается внутри балансировщика. возвращает результат вычисления требуемого показателя за период
+    wells_gap() : вычисление ГЭП для объекта доменной модели. Результат записывает в доменную модель в словарь Indicators
+
+
+
+    """
     def __init__(self,
                  domain_model,
-                 indicator_name: str ,
+                 indicator_name: str,
                  date: int = 0,
                  end_interval_date: int = 12,
                  case: int = 1,
@@ -29,7 +53,6 @@ class SimpleOperations:
 
         if self.case == 4:
             return self.cumulative_production()
-
 
     def wells_sum(self, date: int = None):
         sum = 0.0
@@ -59,7 +82,7 @@ class SimpleOperations:
                     sum += object.indicators[self.indicator_name][self.date:self.end_interval_date+1]
                 except:
                     print('SimpleOperations. Corrupted data for well ', object.name)
-            sum = round(sum.mean(),2)
+            sum = round(sum.mean(), 2)
         return sum
 
     def polka_sum(self):

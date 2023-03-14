@@ -8,8 +8,25 @@ from pathlib import Path
 
 
 class PreparedDomainModel:
+    """
+    Класс подготовки доменной модели для балансировщика. Фильтрует объекты для выбранных ДО/месторождений,
+    преобразует месячные показатели в суточные
+
+    inputs:
+    domain_model: доменная модель в виде словаря
+    time_parameters: исходные параметры алгоритма балансировки (даты)
+    find_gap: пареметр расчета ГЭП (если False, то импортируется из NGT)
+    filter: фильтр выбранных ДО и месторождения для расчета в виде словаря
+    path: путь к исходным данным
+
+    :returns
+    recalculate_indicators(): возвращает доменную модель с выбранными ДО и Месторождениями с суточными показателями
+                Возвращает параметры дат для балансировки в виде индексов. (См. SimpleOperations)
+
+
+    """
     def __init__(self,
-                 domain_model,
+                 domain_model: dict,
                  time_parameters: TimeParameters,
                  find_gap: bool = False,
                  filter: dict = {'company': 'All', 'field': 'All'},

@@ -3,6 +3,17 @@ from Program.BaseObject.Object import Object
 
 
 class ObjectRecord:
+    """
+    Класс-контейнер сведений об объекте доменной модели
+    Позволяет формировать иерархию при создании доменной модели
+
+    inputs:
+    name : имя объекта
+    type_of_object: тип объекта (Well, Cluster, Pad ... Plast ...)
+    Object: указатель (ссылка) на объект
+    links: список ссылок на другие объекты иерархии
+    status: Sensor. Сигнализатор ошибок внутри объекта
+    """
     def __init__(self,
                  name: str,
                  type_of_object: str,

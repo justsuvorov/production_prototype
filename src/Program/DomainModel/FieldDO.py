@@ -7,6 +7,18 @@ from Program.DomainModel import DomainModel
 
 
 class FieldDO(BaseObject):
+    """
+    Класс месторождения
+
+    Inputs:
+    name: имя объекта (название)
+    object_info: класс-контейнер основной информации об объекте. Тип, список связей, статус
+    indicators: показатели объекта с описанием сценария. Показатели - словари
+    sensor: класс-логгер ошибок внутри объекта
+    link: словарь ссылок на объекты иерархии
+    field_info: класс дополнительной информации о месторождении
+
+    """
     def __init__(self,
                  name: str,
                  object_info: ObjectInfo,

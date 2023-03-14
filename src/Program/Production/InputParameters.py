@@ -1,6 +1,11 @@
 import datetime as dt
 
+
 class ParametersOfAlgorithm:
+    """
+    Класс-контейнер исходных параметров алгоритма балансировки (бригады, насосы)
+    """
+
     def __init__(self,
                  value: float,
                  time_lag_step: int = None,
@@ -26,9 +31,12 @@ class ParametersOfAlgorithm:
 
 
 class TimeParameters:
+    """
+    Класс-контейнер исходных параметров алгоритма балансировки (даты, периоды времени)
+    """
     def __init__(self,
-                 date_start: dt.datetime = dt.date(year=2023, month=2, day=1),
-                 current_date: dt.datetime = dt.date(year=2023, month=2, day=1),
+                 date_start: dt.date = dt.date(year=2023, month=2, day=1),
+                 current_date: dt.date = dt.date(year=2023, month=2, day=1),
                  date_begin: dt.date = dt.date(year=2023, month=2, day=1),
                  date_end: dt.date = dt.date(year=2024, month=1, day=31),
                  time_step: str = 'Month',
@@ -38,5 +46,3 @@ class TimeParameters:
         self.date_begin = date_begin
         self.date_end = date_end
         self.time_step = time_step
-
-

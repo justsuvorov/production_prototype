@@ -7,7 +7,10 @@ from Program.BaseObject.ObjectInfo import ObjectInfo
 
 
 class FormatReader(ABC):
+    """
+    Абстрактный класс парсера. Сопоставляет таблицу данных с доменной моделью. Формирует объекты доменной модели
 
+    """
     def names(self, df: pd.DataFrame) -> dict:
         pass
 
@@ -22,7 +25,11 @@ class FormatReader(ABC):
 
 
 class SetOfWellsFormatReader(FormatReader):
+    """
+    Парсера для формата пятилеток.
+    Сопоставляет таблицу данных с доменной моделью. Формирует объекты доменной модели
 
+    """
     def __init__(self,
                  indicator_names: list = None
                  ):
@@ -102,7 +109,11 @@ class SetOfWellsFormatReader(FormatReader):
 
 
 class MerFormatReader(FormatReader):
+    """
+    Парсера для формата МЭР.
+    Сопоставляет таблицу данных с доменной моделью. Формирует объекты доменной модели
 
+    """
     def __init__(self,
                  indicator_names: list = None):
         self.indicator_names = indicator_names

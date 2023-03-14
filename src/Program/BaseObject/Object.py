@@ -8,7 +8,15 @@ from Program.BaseObject.Constraint import Constraint
 
 
 class Object(ABC):
+    """
+      Абстрактный класс базового объекта доменной модели
 
+      Inputs:
+      name: имя объекта (название)
+      sensor: класс-логгер ошибок внутри объекта
+      link: словарь ссылок на объекты иерархии
+
+      """
     def __init__(self,
                  name: str,
                  sensor: Sensor,

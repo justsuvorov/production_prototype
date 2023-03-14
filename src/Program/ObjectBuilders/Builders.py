@@ -16,7 +16,19 @@ from Program.DomainModel.FieldDO import FieldDO
 
 
 class WellBuilder(BaseObjectBuilder):
+    """
+      Строитель для объетка скважины доменной модели
 
+      :input
+
+      format_reader: составная часть парсера данных. Сопоставляет данные с классами доменной модели
+      data: элементарный массив данных для одной скважины
+
+      :returns
+      build_object: возвращает объект скважины
+
+
+      """
     def __init__(self,
                  format_reader: FormatReader,
                  data: np.array):
@@ -51,7 +63,16 @@ class WellBuilder(BaseObjectBuilder):
 
 
 class PadBuilder(BaseObjectBuilder):
+    """
+      Строитель для объекта куста доменной модели
 
+      :input
+      format_reader: составная часть парсера данных. Сопоставляет данные с классами доменной модели
+      data: элементарный массив данных для одного куста
+
+      :returns
+      build_object: возвращает объект куста
+      """
     def __init__(self,
                  format_reader: FormatReader,
                  data: np.array
@@ -86,7 +107,17 @@ class PadBuilder(BaseObjectBuilder):
 
 
 class ClusterBuilder(BaseObjectBuilder):
+    """
+      Строитель для объетка подготовки доменной модели
 
+      :input
+      format_reader: составная часть парсера данных. Сопоставляет данные с классами доменной модели
+      data: элементарный массив данных для одной скважины
+
+      :returns
+      build_object: возвращает объект кластера
+
+      """
     def __init__(self,
                  format_reader: FormatReader,
                  data: np.array,
@@ -121,7 +152,16 @@ class ClusterBuilder(BaseObjectBuilder):
 
 
 class FieldBuilder(BaseObjectBuilder):
+    """
+      Строитель для объетка месторождения доменной модели
 
+      :input
+      format_reader: составная часть парсера данных. Сопоставляет данные с классами доменной модели
+      data: элементарный массив данных для одного месторождения
+
+      :returns
+      build_object: возвращает объект месторождения
+      """
     def __init__(self,
                  format_reader: FormatReader,
                  data: np.array,
@@ -156,6 +196,16 @@ class FieldBuilder(BaseObjectBuilder):
 
 
 class DomainModelBuilder(ObjectBuilder):
+    """
+         Строитель для доменной модели. Формирует объекты доменной модели, вызывает остальные классы-строители
+
+         :input
+         format_reader: составная часть парсера данных. Сопоставляет данные с классами доменной модели
+         parser: часть парсера, считывающая данные и возвращающая их в формате таблицы pandas dataframe
+
+         :returns
+         build_object: возвращает объект месторождения
+         """
     def __init__(self,
                  parser: Parser,
                  format_reader: FormatReader,

@@ -9,6 +9,17 @@ from Program.DomainModel.ObjectList import ObjectRecord
 
 
 class ObjectBuilder(ABC):
+    """
+      Абстрактный класс паттерна строитель для обеъкта доменной модели
+
+      Inputs:
+
+      format_reader: составная часть парсера данных. Сопоставляет данные с классами доменной модели
+        Returns:
+    build_object : Объекто доменной модели
+    sensor: объект-лог ошибки
+
+    """
     def __init__(self,
                  format_reader: FormatReader
                  ):
@@ -29,6 +40,14 @@ class ObjectBuilder(ABC):
 
 
 class BaseObjectBuilder(ObjectBuilder):
+    """
+      Абстрактный класс паттерна строитель для базового обеъкта добычи нефти доменной модели
+
+      Inputs:
+
+      format_reader: составная часть парсера данных. Сопоставляет данные с классами доменной модели
+
+      """
     def __init__(self,
                  format_reader: FormatReader
                  ):

@@ -10,6 +10,19 @@ from Program.BaseObject.Object import Object
 
 
 class BaseObject(Object):
+
+    """
+    Абстрактный класс базового объекта добычи нефти
+
+    Inputs:
+    name: имя объекта (название)
+    object_info: класс-контейнер основной информации об объекте. Тип, список связей, статус
+    indicators: показатели объекта с описанием сценария. Показатели - словари
+    sensor: класс-логгер ошибок внутри объекта
+    link: словарь ссылок на объекты иерархии
+
+
+    """
     def __init__(self,
                  name: str,
                  object_info: ObjectInfo,

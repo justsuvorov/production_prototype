@@ -10,8 +10,16 @@ from math import floor
 
 
 class Optimizator(ABC):
+    """
+    Абстрактный класс оптимизацтора. По значениям входных и выходных параметров по условию минимизации целевой функции
+    формирует вектор новых значений параметров
+
+    inputs:
+    parameters: параметры оптимизации
+
+    """
     def __init__(self,
-                 parameters: APParameters ):
+                 parameters: APParameters):
         self.parameters = parameters
 
     @abc.abstractmethod
@@ -44,7 +52,22 @@ class CbcOptimizator(Optimizator):
         model = self.__initialization()
         return model.solve(solver)
 """
+
+
 class GreedyOptimizer():
+    """
+     класс  жадного алгоритма оптимизацтора. По значениям входных и выходных параметров по условию минимизации целевой функции
+    формирует вектор новых значений параметров
+
+    inputs:
+    parameters: параметры оптимизации
+    constraint: ограничения
+    goal_function: целевая функция
+
+    :returns
+    algorithm(): вектор значений параметров оптимизации
+
+    """
     def __init__(self,
                  parameters: APParameters,
                  constraints,
