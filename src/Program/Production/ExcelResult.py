@@ -123,7 +123,7 @@ class ExcelResult(ResultExport):
                     liquid_base.append(self.domain_model[i].indicators[key][0:366])
                 if key == 'FCF':
                     fcf_base.append(self.domain_model[i].indicators[key][0:366])
-       for i in range(self.vbd_index+1, l):
+       for i in range(self.vbd_index, l):
             names.append(self.domain_model[i].name)
             for key in self.domain_model[i].indicators:
                 if key == 'Добыча нефти, тыс. т':

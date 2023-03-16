@@ -128,6 +128,7 @@ class OperationalProductionBalancer(Production):
                                                                    indicator_name='Добыча нефти, тыс. т'
                                                                    ).cumulative_production(active=True)
 
+            constraints.value = self.input_parameters.value
             self._log_('Initial cumulative production: ' + str(self.input_parameters.value))
         self.initial_vbd_index = self.vbd_index
         self._log_('Data prepared')
@@ -210,7 +211,7 @@ class OperationalProductionBalancer(Production):
 
 
     def _count_number_of_obj(self, values):
-        values = values[(self.vbd_index + 1):]
+        values = values[(self.vbd_index):]
         unique, counts = np.unique(values, return_counts=True)
 
         return dict(zip(unique, counts))
@@ -219,9 +220,8 @@ class OperationalProductionBalancer(Production):
         self.vbd_index = len(self.domain_model['Wells'])
         for i in reversed(range(len(self.domain_model['Wells']))):
             if self.domain_model['Wells'][i].object_info.object_activity:
-                self.vbd_index = i
+                self.vbd_index = i + 1
                 break
-
 
     def _save_initial_results(self, path, qlik_result: QlikExcelResult = None):
         self._log_('Exporting initial results')
@@ -234,7 +234,6 @@ class OperationalProductionBalancer(Production):
             qlik_result.load_data_from_domain_model(domain_model=domain_model,
                                                     initial_calc=True,
                                                     cut_index=self.vbd_index)
-
 
     def __export_results(self, path, qlik_result: QlikExcelResult = None):
         domain_model_with_results = self._update_domain_model(self.result_dates, result=True)
@@ -323,7 +322,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
         available_wells = True
         # count = self._count_number_of_pumps()
         for i in range(12):
-            if not available_wells:
+            if not available_wells and self.input_parameters.compensation:
                 break
             k = 0
             if i * 30.43 < constraints.current_date:  # среднее количество дней в месяце
@@ -334,8 +333,8 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
             temp_value = False
             constraints.date_end = floor(i * 30.43 + 31)
             constraints.current_date = floor(i * 30.43)
-            if self.vbd_index >= len(self.domain_model['Wells']):
-                break
+            if not available_wells:
+                continue
             self.optimizer.solution = False
             for iteration in range(0, self.iterations_count):
                 k += 1
@@ -345,18 +344,17 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                                                        constraints=constraints,
                                                        first_iteration=first_iteration)
 
-                if (self.vbd_index >= len(self.domain_model['Wells'])) or self.optimizer.solution:
-                    self.vbd_index = self.vbd_index + k - 2
+                if self.optimizer.solution:
+                    self.vbd_index = self.vbd_index + k - 1
                     break
 
             first_iteration = False
-            if self.vbd_index >= len(self.domain_model['Wells']):
+            if self.vbd_index >= (len(self.domain_model['Wells'])):
                 available_wells = False
 
         return self.optimizer.best_kid
 
     def _turn_off_nrf_wells(self, i: int, temp_value: bool = False, qlik_result: QlikExcelResult = None):
-
 
         sum = 0
         wells = self.domain_model['Wells']
@@ -370,7 +368,7 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                             str(wells[j].name[0]) + ' || ' + str(wells[j].object_info.link_list['Field'][0])] = floor(i * 30.43)
                         values = floor(i * 30.43)
                         if qlik_result is not None:
-                            qlik_result.load_nrf_well(well=wells[j], gap_index = i)
+                            qlik_result.load_nrf_well(well=wells[j], gap_index=i)
                         self._update_indicators(object=wells[j], values=values, vbd=False)
 
             else:

@@ -7,14 +7,14 @@ class ParametersOfAlgorithm:
     """
 
     def __init__(self,
-                 value: float,
-                 time_lag_step: int = None,
+                 value : float = 8000,
+                 time_lag_step: int = 3,
                  max_objects_per_day: int = 5,
-                 days_per_object: int = 1,
-                 cluster_min_liquid: float = 4,
+                 days_per_object: int = 5,
+                 cluster_min_liquid: float = 0,
                  max_nrf_objects_per_day: int = 100,
                  pump_extraction_value: float = 0.1,
-                 compensation: bool = True,
+                 compensation: bool = False,
                  constraints_from_file: bool = False,
                  crew_constraints: dict = {'No constraints': 'No constraints'}
                  ):
