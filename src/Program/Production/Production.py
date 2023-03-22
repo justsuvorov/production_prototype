@@ -204,7 +204,7 @@ class OperationalProductionBalancer(Production):
                     c = np.concatenate((a, b))
 
                 else:
-                    a = np.zeros(365-values)
+                    a = np.zeros(366-values)
                     b = object.indicators[key][0:values]
                     c = np.concatenate((b, a))
                 object.indicators[key] = c
@@ -345,9 +345,11 @@ class CompensatoryProductionBalancer(OperationalProductionBalancer):
                                                        first_iteration=first_iteration)
 
                 if self.optimizer.solution:
-                    self.vbd_index = self.vbd_index + k - 1
+                 #   if k != 2:
+
                     break
 
+            self.vbd_index = self.vbd_index + k - 2
             first_iteration = False
             if self.vbd_index >= (len(self.domain_model['Wells'])):
                 available_wells = False

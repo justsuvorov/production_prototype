@@ -130,10 +130,12 @@ class GreedyOptimizer():
                 a = floor(self.object_count / self.constraints.max_objects_per_day)  # максимальный сдвиг с учетом бригад
                 self.shift = a * self.constraints.days_per_object  # максимальный сдвиг с учетом ремонта
                 try:
-                    for i in range(self.last_index, self.last_index + self.object_count+1):
+                    for i in range(self.last_index, self.last_index + self.object_count):
                         shift = self.shift-self.constraints.days_per_object*floor((i-self.last_index)/self.constraints.max_objects_per_day)
                         self.best_kid[0][i] = int(self.constraints.date_end - shift)
                 except:
+                  #pass
+                  #  raise ('!!!!!!!!!!!!!!!')
                     self.solution = True
 
         else:

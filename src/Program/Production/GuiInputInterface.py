@@ -4,6 +4,7 @@ from Program.Production.InputParameters import *
 from pathlib import Path
 import os
 import datetime as dt
+import edifice
 
 class GUIInterface(ABC):
     """
@@ -235,3 +236,48 @@ class ExcelInterface(GUIInterface):
         except:
             export = True
         return export
+
+class TodoApp(edifice.Component):
+    def __init__(self):
+        super().__init__()
+        self.items = []
+        self.text = ""
+
+    def render(self):
+        return View(style={"margin": 10})(
+            Label("TODO"),
+            TodoList(items=self.items),
+            View(layout="row")(
+                Label("What needs to be done?"),
+                TextInput(self.text,
+                          on_change=lambda text:self.set_state(text=text)),
+                Button(f"Add #{len(self.items)+1}",
+                       on_click=self.add_item)
+            )
+        )
+
+    def add_item(self, e):
+        if not self.text:
+            return
+        new_item = dict(text=self.text, id=dt.datetime.now())
+        self.set_state(items=self.items + [new_item])
+
+from edifice import Button, Label, TextInput, ScrollView, View
+
+class TodoList(edifice.Component):
+    @edifice.register_props
+    def __init__(self, items):
+        pass
+
+    def render(self):
+        return ScrollView()(
+            *[Label(f"* {item['text']}").set_key(item['id'])
+              for item in self.props.items]
+        )
+
+edifice.App(TodoApp()).start()
+
+
+class GUIEdificeTrain:
+    def __init__(self):
+        pass

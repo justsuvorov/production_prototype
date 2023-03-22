@@ -11,12 +11,12 @@ from shutil import copy
 from abc import ABC
 from math import floor
 
+
 class CompanyDict:
     def __init__(self,
                  path
                  ):
         self.path = path
-
 
     def load(self):
         DATA = self.path / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
@@ -34,8 +34,6 @@ class ResultExport(ABC):
     def __init__(self):
         pass
 
-
-
     @abc.abstractmethod
     def save(self):
         pass
@@ -47,7 +45,7 @@ class ExcelResult(ResultExport):
                  production: Production,
                  dates: TimeParameters,
                  results: str = 'Only sum'
-                ):
+                 ):
         self.domain_model = domain_model
         self.production = production
         self.results = results
@@ -62,7 +60,7 @@ class ExcelResult(ResultExport):
         crude_vbd = np.array(crude_vbd)
         fcf_vbd = np.array(fcf_vbd)
         vbd_names = self.names('VBD.xlsx')
-       # base_names = self.names('СВОД_скв._NEW_5лет.xlsx')
+        # base_names = self.names('СВОД_скв._NEW_5лет.xlsx')
         dateline = pd.date_range(start=self.dates.date_start, periods=366)
         data = [crude_base, fcf_base, crude_vbd, fcf_vbd]
         df = []
@@ -72,12 +70,12 @@ class ExcelResult(ResultExport):
             res = np.array(self.production.result_dates[self.vbd_index:])
             res = res - self.production.shift
             np.where(res != 357, res, 366)
-            np.where(res>0, res, 0)
+            np.where(res > 0, res, 0)
             for x in res:
                 if x < 0: x = 0
             df.append(pd.DataFrame(res))
-        #df[0].index = base_names
-        #df[1].index = base_names
+        # df[0].index = base_names
+        # df[1].index = base_names
         df[2].index = vbd_names
         df[3].index = vbd_names
         return df
@@ -91,39 +89,40 @@ class ExcelResult(ResultExport):
         if self.results == 'Only sum':
             df[0].sum(axis=0).to_excel(path / 'Production_results_sum.xlsx')
             df[2].transpose().sum(axis=1).to_excel(path / 'VBD_sum_results.xlsx')
-            df[1].transpose().sum(axis=1).to_excel(path/ 'Economic_results_base_sum.xlsx')
+            df[1].transpose().sum(axis=1).to_excel(path / 'Economic_results_base_sum.xlsx')
             df[3].transpose().sum(axis=1).to_excel(path / 'Economic_results_vbd.xlsx')
         if self.results == 'Full':
-            df[0].to_excel(path/'Production_results_base.xlsx')
-            df[0].sum(axis=0).to_excel(path/'Production_results_sum.xlsx')
-            df[1].to_excel(path/'Economic_results_base.xlsx')
-            df[2].to_excel(path/'Production_results_vbd.xlsx')
-            df[2].transpose().sum(axis=1).to_excel(path/'VBD_sum_results.xlsx')
-            df[3].transpose().to_excel(path/'Economic_results_vbd.xlsx')
+            df[0].to_excel(path / 'Production_results_base.xlsx')
+            df[0].sum(axis=0).to_excel(path / 'Production_results_sum.xlsx')
+            df[1].to_excel(path / 'Economic_results_base.xlsx')
+            df[2].to_excel(path / 'Production_results_vbd.xlsx')
+            df[2].transpose().sum(axis=1).to_excel(path / 'VBD_sum_results.xlsx')
+            df[3].transpose().to_excel(path / 'Economic_results_vbd.xlsx')
         if df[4] is not None:
-            df[4].to_excel(path/'Shifts.xlsx')
+            df[4].to_excel(path / 'Shifts.xlsx')
 
     def _data(self):
-       names = []
-       self.vbd_index = self.production.vbd_index
-       self.date_start = self.production.date_start
-       l = len(self.domain_model)
-       crude_base = []
-       crude_vbd = []
-       fcf_base = []
-       fcf_vbd = []
-       liquid_base = []
-       liquid_vbd = []
-       for i in range(self.vbd_index):
+        names = []
+        self.vbd_index = self.production.vbd_index
+        self.date_start = self.production.date_start
+        l = len(self.domain_model)
+        crude_base = []
+        crude_vbd = []
+        fcf_base = []
+        fcf_vbd = []
+        liquid_base = []
+        liquid_vbd = []
+        for i in range(self.vbd_index):
             names.append(self.domain_model[i].name)
             for key in self.domain_model[i].indicators:
                 if key == 'Добыча нефти, тыс. т':
                     crude_base.append(self.domain_model[i].indicators[key][0:366])
+
                 if key == 'Добыча жидкости, тыс. т':
                     liquid_base.append(self.domain_model[i].indicators[key][0:366])
                 if key == 'FCF':
                     fcf_base.append(self.domain_model[i].indicators[key][0:366])
-       for i in range(self.vbd_index, l):
+        for i in range(self.vbd_index, l):
             names.append(self.domain_model[i].name)
             for key in self.domain_model[i].indicators:
                 if key == 'Добыча нефти, тыс. т':
@@ -133,10 +132,10 @@ class ExcelResult(ResultExport):
                 if key == 'FCF':
                     fcf_vbd.append(self.domain_model[i].indicators[key][0:366])
 
-       return crude_base, crude_vbd, fcf_base, fcf_vbd, liquid_base, liquid_vbd
+        return crude_base, crude_vbd, fcf_base, fcf_vbd, liquid_base, liquid_vbd
 
     def names(self, filename: str):
-        df = pd.read_excel(DATA_DIR/filename).loc[1:]
+        df = pd.read_excel(DATA_DIR / filename).loc[1:]
         names = pd.DataFrame()
         names['Месторождение'] = df['Месторождение']
         names['Название ДНС'] = df['Название ДНС']
@@ -144,7 +143,7 @@ class ExcelResult(ResultExport):
         names['Куст'] = df['Куст']
         return names
 
-       # df = pd.DataFrame
+    # df = pd.DataFrame
 
 
 class ExcelResultPotential(ExcelResult):
@@ -161,7 +160,7 @@ class ExcelResultPotential(ExcelResult):
             production=production,
             dates=dates,
             results=results
-                        )
+        )
 
     def dataframe(self):
         crude_base, crude_vbd, fcf_base, fcf_vbd, liquid_base, liquid_vbd = self._data()
@@ -175,19 +174,19 @@ class ExcelResultPotential(ExcelResult):
             try:
                 df.append(pd.DataFrame(table, columns=dateline))
             except ValueError:
-
                 df.append(pd.DataFrame(np.zeros_like(crude_base), columns=dateline))
+
                 print('Отсутствуют скважины ВБД')
         if self.production.result_dates is not None:
             res = np.array(self.production.result_dates[self.vbd_index:])
             res = res - self.production.shift
             np.where(res != 357, res, 366)
-            np.where(res>0, res, 0)
+            np.where(res > 0, res, 0)
             for x in res:
                 if x < 0: x = 0
             df.append(pd.DataFrame(res))
-       # df[2].index = vbd_names
-       # df[3].index = vbd_names
+        # df[2].index = vbd_names
+        # df[3].index = vbd_names
         return df
 
     def save(self, path=None):
@@ -281,22 +280,23 @@ class QlikExcelResult(ResultExport):
             for i in range(vbd_index, len(wells)):
                 if dates[i] < 365:
                     well = wells[i]
-                    gap_index = floor(dates[i]/30.3)
+                    gap_index = floor(dates[i] / 30.3)
                     self.load_nrf_well(well=well, gap_index=gap_index, type='ВБД')
         except:
             pass
 
-    def load_nrf_well(self, well, gap_index: int, type: str='НРФ'):
+    def load_nrf_well(self, well, gap_index: int, type: str = 'НРФ'):
         well_info = {}
         well_info['Месторождение'] = well.link['Fields'][0].name[0]
         well_info['Имя скважины'] = well.name[0]
         well_info['ДНС'] = well.link['Clusters'][0].name[0]
         well_info['ГЭП'] = gap_index
         well_info['Тип'] = type
-        #well_info['ДО'] =
+        # well_info['ДО'] =
         self.wells.append(well_info)
 
-    def load_data_from_domain_model(self, domain_model: dict, cut_index: int = None, initial_calc: bool = False, nrf: bool = False):
+    def load_data_from_domain_model(self, domain_model: dict, cut_index: int = None, initial_calc: bool = False,
+                                    nrf: bool = False):
 
         domain_model_temp = domain_model.copy()
 
@@ -310,7 +310,6 @@ class QlikExcelResult(ResultExport):
             well_sum = {}
             for well in field.link['Wells']:
                 if well in wells:
-
                     df_crude = pd.Series(data=well.indicators[self.crude_key][0:365], index=self.dateline)
                     df_crude_result = df_crude.groupby([lambda x: x.year, lambda x: x.month]).sum()
 
@@ -330,7 +329,7 @@ class QlikExcelResult(ResultExport):
             else:
                 self.data.append({field.name[0]: np.sum(b, axis=0)})
 
-       # return self.data
+    # return self.data
 
     def save(self, path):
         if self.export:
@@ -373,12 +372,8 @@ class QlikExcelResult(ResultExport):
                 except:
                     print('Qlick Result || error', new_dict['Месторождение'])
 
-
                 list_of_dict.append(new_dict)
         for well in self.wells:
             well['ДО'] = company_dict[well['Месторождение']]
         df = pd.DataFrame(list_of_dict)
         return df
-
-
-
