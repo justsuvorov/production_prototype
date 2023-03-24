@@ -10,21 +10,35 @@ from Program.Production.GuiInputInterface import *
 from shutil import copy
 from abc import ABC
 from math import floor
+from pathlib import Path
 
 
 class CompanyDict:
     def __init__(self,
                  path
                  ):
-        self.path = path
+        self.path = Path(path)
+        self.joint_venture_crude_part = {}
+        self.joint_venture_fcf_part = {}
 
-    def load(self):
-        DATA = self.path / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
+    def load(self, scenario_program: bool = False):
+        if not scenario_program:
+            DATA = self.path / 'Балансировка компенсационных мероприятий для НРФ.xlsm'
+        else:
+            DATA = self.path / 'Словарь ДО.xlsx'
         df = pd.read_excel(DATA, sheet_name='Словарь ДО')
+
 
         df1 = df['Список ДО']
         df2 = df['Месторождение']
+        if scenario_program:
+            dataframe = pd.read_excel(DATA, sheet_name='Доли СП')
+            df3 = dataframe['ДО']
+            df4 = dataframe['По добыче']
+            df5 = dataframe['По FCF']
 
+            self.joint_venture_crude_part = dict(zip(list(df3), list(df4)))
+            self.joint_venture_fcf_part = dict(zip(list(df3), list(df5)))
         company_dict = dict(zip(list(df2), list(df1)))
         return company_dict
 

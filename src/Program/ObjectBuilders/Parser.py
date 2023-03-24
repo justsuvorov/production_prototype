@@ -38,3 +38,12 @@ class SetOfWellsParser(Parser):
 
     def data(self) -> pd.DataFrame:
         return pd.read_excel(self.data_path).loc[1:]
+
+class GfemParser(Parser):
+    def __init__(self,
+                 data_path: str,
+                 ):
+        self.data_path = data_path
+
+    def data(self) -> pd.DataFrame:
+        return pd.read_excel(self.data_path,)
