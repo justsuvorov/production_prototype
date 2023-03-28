@@ -17,6 +17,7 @@ class Parser:
     def domain_model(self):
         pass
 
+
 class MerParser(Parser):
     def __init__(self,
                  merData: MerData
@@ -30,6 +31,7 @@ class MerParser(Parser):
     def _mer(self):
         return self.merData.dataframe()
 
+
 class SetOfWellsParser(Parser):
     def __init__(self,
                  data_path: str,
@@ -38,6 +40,7 @@ class SetOfWellsParser(Parser):
 
     def data(self) -> pd.DataFrame:
         return pd.read_excel(self.data_path).loc[1:]
+
 
 class GfemParser(Parser):
     def __init__(self,

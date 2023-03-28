@@ -303,7 +303,7 @@ poetry.toml
 /dev_requirements.txt
 /src/Program/DomainModel 13-01-23.rar
 /src/Program/utils/formation_base.py
-/exe_utils/hooks/hook-Program.ProductionTests.py
+/exe_utils/hooks/hook-Program.Production.GfemScenarios.py
 /src/Program/Well/Indicators.py
 /src/Program/ProductionTests/IndicatorsSumTest
 /exe_utils/init_paths.sh

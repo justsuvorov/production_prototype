@@ -4,20 +4,15 @@ from pathlib import Path
 import enum
 import pathlib
 
-from edifice import Label,  Slider, TextInput, View, CheckBox, Component, StateManager, Window
-from edifice.components.forms import FormDialog, Form
-from edifice.components import plotting
-
-
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score
 
 
 
 from Program.ObjectBuilders.Parser import GfemParser
+
 
 class GfemDataFrame:
     def __init__(self,
@@ -150,278 +145,49 @@ class RegressionScenarios:
         return [result_full, result_jv]
 
 
-class Application(Component):
-
-    def __init__(self,
-                 scenarios: RegressionScenarios,
-
-                 ):
-
-        self.scenarios = scenarios
-        super().__init__()
-
-        self.base_crude = False
-        self.condence = False
-        self.joint_venture = False
-        self.label_width = 150
-
-        self.state = StateManager({
-                                    "File": pathlib.Path(""),
-                                    })
-
-        self.min_value_full = {}
-        self.max_value_full = {}
-
-        self.min_value_jv = {}
-        self.max_value_jv = {}
-
-        self.min_value = {}
-        self.max_value = {}
-
-        self.vostok_value = 0.0
-        self.megion_value = 0.0
-        self.messoyaha_value = 0.0
-        self.nng_value = 0.0
-        self.orenburg_value = 0.0
-        self.hantos_value = 0.0
-        self.yamal_value = 0.0
-
-        self.do_value = [self.vostok_value,
-                         self.megion_value,
-                         self.messoyaha_value,
-                         self.nng_value,
-                         self.orenburg_value,
-                         self.hantos_value,
-                         self.yamal_value]
-
-        self.sum_value = self.vostok_value + self.megion_value + self.messoyaha_value + self.nng_value + self.orenburg_value + self.hantos_value + self.yamal_value
-
-        self.fcf_value_full = {}
-        self.fcf_value_jv = {}
-        self.fcf_full = 0
-        self.fcf_jv = 0
-        self.fcf_value = {}
-
-        self.company_min = 0
-        self.company_max = 0
-        self.company_value = 0
-
-        self.company_fcf = 0
-
-        self.data = None
-
-        self.company_names = []
-        self.dataframe_list = None
-
-    def initialization(self):
-        data = self.scenarios.scenarios()
-        self.data = data
-        self.company_names = self.scenarios.company_names.copy()
-
-        self.min_full = 0#data[0]['ГПН'][1]
-        self.max_full = data[0]['ГПН'][2]
-        self.fcf_full = data[0]['ГПН'][0].predict(np.array(self.min_full).reshape(-1, 1))
-
-        self.min_jv = 0#data[1]['ГПН'][1]
-        self.max_jv = data[1]['ГПН'][2]
-        self.fcf_jv = data[0]['ГПН'][0].predict(np.array(self.min_jv).reshape(-1, 1))
-
-        for name in self.company_names:
-            self.min_value_full[name] = 0#data[0][name][1]
-            self.max_value_full[name] = data[0][name][2]
-            self.fcf_value_full[name] = np.array([0])#data[0][name][0].predict(np.array(self.min_value_full[name]).reshape(-1,1))
-        for name in self.company_names:
-            self.min_value_jv[name] = 0#data[1][name][1]
-            self.max_value_jv[name] = data[1][name][2]
-            self.fcf_value_jv[name] = np.array([0])#data[1][name][0].predict(np.array(self.min_value_jv[name]).reshape(-1,1))
-        self._choose_scenario()
-        self.dataframe = self.scenarios.dataframe
-        print(self.dataframe_list[0].head())
-
-    def _choose_scenario(self):
-        self.joint_venture = not self.joint_venture
-        if self.joint_venture:
-            self.min_value = self.min_value_jv
-            self.max_value = self.max_value_jv
-            self.company_min = self.min_jv
-            self.company_max = self.max_jv
-            self.company_value = self.company_min
-            self.fcf_value = self.fcf_value_jv
-
-            self.vostok_value = self.min_value_jv[self.company_names[0]]
-            self.megion_value = self.min_value_jv[self.company_names[1]]
-            self.nng_value = self.min_value_jv[self.company_names[2]]
-            self.hantos_value = self.min_value_jv[self.company_names[3]]
-            self.orenburg_value = self.min_value_jv[self.company_names[4]]
-            self.messoyaha_value = self.min_value_jv[self.company_names[5]]
-            self.yamal_value = self.min_value_jv[self.company_names[6]]
-
-        if not self.joint_venture:
-            self.min_value = self.min_value_full
-            self.max_value = self.max_value_full
-            self.company_min = self.min_full
-            self.company_max = self.max_full
-            self.company_value = self.company_min
-
-            self.fcf_value = self.fcf_value_full
-            self.vostok_value = self.min_value_full[self.company_names[0]]
-            self.megion_value = self.min_value_full[self.company_names[1]]
-            self.nng_value = self.min_value_full[self.company_names[2]]
-            self.hantos_value = self.min_value_full[self.company_names[3]]
-            self.orenburg_value = self.min_value_full[self.company_names[4]]
-            self.messoyaha_value = self.min_value_full[self.company_names[5]]
-            self.yamal_value = self.min_value_full[self.company_names[6]]
-
-    def plot(self, ax):
-        x = np.linspace(0, self.company_max, 200)
-
-        if self.joint_venture: j = 0
-        else: j = 1
-        y = self.data[j]['ГПН'][0].predict(x[:,np.newaxis])
-        ax.plot(x, y)
-
-    def _update_fcf(self):
-
-        if self.joint_venture: j = 0
-        else: j = 1
-        self.company_fcf = self.data[j]['ГПН'][0].predict(np.array(self.company_value).reshape(-1, 1))
-        if self.vostok_value == 0:
-            self.fcf_value[self.company_names[0]] = np.array([0])
-        else:
-            self.fcf_value[self.company_names[0]] = self.data[j][self.company_names[0]][0].predict(np.array(self.vostok_value).reshape(-1, 1))
-        if self.megion_value == 0:
-            self.fcf_value[self.company_names[1]]= np.array([0])
-        else:
-            self.fcf_value[self.company_names[1]] = self.data[j][self.company_names[1]][0].predict(np.array(self.megion_value).reshape(-1, 1))
-        self.fcf_value[self.company_names[2]] = self.data[j][self.company_names[2]][0].predict(np.array(self.messoyaha_value).reshape(-1, 1))
-        self.fcf_value[self.company_names[3]] = self.data[j][self.company_names[3]][0].predict(np.array(self.nng_value).reshape(-1, 1))
-        self.fcf_value[self.company_names[4]] = self.data[j][self.company_names[4]][0].predict(np.array(self.orenburg_value).reshape(-1, 1))
-        self.fcf_value[self.company_names[5]] = self.data[j][self.company_names[5]][0].predict(np.array(self.hantos_value).reshape(-1, 1))
-        self.fcf_value[self.company_names[6]] = self.data[j][self.company_names[6]][0].predict(np.array(self.yamal_value).reshape(-1, 1))
-
-    def _find_solution(self):
-
-        pass
-
-    def render(self):
-        self.sum_value = self.vostok_value + self.megion_value + self.messoyaha_value + self.nng_value + self.orenburg_value + self.hantos_value + self.yamal_value
-        self.sum_fcf = sum(self.fcf_value.values())
-        self._update_fcf()
-        return Window(title='Просмотрщик сценариев')(View(layout="column", style={"margin": 15, "font-weight": 1})(View(layout="row")(
-                                            View(layout="column")(
-                                                CheckBox(text='Базовая добыча',),
-                                                CheckBox(text='ГТМ'),
-                                                CheckBox(text='Конденсат'),
-                                                CheckBox(text='Учет доли СП', checked=self.joint_venture, on_change=lambda value: self._choose_scenario()),
-                                                                ),
-                                           # Image(src=r'C:\Users\User\Downloads\Desktop\image.JPG', style={"width": self.label_width*5,  "margin": 10}, scale_to_fit=False)
-                                            plotting.Figure(lambda ax: self.plot(ax))),
-
-
-                                    View(layout="row", )(
-                                        Label('ГПН', style={"width": self.label_width, }, ),
-                                        Slider(value=self.company_value, min_value=self.company_min,
-                                               max_value=self.company_max, on_click=lambda value: self._find_solution(),
-                                               on_change=lambda value: self.set_state(company_value=value)),
-                                        Label(round(self.company_value, 1),
-                                              style={"width": self.label_width / 2, "margin": 5, "align": "center"}),
-                                        Label(self.company_fcf.round()[0],
-                                              style={"width": self.label_width / 2, "margin": 5, "align": "center"})
-
-            ),
-
-
-                                        View(layout="row",)(
-                                            Label(self.company_names[0], style={"width": self.label_width,  }, ),
-                                            Slider(value=self.vostok_value, min_value=self.min_value[self.company_names[0]], max_value=self.max_value[self.company_names[0]], on_change=lambda value: self.set_state(vostok_value=value)),
-                                            Label(round(self.vostok_value, 1), style={"width": self.label_width/2, "margin": 5, "align": "center"}),
-                                            Label(self.fcf_value[self.company_names[0]].round()[0], style={"width": self.label_width / 2, "margin": 5, "align": "center"})
-
-
-                                                            ),
-                                        View(layout="row", )(
-                                            Label(self.company_names[1], style={"width": self.label_width}),
-                                            Slider(value=self.megion_value,min_value=self.min_value[self.company_names[1]], max_value=self.max_value[self.company_names[1]], on_change=lambda value: self.set_state(megion_value=value)),
-                                            Label(round(self.megion_value, 1), style={"width": self.label_width / 2, "margin": 5,
-                                                                         "align": "center"}),
-                                            Label(self.fcf_value[self.company_names[1]].round()[0],
-                                                  style={"width": self.label_width / 2, "margin": 5, "align": "center"})
-
-
-                                        ),
-                                        View(layout="row")(
-                                            Label(self.company_names[2], style={"width": self.label_width}),
-                                            Slider(value=self.messoyaha_value, min_value=self.min_value[self.company_names[2]],
-                                                   max_value=self.max_value[self.company_names[5]],
-                                                   on_change=lambda value: self.set_state(messoyaha_value=value)),
-                                            Label(round(self.messoyaha_value, 1), style={"width": self.label_width / 2, "margin": 5,
-                                                                                         "align": "center"}),
-                                            Label(self.fcf_value[self.company_names[2]].round()[0],
-                                                  style={"width": self.label_width / 2, "margin": 5, "align": "center"})
-                                        ),
-
-                                        View(layout="row", )(
-                                            Label(self.company_names[3], style={"width": self.label_width}),
-                                            Slider(value=self.nng_value, min_value=self.min_value[self.company_names[3]], max_value=self.max_value[self.company_names[3]], on_change=lambda value: self.set_state(nng_value=value)),
-                                            Label(round(self.nng_value, 1), style={"width": self.label_width / 2, "margin": 5,
-                                                                         "align": "center"}),
-                                            Label(self.fcf_value[self.company_names[3]].round()[0],
-                                                  style={"width": self.label_width / 2, "margin": 5, "align": "center"})
-                                        ),
-
-                                        View(layout="row")(
-                                            Label(self.company_names[4], style={"width": self.label_width}),
-                                            Slider(self.orenburg_value, min_value=self.min_value[self.company_names[4]], max_value=self.max_value[self.company_names[4]], on_change=lambda value: self.set_state(orenburg_value=value)),
-                                            Label(round(self.orenburg_value, 1), style={"width": self.label_width / 2, "margin": 5,
-                                                                         "align": "center"}),
-                                            Label(self.fcf_value[self.company_names[4]].round()[0],
-                                                  style={"width": self.label_width / 2, "margin": 5, "align": "center"})
-                                        ),
-                                        View(layout="row")(
-                                            Label(self.company_names[5], style={"width": self.label_width}),
-                                            Slider(value=self.hantos_value, min_value=self.min_value[self.company_names[5]],
-                                                   max_value=self.max_value[self.company_names[5]],
-                                                   on_change=lambda value: self.set_state(hantos_value=value)),
-                                            Label(round(self.hantos_value, 1), style={"width": self.label_width / 2, "margin": 5,
-                                                                                      "align": "center"}),
-                                            Label(self.fcf_value[self.company_names[5]].round()[0],
-                                                  style={"width": self.label_width / 2, "margin": 5, "align": "center"})
-                                        ),
-
-                                        View(layout="row")(
-                                            Label(self.company_names[6], style={"width": self.label_width}),
-                                            Slider(value=self.yamal_value, min_value=self.min_value[self.company_names[6]], max_value=self.max_value[self.company_names[6]],
-                                                   on_change=lambda value: self.set_state(yamal_value=value)),
-                                            Label(round(self.yamal_value, 1), style={"width": self.label_width / 2, "margin": 5,
-                                                                              "align": "center"}),
-                                            Label(self.fcf_value[self.company_names[6]].round()[0],
-                                                  style={"width": self.label_width / 2, "margin": 5, "align": "center"})
-                                        ),
-                                        View(layout="row")(
-                                            Label('Сумма', style={"width": self.label_width}),
-
-                                            Label(round(self.sum_value, 1), style={"width": self.label_width / 2, "margin": 5,
-                                                                                     "align": "right"}),
-                                            Label(self.sum_fcf.round()[0],
-                                                  style={"width": self.label_width / 2, "margin": 5, "align": "right"})
-                                        ),
-
-                                        View(layout="row")(
-                                            Label("Загрузить объекты в Excel", style={"width": self.label_width}),
-                                            Form(self.state,),
-
-            ),
-
-        )
-    )
-
-
 class SolutionBalancer:
 
     def __init__(self,
                  dataframe_list: list,
-                 crude_value: float):
+                 company_names: list,
+                 ):
+        self.dataframe_list = dataframe_list
+        self.company_names = company_names
+        self.data_for_excel = pd.DataFrame()
 
+    def result(self, crude_value: float, solution_index: int):
+        dataframe = self.dataframe_list[solution_index]
+        if solution_index == 0:
+            key = 'НДН за первый месяц; т./сут.'
+        if solution_index == 1:
+            key = 'НДН за первый месяц; т./сут. с долей СП'
+        result_data = dataframe[[key]].to_numpy()
+        data1 = np.copy(result_data)
+        x_initial = data1.T[0]
+        x = np.cumsum(x_initial)
+        array_index = np.searchsorted(x, crude_value, side="left")
+        filtered_dataframe = dataframe.iloc[:array_index]
+        self.data_for_excel = filtered_dataframe
+        temp_data = []
+        for name in self.company_names:
+            x_filtered = filtered_dataframe.loc[filtered_dataframe['ДО'] == name][[key]].to_numpy()
+            x_cum = np.cumsum(x_filtered)
+            try:
+                new_value = x_cum[-1]
+            except IndexError:
+                new_value = 0
+            temp_data.append(float(new_value))
+
+        return temp_data
+
+    def _data(self):
+        pass
+
+    def export_results(self, path=None):
+        if path is None:
+            print('Не задан путь к файлу!')
+        else:
+            self.data_for_excel.to_excel(path)
 
 
 class CompanyDict:
@@ -439,7 +205,6 @@ class CompanyDict:
             DATA = self.path / 'Словарь ДО.xlsx'
         df = pd.read_excel(DATA, sheet_name='Словарь ДО')
 
-
         df1 = df['Список ДО']
         df2 = df['Месторождение']
         if scenario_program:
@@ -452,3 +217,27 @@ class CompanyDict:
             self.joint_venture_fcf_part = dict(zip(list(df3), list(df5)))
         company_dict = dict(zip(list(df2), list(df1)))
         return company_dict
+
+
+class Constraints:
+    def __init__(self,
+                 path,
+                 ):
+        self.path = Path(path)
+        self.dataframe = None
+        self.months = None
+
+    def _data(self):
+        self.dataframe = pd.read_excel(self.path/'Ограничения.xlsx', )
+
+    def load_constraints(self):
+        self._data()
+        self.months_index = self.dataframe.columns[1:]
+        self.months = np.datetime_as_string(np.array(self.dataframe.columns[1:], dtype='datetime64'), unit='M')
+
+    def extract_value(self, index: int):
+        return self.dataframe[self.months_index[index]].iloc[19]*1000
+
+    def extract_list(self, index: int):
+        return self.dataframe[self.months_index[index]]*1000
+
