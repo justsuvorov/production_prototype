@@ -21,6 +21,7 @@ class GfemDataFrame:
         self.file_path = file_path
         self.path = file_path + '\СВОД_Скв_формат из ГФЭМ.xlsm'
         self.parser = GfemParser(data_path=self.path)
+        self.company_names = None
 
     def result(self):
         return self._recalculate_indicators()
@@ -32,6 +33,7 @@ class GfemDataFrame:
         data = self._data()
         companydict = CompanyDict(path=self.file_path)
         company_dict = companydict.load(scenario_program=True)
+        self.company_names = list(companydict.joint_venture_crude_part.keys())
         prepared_data = pd.DataFrame()
         prepared_data['Месторождение'] = data['Месторождение']
         prepared_data['Скважина'] = data['Скважина']
@@ -73,7 +75,7 @@ class SortedGfemData:
 
     def result(self):
         dataframe = self._data()
-        company_names = dataframe['ДО'].unique()
+        company_names = self.prepared_data.company_names
         self.company_names = company_names
         result_data = []
         result_jv = []
@@ -96,7 +98,7 @@ class RegressionScenarios:
         self.dataframe = []
     def _data(self):
         data = self.sorted_data.result()
-        self.company_names = self.sorted_data.company_names
+        self.company_names = self.sorted_data.company_names.copy()
 
         return data
 
