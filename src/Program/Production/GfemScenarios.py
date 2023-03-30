@@ -8,6 +8,9 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+from sklearn.base import BaseEstimator, TransformerMixin
+from matplotlib.pyplot import plot, show
 
 
 
@@ -40,7 +43,7 @@ class GfemDataFrame:
         prepared_data['Куст'] = data['Куст']
         prepared_data['FCF первый месяц'] = data['FCF первый месяц:']/1000
         prepared_data['НДН за первый месяц; тыс. т'] = data['НДН за первый месяц; тыс. т']
-        prepared_data['НДН за первый месяц; т./сут.'] =  prepared_data['НДН за первый месяц; тыс. т']/(365/12)*1000
+        prepared_data['НДН за первый месяц; т./сут.'] = prepared_data['НДН за первый месяц; тыс. т']/(365/12)*1000
         prepared_data['Уд.FCF на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц']/\
                                                        prepared_data['НДН за первый месяц; т./сут.']
         prepared_data['Доля СП по добыче'] = 1
@@ -119,14 +122,45 @@ class RegressionScenarios:
         x_initial = data1.T[0]
         y_initial = data1.T[1]
         x = np.cumsum(x_initial)
+
         x = x[:, np.newaxis]
         y = np.cumsum(y_initial)
+
+        x_test = x[:10000]
+        y_test = y[:10000]
+
+  #      show()
+
+        class GaussianFeatures(BaseEstimator, TransformerMixin):
+            def __init__(self, N, width_factor=2):
+                self.N = N
+                self.width_factor = width_factor
+
+            @staticmethod
+            def _gauss_basis(x, y, width, axis=None):
+                arg = (x - y) / width
+                return np.exp(-0.5 * np.sum(arg ** 2, axis))
+
+            def fit(self, X, y=None):
+                self.centers_ = np.linspace(X.min(), X.max(), self.N)
+                self.width_ = self.width_factor * (self.centers_[1] - self.centers_[0])
+                return self
+
+            def transform(self, X):
+                return self._gauss_basis(X[:, :, np.newaxis], self.centers_, self.width_, axis=1)
+
+
         X_train, X_test, Y_train, Y_test = train_test_split(x, y,
-                                                            test_size=0.2,
+                                                            test_size=0.05,
                                                             random_state=1)
         poly = PolynomialFeatures(4)
+       # poly_model = make_pipeline(GaussianFeatures(8, 2), LinearRegression())
         poly_model = make_pipeline(poly, LinearRegression())
         poly_model.fit(X_train, Y_train)
+     #   plot(np.cumsum(x_initial), poly_model.predict(x))
+     #   show()
+
+
 
         return [poly_model, x.min(), x.max()]
 
@@ -157,27 +191,43 @@ class SolutionBalancer:
         self.company_names = company_names
         self.data_for_excel = pd.DataFrame()
 
-    def result(self, crude_value: float, solution_index: int):
+    def result(self, crude_value: float, solution_index: int, company_name: str = 'All', company_value: float = 0.0):
         dataframe = self.dataframe_list[solution_index]
         if solution_index == 0:
             key = 'НДН за первый месяц; т./сут.'
         if solution_index == 1:
             key = 'НДН за первый месяц; т./сут. с долей СП'
+        if company_name != 'All':
+            company_dataframe = dataframe.loc[dataframe['ДО'] == company_name]
+            company_result = company_dataframe[[key]].to_numpy()
+            company_data = np.copy(company_result)
+            x_initial = company_data.T[0]
+            x = np.cumsum(x_initial)
+            array_index = np.searchsorted(x, company_value, side="left")
+            company_filtered_dataframe = company_dataframe.iloc[:array_index]
+            dataframe = dataframe.loc[dataframe['ДО'] != company_name]
+
         result_data = dataframe[[key]].to_numpy()
         data1 = np.copy(result_data)
         x_initial = data1.T[0]
         x = np.cumsum(x_initial)
-        array_index = np.searchsorted(x, crude_value, side="left")
+        array_index = np.searchsorted(x, crude_value-company_value, side="left")
         filtered_dataframe = dataframe.iloc[:array_index]
-        self.data_for_excel = filtered_dataframe
+        if company_name == 'All':
+            self.data_for_excel = filtered_dataframe
+        else:
+            self.data_for_excel = pd.concat([filtered_dataframe, company_filtered_dataframe])
         temp_data = []
         for name in self.company_names:
-            x_filtered = filtered_dataframe.loc[filtered_dataframe['ДО'] == name][[key]].to_numpy()
-            x_cum = np.cumsum(x_filtered)
-            try:
-                new_value = x_cum[-1]
-            except IndexError:
-                new_value = 0
+            if name == company_name:
+                new_value = company_value
+            else:
+                x_filtered = filtered_dataframe.loc[filtered_dataframe['ДО'] == name][[key]].to_numpy()
+                x_cum = np.cumsum(x_filtered)
+                try:
+                    new_value = x_cum[-1]
+                except IndexError:
+                    new_value = 0
             temp_data.append(float(new_value))
 
         return temp_data
