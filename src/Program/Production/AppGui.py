@@ -188,7 +188,7 @@ class Application(Component):
     def _choose_month(self, value):
         self.set_state(index=int(np.where(self.constraints.months == value)[0]))
         self._set_value(value=self.constraints.extract_value(index=int(np.where(self.constraints.months == value)[0])))
-      #  self.set_state(index=int(np.where(self.constraints.months == value)[0]))
+        self.set_state(index=int(np.where(self.constraints.months == value)[0]))
         self._set_value(value=self.constraints.extract_value(index=int(np.where(self.constraints.months == value)[0])))
         self.sum_value = self.vostok_value + self.megion_value + self.messoyaha_value + self.nng_value + self.orenburg_value + self.hantos_value + self.yamal_value
 
@@ -201,7 +201,6 @@ class Application(Component):
             new_values = self.solution.result(crude_value=self.company_value,
                                               solution_index=j)
         else:
-
             new_values = self.solution.result(crude_value=self.company_value,
                                               solution_index=j,
                                               company_name=company_name,
@@ -226,6 +225,22 @@ class Application(Component):
 
     def set_do_value(self, value, copmany: str):
 
+        self.control_option = False
+
+        if copmany == self.company_names[0]:
+            self.set_state(vostok_value=value)
+        if copmany == self.company_names[1]:
+            self.set_state(megion_value=value)
+        if copmany == self.company_names[2]:
+            self.set_state(messoyaha_value=value)
+        if copmany == self.company_names[3]:
+            self.set_state(nng_value=value)
+        if copmany == self.company_names[4]:
+            self.set_state(orenburg_value=value)
+        if copmany == self.company_names[5]:
+            self.set_state(hantos_value=value)
+        if copmany == self.company_names[6]:
+            self.set_state(yamal_value=value)
         if copmany == self.company_names[0]:
             self.set_state(vostok_value=value)
         if copmany == self.company_names[1]:
@@ -241,7 +256,9 @@ class Application(Component):
         if copmany == self.company_names[6]:
             self.set_state(yamal_value=value)
         self._find_solution(company_name=copmany, company_value=value)
-        self._find_solution(company_name=copmany, company_value=value)
+        self.sum_value = self.vostok_value + self.megion_value + self.messoyaha_value + self.nng_value + self.orenburg_value + self.hantos_value + self.yamal_value
+
+
 
     def add_default_slider(self, name: str, value):
         return View(layout="row", )(

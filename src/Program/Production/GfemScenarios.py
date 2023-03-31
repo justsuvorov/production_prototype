@@ -5,12 +5,18 @@ import enum
 import pathlib
 
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 from sklearn.base import BaseEstimator, TransformerMixin
 from matplotlib.pyplot import plot, show
+import timeit
+from sklearn.linear_model import  LinearRegression, Lasso
+from sklearn.utils._testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
+from sklearn.preprocessing import KBinsDiscretizer
+from mlinsights.mlmodel import PiecewiseRegressor
 
 
 
@@ -54,8 +60,6 @@ class GfemDataFrame:
             prepared_data.at[index,'ДО'] = company_dict[row['Месторождение']]
             prepared_data.at[index,'Доля СП по добыче'] = companydict.joint_venture_crude_part[row['ДО']]
             prepared_data.at[index,'Доля СП по FCF'] = companydict.joint_venture_fcf_part[row['ДО']]
-
-           # row['НДН за первый месяц; т./сут.'] =
 
         prepared_data['НДН за первый месяц; тыс. т. с долей СП'] = prepared_data['НДН за первый месяц; тыс. т'] * prepared_data['Доля СП по добыче']
         prepared_data['FCF первый месяц c долей СП'] = prepared_data['FCF первый месяц'] * prepared_data['Доля СП по FCF']
@@ -117,18 +121,19 @@ class RegressionScenarios:
 
         return [full_scenarios, jv_scenarios]
 
+    @ignore_warnings(category=ConvergenceWarning)
     def _prepare_scenario(self, data):
         data1 = np.copy(data)
         x_initial = data1.T[0]
         y_initial = data1.T[1]
-        x = np.cumsum(x_initial)
-
-        x = x[:, np.newaxis]
+   #     min_index = np.argmin(np.cumsum(y_initial))
+   #     if min_index == 0: min_index = y_initial.size
+    #    print(min_index)
+   #     x1 = np.cumsum(x_initial[:min_index])
+        x1 = np.cumsum(x_initial)
+        x = x1[:, np.newaxis]
+     #   y = np.cumsum(y_initial[:min_index])
         y = np.cumsum(y_initial)
-
-        x_test = x[:10000]
-        y_test = y[:10000]
-
   #      show()
 
         class GaussianFeatures(BaseEstimator, TransformerMixin):
@@ -151,16 +156,18 @@ class RegressionScenarios:
 
 
         X_train, X_test, Y_train, Y_test = train_test_split(x, y,
-                                                            test_size=0.05,
+                                                            test_size=1,
                                                             random_state=1)
-        poly = PolynomialFeatures(4)
-       # poly_model = make_pipeline(GaussianFeatures(8, 2), LinearRegression())
-        poly_model = make_pipeline(poly, LinearRegression())
+
+     #   poly = PolynomialFeatures(10)
+     #   poly_model = make_pipeline(GaussianFeatures(20, 1),  Lasso(alpha=0.001))
+     #   poly_model = make_pipeline(poly, Lasso(alpha=0.1))
+        poly_model = PiecewiseRegressor(verbose=True,
+                           binner=KBinsDiscretizer(n_bins=30))
+     #   poly_model = make_pipeline(poly,  StandardScaler(), ARDRegression())
         poly_model.fit(X_train, Y_train)
-     #   plot(np.cumsum(x_initial), poly_model.predict(x))
-     #   show()
-
-
+     #   plot(x1, poly_model.predict(x))
+   #     show()
 
         return [poly_model, x.min(), x.max()]
 
@@ -193,6 +200,7 @@ class SolutionBalancer:
 
     def result(self, crude_value: float, solution_index: int, company_name: str = 'All', company_value: float = 0.0):
         dataframe = self.dataframe_list[solution_index]
+
         if solution_index == 0:
             key = 'НДН за первый месяц; т./сут.'
         if solution_index == 1:
