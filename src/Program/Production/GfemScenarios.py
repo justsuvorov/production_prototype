@@ -126,48 +126,18 @@ class RegressionScenarios:
         data1 = np.copy(data)
         x_initial = data1.T[0]
         y_initial = data1.T[1]
-   #     min_index = np.argmin(np.cumsum(y_initial))
-   #     if min_index == 0: min_index = y_initial.size
-    #    print(min_index)
-   #     x1 = np.cumsum(x_initial[:min_index])
         x1 = np.cumsum(x_initial)
         x = x1[:, np.newaxis]
-     #   y = np.cumsum(y_initial[:min_index])
         y = np.cumsum(y_initial)
-  #      show()
-
-        class GaussianFeatures(BaseEstimator, TransformerMixin):
-            def __init__(self, N, width_factor=2):
-                self.N = N
-                self.width_factor = width_factor
-
-            @staticmethod
-            def _gauss_basis(x, y, width, axis=None):
-                arg = (x - y) / width
-                return np.exp(-0.5 * np.sum(arg ** 2, axis))
-
-            def fit(self, X, y=None):
-                self.centers_ = np.linspace(X.min(), X.max(), self.N)
-                self.width_ = self.width_factor * (self.centers_[1] - self.centers_[0])
-                return self
-
-            def transform(self, X):
-                return self._gauss_basis(X[:, :, np.newaxis], self.centers_, self.width_, axis=1)
-
 
         X_train, X_test, Y_train, Y_test = train_test_split(x, y,
                                                             test_size=1,
                                                             random_state=1)
 
-     #   poly = PolynomialFeatures(10)
-     #   poly_model = make_pipeline(GaussianFeatures(20, 1),  Lasso(alpha=0.001))
-     #   poly_model = make_pipeline(poly, Lasso(alpha=0.1))
         poly_model = PiecewiseRegressor(verbose=True,
-                           binner=KBinsDiscretizer(n_bins=30))
-     #   poly_model = make_pipeline(poly,  StandardScaler(), ARDRegression())
+                                        binner=KBinsDiscretizer(n_bins=30))
+
         poly_model.fit(X_train, Y_train)
-     #   plot(x1, poly_model.predict(x))
-   #     show()
 
         return [poly_model, x.min(), x.max()]
 
@@ -220,7 +190,10 @@ class SolutionBalancer:
         x_initial = data1.T[0]
         x = np.cumsum(x_initial)
         array_index = np.searchsorted(x, crude_value-company_value, side="left")
-        filtered_dataframe = dataframe.iloc[:array_index]
+        try:
+            filtered_dataframe = dataframe.iloc[:array_index+1]
+        except:
+            filtered_dataframe = dataframe.iloc[:array_index]
         if company_name == 'All':
             self.data_for_excel = filtered_dataframe
         else:
@@ -296,7 +269,7 @@ class Constraints:
         self.months = np.datetime_as_string(np.array(self.dataframe.columns[1:], dtype='datetime64'), unit='M')
 
     def extract_value(self, index: int):
-        return self.dataframe[self.months_index[index]].iloc[19]*1000
+        return self.dataframe[self.months_index[index]].iloc[22]*1000
 
     def extract_list(self, index: int):
         return self.dataframe[self.months_index[index]]*1000

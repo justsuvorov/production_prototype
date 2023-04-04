@@ -216,13 +216,19 @@ class DomainModelBuilder(ObjectBuilder):
         self.object_id = 0
         self.object_list = {}
 
-    def build_object(self, only_wells: bool = None) -> Object:
+    def build_object(self, only_wells: bool = False, only_pads: bool = False, only_clusters: bool = False) -> Object:
         domain_model = []
         data = self._data()
 
-        domain_model.append(self._create_wells(data))
-        if only_wells is False or None:
-           # domain_model.append(self._create_pads(data))
+        if only_pads:
+            only_wells = True
+            domain_model.append(self._create_wells(data, pads=True))
+        if only_clusters:
+            only_wells = True
+            domain_model.append(self._create_wells(data, clusters=True))
+        if only_wells is False:
+            domain_model.append(self._create_wells(data))
+            domain_model.append(self._create_pads(data))
             domain_model.append(self._create_clusters(data))
             domain_model.append(self._create_fields(data))
 
@@ -237,19 +243,33 @@ class DomainModelBuilder(ObjectBuilder):
     def _data(self):
         return self.parser.data()
 
-    def _create_wells(self, data: pd.DataFrame):
+    def _create_wells(self, data: pd.DataFrame, pads: bool = False, clusters: bool = False):
         wells = []
+
         #well_names = data['Скважина'].unique()
         #well_names = data['Скважина']
         for index, well_data in data.iterrows():
             data_temp = well_data.to_numpy()
-            well = WellBuilder(
-                format_reader=self.format_reader,
-                data=data_temp).build_object()
+            type_of_object = 'well'
+            if pads:
+                well = PadBuilder(
+                    format_reader=self.format_reader,
+                    data=data_temp).build_object()
+                type_of_object = 'Well'
+            elif clusters:
+                well = ClusterBuilder(
+                    format_reader=self.format_reader,
+                    data=data_temp).build_object()
+                type_of_object = 'Cluster'
+            else:
+                well = ClusterBuilder(
+                    format_reader=self.format_reader,
+                    data=data_temp).build_object()
+
             wells.append(well)
             self.object_id += 1
             self.object_list[str(well.name[0])+str(well.object_info.link_list['Field'][0])] =\
-                ObjectRecord.create(object=well, type_of_object='Well')
+                ObjectRecord.create(object=well, type_of_object=type_of_object)
 
         """ 
         for name in well_names:
@@ -285,6 +305,17 @@ class DomainModelBuilder(ObjectBuilder):
             self.object_list[self.object_id] = ObjectRecord.create(object=pad,
                                                                    type_of_object='Pad')
             pads.append(pad)
+
+            for pad in pads:
+                pad.link['Wells'] = []
+                for i in range(len(pad.object_info.link_list['Field'])):
+                    wells_names = pad.object_info.link_list['Well'] + pad.object_info.link_list['Field'][i]
+                    for well in wells_names:
+                        if well in self.object_list.keys():
+                            pad.link['Wells'].append(self.object_list[well].object)
+                            self.object_list[well].object.link['Pads'] = []
+                            self.object_list[well].object.link['Pads'].append(pad)
+
         return pads
 
     def _create_clusters(self, data):

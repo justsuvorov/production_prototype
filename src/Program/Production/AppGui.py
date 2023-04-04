@@ -1,13 +1,28 @@
 import edifice
 import numpy as np
 import pandas as pd
+from copy import deepcopy, copy
 
 from Program.Production.GfemScenarios import *
 
-from edifice import Label,  Slider, Dropdown, View, CheckBox, Component, StateManager, Window, Button, ScrollView
+from edifice import Label,  Slider, Dropdown, View, CheckBox,TextInput,  Component, StateManager, Window, Button, ScrollView
 from edifice.components.forms import FormDialog, Form
 from edifice.components import plotting
+from edifice import Timer
 
+
+app_state = StateManager({
+            'company_value': 0.0,
+            'vostok_value': 0.0,
+            'megion_value':  0.0,
+            'messoyaha_value': 0.0,
+            'nng_value': 0.0,
+            'orenburg_value': 0.0,
+            'hantos_value': 0.0,
+            'yamal_value': 0.0,
+            'sum_value': 0.0,
+            "File": pathlib.Path(""),
+        })
 
 class Application(Component):
 
@@ -19,14 +34,12 @@ class Application(Component):
         self.path = Path(path)
         super().__init__()
 
-        self.base_crude = False
-        self.condence = False
-        self.joint_venture = True
-        self.label_width = 200
-
         self.state = StateManager({
             "File": pathlib.Path(""),
         })
+
+        self.joint_venture = True
+        self.label_width = 200
 
         self.min_value_full = {}
         self.max_value_full = {}
@@ -45,7 +58,7 @@ class Application(Component):
         self.hantos_value = 0.0
         self.yamal_value = 0.0
 
-        self.sum_value = self.vostok_value + self.megion_value + self.messoyaha_value + self.nng_value + self.orenburg_value + self.hantos_value + self.yamal_value
+        #self.sum_value = self.vostok_value + self.megion_value + self.messoyaha_value + self.nng_value + self.orenburg_value + self.hantos_value + self.yamal_value
         self.sum_fcf = 0
         self.fcf_value_full = {}
         self.fcf_value_jv = {}
@@ -66,8 +79,13 @@ class Application(Component):
         self.solution = None
         self.constraints = None
         self.index = 0
-        self.result_crude = np.zeros(17)
+        self.result_crude = np.zeros(20)
         self.control_option = True
+
+        self.last_company = 'All'
+        self.last_company_value = 0.0
+        self.label_sum = 0
+        self.last_target = 0
 
     def initialization(self):
         data = self.scenarios.scenarios()
@@ -79,24 +97,20 @@ class Application(Component):
 
         self.min_full = 0
         self.max_full = data[0]['ГПН'][2]
-    #    self.fcf_full = data[0]['ГПН'][0].predict(np.array(self.min_full).reshape(-1, 1))
-        self.fcf_full = np.array(
-                [0])
+        self.fcf_full = np.array([0])
+
         self.min_jv = 0
         self.max_jv = data[1]['ГПН'][2]
-     #   self.fcf_jv = data[1]['ГПН'][0].predict(np.array(self.min_jv).reshape(-1, 1))
-        self.fcf_jv = np.array(
-                [0])
+        self.fcf_jv = np.array([0])
+
         for name in self.company_names:
             self.min_value_full[name] = 0
             self.max_value_full[name] = data[0][name][2]
-            self.fcf_value_full[name] = np.array(
-                [0])
-        for name in self.company_names:
+            self.fcf_value_full[name] = np.array([0])
             self.min_value_jv[name] = 0
             self.max_value_jv[name] = data[1][name][2]
-            self.fcf_value_jv[name] = np.array(
-                [0])
+            self.fcf_value_jv[name] = np.array([0])
+
         self._choose_scenario()
 
         self.dataframe_list = self.scenarios.dataframe
@@ -108,63 +122,81 @@ class Application(Component):
         self.joint_venture = not self.joint_venture
         do_value = self._do_value_list()
         if self.joint_venture:
-            self.min_value = self.min_value_jv
-            self.max_value = self.max_value_jv
-            self.company_min = self.min_jv
-            self.company_max = self.max_jv
-            self.company_value = self.company_min
-            self.fcf_value = self.fcf_value_jv
+            a = self.min_value_jv
+            b = self.max_value_jv
+            c = self.min_jv
+            d = self.max_jv
+            e = self.company_min
+            f = self.fcf_value_jv
             for i in range(len(do_value)):
                 do_value[i] = self.min_value_jv[self.company_names[i]]
 
-        if not self.joint_venture:
-            self.min_value = self.min_value_full
-            self.max_value = self.max_value_full
-            self.company_min = self.min_full
-            self.company_max = self.max_full
-            self.company_value = self.company_min
-            self.fcf_value = self.fcf_value_full
+        else:
+            a = self.min_value_full
+            b = self.max_value_full
+            c = self.min_full
+            d = self.max_full
+            e = self.company_min
+            f = self.fcf_value_full
             for i in range(len(do_value)):
                 do_value[i] = self.min_value_full[self.company_names[i]]
+        self.min_value = a
+        self.max_value = b
+        self.company_min = c
+        self.company_max = d
+        self.company_value = e
+        self.fcf_value = f
         self.company_value = 0
 
     def plot(self, ax):
-        x = np.linspace(0, self.company_max, 100)
         if self.joint_venture:
             j = 1
         else:
             j = 0
-        y = self.data[j]['ГПН'][0].predict(x[:, np.newaxis])
-        ax.plot(x, y)
-        x2 = np.linspace(0, self.company_value, 100)
-        y2 = self.data[j]['ГПН'][0].predict(x2[:, np.newaxis])
-        ax.plot(x2, y2)
+        if self.last_company =='All':
+            x = np.linspace(0, self.company_max, 100)
+            y = self.data[j]['ГПН'][0].predict(x[:, np.newaxis])
+            ax.plot(x, y)
+            x2 = np.linspace(0, self.company_value, 100)
+            y2 = self.data[j]['ГПН'][0].predict(x2[:, np.newaxis])
+            ax.plot(x2, y2)
+        else:
+            x = np.linspace(0, self.max_value[self.last_company], 100)
+            y = self.data[j][self.last_company][0].predict(x[:, np.newaxis])
+            ax.plot(x, y)
+            x2 = np.linspace(0, self.last_company_value, 100)
+            y2 = self.data[j][self.last_company][0].predict(x2[:, np.newaxis])
+            ax.plot(x2, y2)
 
     def _do_value_list(self):
-        return [self.vostok_value,
-                self.megion_value,
-                self.messoyaha_value,
-                self.nng_value,
-                self.orenburg_value,
-                self.hantos_value,
-                self.yamal_value]
+        a = [self.vostok_value,
+             self.megion_value,
+             self.messoyaha_value,
+             self.nng_value,
+             self.orenburg_value,
+             self.hantos_value,
+             self.yamal_value]
+        return a.copy()
 
     def _company_result_list(self):
-        company_result_list = self.constraints.dataframe['ДО'].iloc[:17].to_list()
+        company_result_list = self.constraints.dataframe['ДО'].iloc[:23].to_list()
         return company_result_list
 
     def _do_result_list(self):
-        return [self.vostok_value,
-                self.megion_value,
-                self.messoyaha_value,
-                self.nng_value,
-                self.orenburg_value,
-                self.hantos_value,
-                self.yamal_value,
-                0,0,0,0,0,0,0,0,0,0]
+        result = self._do_value_list()
+
+        return [0,
+                result[0],0,0,0,
+                result[2],
+                result[4],0,
+                result[1],
+                result[5],
+                result[6],
+                result[3],
+                0,0,0,0,0,0,0,0,]
 
     def _update_fcf(self):
-        do_value = self._do_value_list()
+        do_value = self._do_value_list().copy()
         if self.joint_venture:
             j = 1
         else:
@@ -182,26 +214,34 @@ class Application(Component):
 
     def _set_value(self, value):
         self.control_option = True
+        self.last_company = 'All'
+        self.last_company_value = 0
         self.set_state(company_value=value)
-        self._find_solution()
+        new_values = self._find_solution(target=value)
+        i = 0
+
+        for name in self.company_names:
+            self.set_do_value(value=new_values[i], copmany=name)
+            i = i + 1
+        self.set_state(label_sum=np.sum(new_values))
 
     def _choose_month(self, value):
         self.set_state(index=int(np.where(self.constraints.months == value)[0]))
-        self._set_value(value=self.constraints.extract_value(index=int(np.where(self.constraints.months == value)[0])))
-        self.set_state(index=int(np.where(self.constraints.months == value)[0]))
-        self._set_value(value=self.constraints.extract_value(index=int(np.where(self.constraints.months == value)[0])))
-        self.sum_value = self.vostok_value + self.megion_value + self.messoyaha_value + self.nng_value + self.orenburg_value + self.hantos_value + self.yamal_value
+        val = self.constraints.extract_value(index=int(np.where(self.constraints.months == value)[0]))
+        self._set_value(value=val)
 
-    def _find_solution(self, company_name: str = 'All', company_value: float = 0.0):
+    def _find_solution(self, company_name: str = 'All', company_value: float = 0.0, target: float = 0):
+
+        self.last_target = target
         if self.joint_venture:
             j = 1
         else:
             j = 0
         if self.control_option:
-            new_values = self.solution.result(crude_value=self.company_value,
+            new_values = self.solution.result(crude_value=target,
                                               solution_index=j)
         else:
-            new_values = self.solution.result(crude_value=self.company_value,
+            new_values = self.solution.result(crude_value=target,
                                               solution_index=j,
                                               company_name=company_name,
                                               company_value=company_value)
@@ -211,22 +251,12 @@ class Application(Component):
                 new_values[i] = self.max_value[self.company_names[i]]
             if self.min_value[self.company_names[i]] > new_values[i]:
                 new_values[i] = self.min_value[self.company_names[i]]
-
-        self.vostok_value = new_values[0]
-        self.megion_value = new_values[1]
-        self.messoyaha_value = new_values[2]
-        self.nng_value = new_values[3]
-        self.orenburg_value = new_values[4]
-        self.hantos_value = new_values[5]
-        self.yamal_value = new_values[6]
-        self.sum_value = self.vostok_value + self.megion_value + self.messoyaha_value + self.nng_value + self.orenburg_value + self.hantos_value + self.yamal_value
-
-        self.result_crude = np.array(self.constraints.extract_list(index=self.index))[0:len(self._do_result_list())] - np.array(self._do_result_list())
+        return new_values
 
     def set_do_value(self, value, copmany: str):
-
         self.control_option = False
-
+        if value > self.company_value:
+            value = self.company_value
         if copmany == self.company_names[0]:
             self.set_state(vostok_value=value)
         if copmany == self.company_names[1]:
@@ -241,24 +271,17 @@ class Application(Component):
             self.set_state(hantos_value=value)
         if copmany == self.company_names[6]:
             self.set_state(yamal_value=value)
-        if copmany == self.company_names[0]:
-            self.set_state(vostok_value=value)
-        if copmany == self.company_names[1]:
-            self.set_state(megion_value=value)
-        if copmany == self.company_names[2]:
-            self.set_state(messoyaha_value=value)
-        if copmany == self.company_names[3]:
-            self.set_state(nng_value=value)
-        if copmany == self.company_names[4]:
-            self.set_state(orenburg_value=value)
-        if copmany == self.company_names[5]:
-            self.set_state(hantos_value=value)
-        if copmany == self.company_names[6]:
-            self.set_state(yamal_value=value)
-        self._find_solution(company_name=copmany, company_value=value)
-        self.sum_value = self.vostok_value + self.megion_value + self.messoyaha_value + self.nng_value + self.orenburg_value + self.hantos_value + self.yamal_value
+        self.label_sum = round(sum(self._do_result_list()))
 
-
+    def _click(self,):
+        new_values = self._find_solution(target=self.last_target,
+                                         company_name=self.last_company,
+                                         company_value=self.last_company_value)
+        i = 0
+        for name in self.company_names:
+            self.set_do_value(value=new_values[i], copmany=name)
+            i = i + 1
+        self.set_state(label_sum=np.sum(new_values))
 
     def add_default_slider(self, name: str, value):
         return View(layout="row", )(
@@ -266,10 +289,12 @@ class Application(Component):
             Slider(value=value,
                    min_value=self.min_value[name],
                    max_value=self.max_value[name],
-                   on_click=lambda value: self.control(),
-                   on_change=lambda value: self.set_do_value(value=value, copmany=name)),
-            Label(round(value, 1),
+                   on_mouse_up=lambda value1: self.control(copmany=name, value=value),
+                   on_mouse_down=lambda value1: self.control(copmany=name, value=value),
+                   on_change=lambda value1: self.set_do_value(value=value1, copmany=name)),
+            Label(round(value, 1), on_click=lambda value: self._click(),
                   style=self.default_label(i=3)),
+          #  TextInput(round(float(value), 1), on_change=lambda value: self.set_do_value(value=float(value), copmany=name)),
             Label(self.fcf_value[name].round()[0],
                   style=self.default_label(i=3))
             )
@@ -302,93 +327,121 @@ class Application(Component):
             View(style={"height": 0, "border": "1px solid gray"})))
         )
 
-    def control(self):
+    def control(self, copmany, value):
         self.control_option = False
+        self.last_company = copmany
+        self.last_company_value = value
 
-    def render(self):
-        if self.control_option:
-            self._find_solution()
+
+    def update_parameters(self):
+
+        result_crude = copy(self.result_crude)
+        do_list = self._do_result_list()
+        do_result = self._do_value_list()
+        crude = sum(do_list)
+        company_value = copy(self.company_value)
         self._update_fcf()
-        self.sum_value = self.vostok_value + self.megion_value + self.messoyaha_value + self.nng_value + self.orenburg_value + self.hantos_value + self.yamal_value
         self.sum_fcf = sum(self.fcf_value.values())
+        return do_list, do_result, crude, result_crude, company_value
 
+    def application(self, do_list, do_result, crude, result_crude, company_value):
         return Window(title='Просмотрщик сценариев')(
             View(layout="column", style={"margin": 15, "font-weight": 1})
                 (View(layout="row", )(
-                    Label('Месяц прогноза', style=self.default_label(i=1), ),
-                    Dropdown(selection='Месяц', options=self.constraints.months, on_select=lambda value: self._choose_month(value=value)),
-                    Label('', style={"width": 30 }, ),
-                    Label('Необходимо срезать добычи, т/сут.', style=self.default_label(i=1), ),
-                    Label(round(self.constraints.extract_value(index=self.index)), style=self.default_label(i=1), )
-                                    ),
+                Label('Месяц прогноза', style=self.default_label(i=1), ),
+                Dropdown(selection='Месяц', options=self.constraints.months,
+                         on_select=lambda value: self._choose_month(value=value)),
+                Label('', style={"width": 30}, ),
+                Label('Необходимо срезать добычи, т/сут.', style=self.default_label(i=1), ),
+                Label(round(self.constraints.extract_value(index=self.index)), style=self.default_label(i=1), )
+            ),
 
-                ScrollView(layout="column" , )
+                ScrollView(layout="column", )
                     (View(layout="row", style={"border": "1px solid gray"})(
-                                        Label('ДО'),
-                                        Label('Прогноз добычи, т/сут.'),
-                                        Label('Сокращение добычи, т/сут.'),
-                                        Label('Итоговая добыча, т/сут.'),
-                                        ),
+                    Label('ДО'),
+                    Label('Прогноз добычи, т/сут.'),
+                    Label('Сокращение добычи, т/сут.'),
+                    Label('Итоговая добыча, т/сут.'),
+                ),
                     *[self.add_divider(Label(name),
                                        Label(constraint, style=self.default_label(i=2)),
                                        Label(round(value), style=self.default_label(i=2)),
                                        Label(result.round(), style=self.default_label(i=2)),
-                                       ) for name, constraint, value, result in zip(self._company_result_list(), self.constraints.extract_list(index=self.index),  self._do_result_list(), self.result_crude)],
+                                       ) for name, constraint, value, result in zip(self._company_result_list(),
+                                                                                    self.constraints.extract_list(
+                                                                                        index=self.index), do_list,
+                                                                                    result_crude)],
                     (View(layout="row")),
-                    ),
+                ),
 
-        View(layout="row")(Label('Итог'),
-                           Label(round(self.constraints.extract_list(index=self.index).iloc[17]), style=self.default_label(i=2)),
-                           Label(round(self.sum_value, 1), style=self.default_label(i=2)),
-                           Label(self.result_crude.sum().round(), style=self.default_label(i=2)),
-                           ),
+                View(layout="row")(Label('Итог'),
+                                   Label(round(self.constraints.extract_list(index=self.index).iloc[20]),
+                                         style=self.default_label(i=2)),
+                                   Label(round(self.label_sum), style=self.default_label(i=2)),
+                                   Label(result_crude.sum().round(), style=self.default_label(i=2)),
+                                   ),
 
-        View(layout="row")(Label('Квота МЭ'),
-                           Label(round(self.constraints.extract_list(index=self.index).iloc[18]),style=self.default_label(i=2)),
-                           Label('', style=self.default_label(i=1)),
-                           Label('', style=self.default_label(i=1)),
-                           ),
+                View(layout="row")(Label('Квота МЭ'),
+                                   Label(round(self.constraints.extract_list(index=self.index).iloc[21]),
+                                         style=self.default_label(i=2)),
+                                   Label('', style=self.default_label(i=1)),
+                                   Label('', style=self.default_label(i=1)),
+                                   ),
 
-        View(layout="row", )(
+                View(layout="row", )(
                     Label('ДО', style=self.default_label(i=1), ),
                     Label('Сокращение добычи', style={"width": 1.5 * self.label_width, }, ),
+                    Button('Расчет', on_click=lambda a: self._click()),
                     Label('т/сут.', style=self.default_label(i=3)),
-                    Label('Потери FCF, тыс.руб.', style=self.default_label(i=3))
+                    Label('Потери FCF, тыс.руб.', style=self.default_label(i=3)),
+
                 ),
                 View(layout="row", )(
                     Label('ГПН', style={"width": self.label_width, }, ),
-                    Slider(value=self.company_value, min_value=self.company_min,
+                    Slider(value=company_value, min_value=self.company_min,
                            max_value=self.company_max,  # on_click=lambda value: self._find_solution(),
-                           on_change=lambda value: self._set_value(value=value), ),
-                    Label(round(self.company_value, 1),
+                           on_change=lambda value1: self._set_value(value=value1), ),
+                    Label(round(company_value, 1),
                           style=self.default_label(i=3)),
                     Label(self.sum_fcf.round()[0],
                           style=self.default_label(i=3))
                 ),
 
-                *[self.add_default_slider(name, value) for name, value in zip(self.company_names, self._do_value_list())],
+                *[self.add_default_slider(name, value) for name, value in zip(self.company_names, do_result)],
 
                 View(layout="row")(
                     Label('', style={"width": self.label_width}),
                     Label('Сумма', style={"width": 1.5 * self.label_width, "align": "center"}, ),
-                    Label(round(self.sum_value, 1), style=self.default_label(i=3)),
+                    Label(round(self.label_sum), style=self.default_label(i=3)),
                     Label(self.sum_fcf.round()[0], style=self.default_label(i=3))
                 ),
                 View(layout="row")(
-                View(layout="column", style={"height": 250})(
-                  #  CheckBox(text='Базовая добыча', ),
-                  #  CheckBox(text='ГТМ'),
-                 #   CheckBox(text='Конденсат'),
-                    CheckBox(text='Учет доли СП', checked=self.joint_venture,
-                             on_change=lambda value: self._choose_scenario()),
-                ),
+                    View(layout="column", style={"height": 250})(
+                        #  CheckBox(text='Базовая добыча', ),
+                        #  CheckBox(text='ГТМ'),
+                        #   CheckBox(text='Конденсат'),
+                        CheckBox(text='Учет доли СП', checked=self.joint_venture,
+                                 on_change=lambda value: self._choose_scenario()),
+                    ),
 
-                plotting.Figure(lambda ax: self.plot(ax))),
+                       plotting.Figure(lambda ax: self.plot(ax))),
 
                 View(layout="row")(
                     Form(self.state, ),
-                    Button("Загрузить объекты в Excel", style={"width": self.label_width * 2}, on_click=lambda value: self.solution.export_results(path=self.state['File'])),
+                    Button("Загрузить объекты в Excel", style={"width": self.label_width * 2},
+                           on_click=lambda value: self.solution.export_results(path=self.state['File'])),
                 ),
             )
         )
+
+    def _update_sum(self):
+        self.sum_value = self.vostok_value + self.megion_value + self.messoyaha_value + self.nng_value + self.orenburg_value + self.hantos_value + self.yamal_value
+    def render(self):
+#        self.set_state(sum_value = self.vostok_value + self.megion_value + self.messoyaha_value + self.nng_value + self.orenburg_value + self.hantos_value + self.yamal_value)
+
+        do_list, do_result, crude, result_crude, company_value = self.update_parameters()
+
+        window = self.application(do_list, do_result, crude, result_crude, company_value)
+
+        return window
 

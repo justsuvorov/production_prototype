@@ -54,7 +54,7 @@ def domain_model(file_path):
    # vbd_initial = file_path / 'VBD.xlsm'
     #vbd = prepare_data(file_path=file_path)
     print('Прочитан xlsm формат')
-    vbd = prepare_data(file_path=file_path)
+#    vbd = prepare_data(file_path=file_path)
 
 
 
