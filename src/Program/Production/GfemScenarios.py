@@ -64,7 +64,6 @@ class GfemDataFrame:
         prepared_data['НДН за первый месяц; тыс. т. с долей СП'] = prepared_data['НДН за первый месяц; тыс. т'] * prepared_data['Доля СП по добыче']
         prepared_data['FCF первый месяц c долей СП'] = prepared_data['FCF первый месяц'] * prepared_data['Доля СП по FCF']
         prepared_data['НДН за первый месяц; т./сут. с долей СП'] = prepared_data['НДН за первый месяц; тыс. т. с долей СП'] / (365 / 12) * 1000
-
         prepared_data['Уд.FCF с СП на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц c долей СП']/prepared_data['НДН за первый месяц; т./сут. с долей СП']
         return prepared_data
 
@@ -168,40 +167,44 @@ class SolutionBalancer:
         self.company_names = company_names
         self.data_for_excel = pd.DataFrame()
 
-    def result(self, crude_value: float, solution_index: int, company_name: str = 'All', company_value: float = 0.0):
+    def result(self, crude_value: float, solution_index: int, company_name: list = ['All'], company_value: list = [0.0]):
         dataframe = self.dataframe_list[solution_index]
 
         if solution_index == 0:
             key = 'НДН за первый месяц; т./сут.'
         if solution_index == 1:
             key = 'НДН за первый месяц; т./сут. с долей СП'
-        if company_name != 'All':
-            company_dataframe = dataframe.loc[dataframe['ДО'] == company_name]
-            company_result = company_dataframe[[key]].to_numpy()
-            company_data = np.copy(company_result)
-            x_initial = company_data.T[0]
-            x = np.cumsum(x_initial)
-            array_index = np.searchsorted(x, company_value, side="left")
-            company_filtered_dataframe = company_dataframe.iloc[:array_index]
-            dataframe = dataframe.loc[dataframe['ДО'] != company_name]
+        if company_name[0] != 'All':
+            temp_dataframe = dataframe
+            company_filtered_dataframe = pd.DataFrame()
+            for i in range(len(company_name)):
+                company_dataframe = temp_dataframe.loc[temp_dataframe['ДО'] == company_name[i]]
+                company_result = company_dataframe[[key]].to_numpy()
+                company_data = np.copy(company_result)
+                x_initial = company_data.T[0]
+                x = np.cumsum(x_initial)
+                array_index = np.searchsorted(x, company_value[i], side="left")
+                company_filtered_dataframe = pd.concat([company_filtered_dataframe, company_dataframe.iloc[:array_index+1]])
+                dataframe = dataframe.loc[dataframe['ДО'] != company_name[i]]
 
         result_data = dataframe[[key]].to_numpy()
         data1 = np.copy(result_data)
         x_initial = data1.T[0]
         x = np.cumsum(x_initial)
-        array_index = np.searchsorted(x, crude_value-company_value, side="left")
+        array_index = np.searchsorted(x, crude_value-sum(company_value), side="left")
         try:
             filtered_dataframe = dataframe.iloc[:array_index+1]
         except:
             filtered_dataframe = dataframe.iloc[:array_index]
-        if company_name == 'All':
+        if company_name[0] == 'All':
             self.data_for_excel = filtered_dataframe
         else:
             self.data_for_excel = pd.concat([filtered_dataframe, company_filtered_dataframe])
         temp_data = []
         for name in self.company_names:
-            if name == company_name:
-                new_value = company_value
+            if name in company_name:
+               i = company_name.index(name)
+               new_value = company_value[i]
             else:
                 x_filtered = filtered_dataframe.loc[filtered_dataframe['ДО'] == name][[key]].to_numpy()
                 x_cum = np.cumsum(x_filtered)

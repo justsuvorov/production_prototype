@@ -2,6 +2,7 @@ import edifice
 import numpy as np
 import pandas as pd
 from copy import deepcopy, copy
+from typing import Callable
 
 from Program.Production.GfemScenarios import *
 
@@ -38,7 +39,7 @@ class Application(Component):
             "File": pathlib.Path(""),
         })
 
-        self.joint_venture = True
+        self.joint_venture = False
         self.label_width = 200
 
         self.min_value_full = {}
@@ -90,11 +91,13 @@ class Application(Component):
         self.result_crude = np.zeros(20)
         self.control_option = True
 
-        self.last_company = 'All'
-        self.last_company_value = 0.0
+        self.last_company = ['All']
+        self.last_company_value = [0.0]
+        self.edit_company ='Восток'
         self.label_sum = 0
         self.last_target = 0
         self.label_do = []
+        self.solve = ''
 
     def initialization(self):
         data = self.scenarios.scenarios()
@@ -163,7 +166,7 @@ class Application(Component):
             j = 1
         else:
             j = 0
-        if self.last_company =='All':
+        if self.last_company[-1] =='All':
             x = np.linspace(0, self.company_max, 100)
             y = self.data[j]['ГПН'][0].predict(x[:, np.newaxis])
             ax.plot(x, y)
@@ -171,11 +174,11 @@ class Application(Component):
             y2 = self.data[j]['ГПН'][0].predict(x2[:, np.newaxis])
             ax.plot(x2, y2)
         else:
-            x = np.linspace(0, self.max_value[self.last_company], 100)
-            y = self.data[j][self.last_company][0].predict(x[:, np.newaxis])
+            x = np.linspace(0, self.max_value[self.last_company[-1]], 100)
+            y = self.data[j][self.last_company[-1]][0].predict(x[:, np.newaxis])
             ax.plot(x, y)
-            x2 = np.linspace(0, self.last_company_value, 100)
-            y2 = self.data[j][self.last_company][0].predict(x2[:, np.newaxis])
+            x2 = np.linspace(0, self.last_company_value[-1], 100)
+            y2 = self.data[j][self.last_company[-1]][0].predict(x2[:, np.newaxis])
             ax.plot(x2, y2)
 
     def _do_value_list(self):
@@ -228,29 +231,40 @@ class Application(Component):
             self.company_fcf = np.array([0])
         else:
             self.company_fcf = np.array([0])
-        self.set_state(fcf_value=fcf)
+      #  self.set_state(fcf_value=fcf)
+        self.fcf_value=fcf
 
-        self.set_state(sum_fcf=np.sum(list(fcf.values())).round())
+       # self.set_state(sum_fcf=np.sum(list(fcf.values())).round())
+        self.sum_fcf = np.sum(list(fcf.values())).round()
 
-    def _set_value(self, value):
+    def _set_value(self, value, set_state=True):
         self.control_option = True
-        self.last_company = 'All'
-        self.last_company_value = 0
-        self.set_state(company_value=value)
+        self.last_company = []
+        self.last_company.append('All')
+        self.last_company_value = []
+        self.last_company_value.append(0)
+      #  self.set_state(company_value=value)
+        self.company_value = value
+
         new_values = self._find_solution(target=value)
         i = 0
 
         for name in self.company_names:
-            self.set_do_value(value=new_values[i], copmany=name)
+            self.set_do_value(value=new_values[i], copmany=name, set_state=False)
             i = i + 1
-        self.set_state(label_sum=np.sum(new_values))
+      #  self.set_state(label_sum=np.sum(new_values))
+        self.label_sum = np.sum(new_values)
+        if set_state: self.set_state()
 
     def _choose_month(self, value):
-        self.set_state(index=int(np.where(self.constraints.months == value)[0]))
-        val = self.constraints.extract_value(index=int(np.where(self.constraints.months == value)[0]))
-        self._set_value(value=val)
 
-    def _find_solution(self, company_name: str = 'All', company_value: float = 0.0, target: float = 0):
+        self.index = int(np.where(self.constraints.months == value)[0])
+        val = self.constraints.extract_value(index=int(np.where(self.constraints.months == value)[0]))
+        for i in range(2):
+            self._set_value(value=val, set_state=False)
+            self.set_state()
+
+    def _find_solution(self, company_name: list = ['All'], company_value: list = [0.0], target: float = 0):
 
         self.last_target = target
         if self.joint_venture:
@@ -273,47 +287,89 @@ class Application(Component):
                 new_values[i] = self.min_value[self.company_names[i]]
         return new_values
 
-    def set_do_value(self, value, copmany: str):
-        if not isinstance(value, float): value = self.last_company_value
+    def set_do_value(self, value, copmany: str, set_state: bool = True):
+        if not isinstance(value, float): value = self.last_company_value[-1]
+        self.edit_company = copmany
         self.control_option = False
+   #     if sum(self.last_company_value) > self.company_value:
+    #        print('sss')
+    #        value = self.last_company_value[-1]
         if value > self.company_value:
             value = self.company_value
+     #   if sum(self.last_company_value) > self.company_value:
+    #        value = 0
+
         if copmany == self.company_names[0]:
-            self.set_state(vostok_value=value)
-            self.set_state(vostok_value_lab=value)
+            self.vostok_value=value
+            self.vostok_value_lab=value
+
         if copmany == self.company_names[1]:
-            self.set_state(megion_value=value)
-            self.set_state(megion_value_lab=value)
+            self.megion_value=value
+            self.megion_value_lab=value
         if copmany == self.company_names[2]:
-            self.set_state(messoyaha_value=value)
-            self.set_state(messoyaha_value_lab=value)
+
+            self.messoyaha_value=value
+            self.messoyaha_value_lab=value
         if copmany == self.company_names[3]:
-            self.set_state(nng_value=value)
-            self.set_state(nng_value_lab=value)
+
+            self.nng_value=value
+            self.nng_value_lab=value
         if copmany == self.company_names[4]:
-            self.set_state(orenburg_value=value)
-            self.set_state(orenburg_value_lab=value)
+
+            self.orenburg_value=value
+            self.orenburg_value_lab=value
         if copmany == self.company_names[5]:
-            self.set_state(hantos_value=value)
-            self.set_state(hantos_value_lab=value)
+
+            self.hantos_value=value
+            self.hantos_value_lab=value
         if copmany == self.company_names[6]:
-            self.set_state(yamal_value=value)
-            self.set_state(yamal_value_lab=value)
+
+            self.yamal_value=value
+            self.yamal_value_lab=value
+       # self.set_state()
+
         self.label_sum = round(sum(self._do_result_list()))
-        self.set_state(label_do=self._do_result_list())
+    #    self.set_state(label_do=self._do_result_list())
+        self.label_do = self._do_result_list()
         self.result_crude = np.array(self.constraints.extract_list(index=self.index))[
                             0:len(self._do_result_list())] - np.array(self._do_result_list())
         self._update_fcf()
+        if set_state:
+            self.set_state()
+
 
     def _click(self,):
-        new_values = self._find_solution(target=self.last_target,
-                                         company_name=self.last_company,
-                                         company_value=self.last_company_value)
-        i = 0
-        for name in self.company_names:
-            self.set_do_value(value=new_values[i], copmany=name)
-            i = i + 1
-        self.set_state(label_sum=np.sum(new_values))
+        for i in range(2):
+            new_values = self._find_solution(target=self.last_target,
+                                             company_name=self.last_company,
+                                             company_value=self.last_company_value)
+
+            self.label_sum = np.sum(new_values)
+
+            i = 0
+            for name in self.company_names:
+                self.set_do_value(value=new_values[i], copmany=name, set_state=False)
+                i = i + 1
+            if sum(self.last_company_value) > self.company_value:
+                self.solve = 'Нет решения'
+            else:
+                self.solve = ''
+            self.set_state()
+        #self.set_state(label_sum=np.sum(new_values))
+
+    def __onSliderValueChanged(self, value):
+        self.set_do_value(value=value, copmany=self.last_company[-1], set_state=True)
+
+    def __onEditValueChanged(self, value):
+
+
+        self._set_value(value=float(value))
+
+    def __onEditClick(self, value):
+
+        self.control(value=float(value), copmany=self.last_company[-1])
+        self.set_do_value(value=float(value), copmany=self.last_company[-1], set_state=False)
+        self.set_state()
 
     def add_default_slider(self, name: str, value):
         return View(layout="row", )(
@@ -324,10 +380,11 @@ class Application(Component):
                    on_mouse_up=lambda value1: self.control(copmany=name, value=value),
                    on_mouse_down=lambda value1: self.control(copmany=name, value=value),
                    on_change=lambda value1: self.set_do_value(value=value1, copmany=name)),
+                   #on_change=self.__onSliderValueChanged),
             TextInput(text=str(round(value, 1)),
-                      on_click=lambda value1: self.control(copmany=name, value=value),
-                  #    on_change=lambda value1: self.set_do_value(value=float(value1), copmany=name),
-                      on_edit_finish= lambda: self._click(),
+             #         on_click=lambda value1 :self.control(copmany=name, value=value),
+                   #   on_change=self.__onEditValueChanged,
+                  #    on_edit_finish=self._click,
                       style=self.default_label(i=6)),
           #  TextInput(round(float(value), 1), on_change=lambda value: self.set_do_value(value=float(value), copmany=name)),
             Label(self.fcf_value[name].round()[0],
@@ -368,10 +425,22 @@ class Application(Component):
             View(style={"height": 0, "border": "1px solid gray", })))
         )
 
+
     def control(self, copmany, value):
+
+        self.edit_company = copmany
+
+        if self.last_company[0] == 'All':
+            self.last_company_value = []
+            self.last_company = []
         self.control_option = False
-        self.last_company = copmany
-        self.last_company_value = value
+        if copmany not in self.last_company:
+            self.last_company.append(copmany)
+            self.last_company_value.append(value)
+        else:
+            i = self.last_company.index(copmany)
+            self.last_company[i] = copmany
+            self.last_company_value[i] = value
 
     def update_parameters(self):
 
@@ -401,9 +470,9 @@ class Application(Component):
                                          Label('Итоговая добыча, т/сут.', style=self.default_label(i=2)),),
                                         ),
                         *[self.add_divider(Label(name),
-                                         Label(constraint, style=self.default_label(i=2)),
-                                         Label(round(value), style=self.default_label(i=2)),
-                                         Label(result.round(), style=self.default_label(i=2)),
+                                          Label(constraint, style=self.default_label(i=2)),
+                                          Label(round(value), style=self.default_label(i=2)),
+                                          Label(result.round(), style=self.default_label(i=2)),
                                           ) for name, constraint, value, result in zip(self._company_result_list(),
                                                                                     self.constraints.extract_list(
                                                                                         index=self.index), self.label_do,
@@ -441,11 +510,15 @@ class Application(Component):
                            on_change=lambda value1: self._set_value(value=value1), ),
                     Label(round(company_value, 1),
                           style=self.default_label(i=3)),
+                   # TextInput(text=str(round(company_value, 1)),
+                  #            on_change=self.__onEditValueChanged,
+                   #           on_edit_finish=self._click,
+                    #          style=self.default_label(i=6)),
                     Label(self.sum_fcf,
                           style=self.default_label(i=3))
                 ),
                 View(layout="row", )(
-                    Label('', style={"width": self.label_width, }, ),
+                    Label(self.solve, style={"width": self.label_width, "align": 'center' }, ),
 
 
                 ),
@@ -465,7 +538,7 @@ class Application(Component):
                         #  CheckBox(text='ГТМ'),
                         #   CheckBox(text='Конденсат'),
                         CheckBox(text='Учет доли СП', checked=self.joint_venture,
-                                 on_change=lambda value: self._choose_scenario(), style={"width": self.label_width / 1.5, "align": "center", "height": 190, }),
+                                 on_change=self._choose_scenario, style={"width": self.label_width / 1.5, "align": "center", "height": 190, }),
                         plotting.Figure(lambda ax: self.plot(ax)),  # ),
                     ),
 
@@ -482,4 +555,5 @@ class Application(Component):
         window = self.application(do_result, result_crude, company_value)
 
         return window
+
 
