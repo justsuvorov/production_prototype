@@ -80,7 +80,13 @@ class MyApplication(Component):
         self.__enableOnChangeCalback = True
 
     def __onSaveButtonClick(self, value):
-        self.__model.save_results(path=self.state['Path'])
+        self.__model.save_results(path=self.state['File'])
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_Reset_click_button(self, value):
+        self.__model.reset_results()
         self.__enableOnChangeCalback = False
         self.set_state()
         self.__enableOnChangeCalback = True
@@ -134,7 +140,7 @@ class MyApplication(Component):
                         View(layout="row", )(
                             Label('ДО', style=default_label(i=1), ),
                             Label('Сокращение добычи', style={"width": 1.5 * 200, }, ),
-                            Button('Расчет',),
+                            Button('Сбросить результаты', on_click=self.__on_Reset_click_button),
                             Label('т/сут.', style=default_label(i=3)),
                             Label('Потери FCF, млн.руб.', style=default_label(i=3)),
 
@@ -232,7 +238,7 @@ class MyApplication(Component):
                         View(layout="row", )(
                             CheckBox(text='Учет доли СП', checked=self.__model.joint_venture,
                                      on_change=self.__on_checkbox_changed if self.__enableOnChangeCalback else None,
-                                     style={"width": 200 / 1.5, "align": "center", "height": 50, }),
+                                     style={"width": 200 / 1.5, "align": "left", "height": 50, }),
                           #  plotting.Figure(lambda ax: self.plot(ax)),  # ),
                         ),
 

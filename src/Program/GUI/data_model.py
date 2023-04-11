@@ -76,6 +76,10 @@ class DataModel:
         self.index = 0
         self.target = DataValue('0')
 
+        self.__last_company_value = [0]
+        self.__last_company = ['All']
+
+        self.__last_target = 0.0
 
     def initializtion(self):
         self.__data = self.scenarios.scenarios()
@@ -110,7 +114,6 @@ class DataModel:
         self.result_crude_list = self.__result_crude_list()
 
         self.choose_scenario()
-
 
     def choose_scenario(self):
 
@@ -152,7 +155,6 @@ class DataModel:
                         0:len(self.__do_result_list())] - np.array(self.__do_result_list())
         return result_crude
 
-
     def choose_month(self, value):
     #    self.control_option = False
         self.index = int(np.where(self.__constraints.months == value)[0])
@@ -163,59 +165,112 @@ class DataModel:
         self.set_value(company_value=val)
         new_values = self._find_solution(target=val)
         self.__update_values_for_view(new_values)
-        self.result_crude_list = self.__result_crude_list()
-        self.result_crude_sum.update(sum(self.result_crude_list))
         self.quota.update(self.__constraints.extract_list(index=self.index).iloc[21])
 
     def on_click(self):
         self.__control_option = False
 
+    def __control(self, company, value):
+        self.__control_option = False
+        if self.__last_company[0] == 'All':
+            self.__last_company_value = []
+            self.__last_company = []
+        self.control_option = False
+        if company not in self.__last_company:
+            self.__last_company.append(company)
+            self.__last_company_value.append(value)
+        else:
+            i = self.__last_company.index(company)
+            self.__last_company[i] = company
+            self.__last_company_value[i] = value
+
     def set_value(self, company_value):
-  #      self.control_option = True
         self.__control_option = True
+        self.__last_company = []
+        self.__last_company.append('All')
+        self.__last_company_value = []
+        self.__last_company_value.append(0)
+        self.__last_target = company_value
         self.company_value.update(company_value)
-      #  new_crude_values = self._find_solution(target=company_value)
-    #    self.__update_crude_values_for_view(values=new_crude_values)
+
+    def reset_results(self):
+        self.on_gpn_change(company_value=self.__last_target)
+
 
     def on_gpn_change(self, company_value):
         self.set_value(company_value)
         new_values = self._find_solution(target=company_value)
         self.__update_values_for_view(new_values)
-    #    self.result_crude_list = self.__result_crude_list()
-    #    self.result_crude_sum.update(sum(self.result_crude_list))
-     #   self.quota.update(self.__constraints.extract_list(index=self.index).iloc[21])
 
     def set_vostok_value(self, value):
+        value = self.__check_value(value=value, company=self.company_names[0])
         self.vostok_value.update(value)
-        self.vostok_fcf.update(self._update_company_fcf(value, i=0))
+        self.__control(company=self.company_names[0],value=value)
+        new_values = self._find_solution(target=self.__last_target,
+                                         company_name=self.__last_company,
+                                         company_value=self.__last_company_value)
+        self.__update_values_for_view(new_values)
+
 
     def set_megion_value(self, value):
+        value = self.__check_value(value=value, company=self.company_names[1])
         self.megion_value.update(value)
-        self.megion_fcf.update(self._update_company_fcf(value, i=1))
+        self.__control(company=self.company_names[1], value=value)
+        new_values = self._find_solution(target=self.__last_target,
+                                         company_name=self.__last_company,
+                                         company_value=self.__last_company_value)
+        self.__update_values_for_view(new_values)
 
     def set_messoyaha_value(self, value):
+        value = self.__check_value(value=value, company=self.company_names[2])
         self.messoyaha_value.update(value)
-        self.messoyaha_fcf.update(self._update_company_fcf(value, i=2))
+        self.__control(company=self.company_names[2], value=value)
+        new_values = self._find_solution(target=self.__last_target,
+                                         company_name=self.__last_company,
+                                         company_value=self.__last_company_value)
+        self.__update_values_for_view(new_values)
+
 
     def set_nng_value(self, value):
+
+        value = self.__check_value(value=value, company = self.company_names[3])
         self.nng_value.update(value)
-        self.nng_fcf.update(self._update_company_fcf(value, i=3))
+        self.__control(company=self.company_names[3], value=value)
+        new_values = self._find_solution(target=self.__last_target,
+                                         company_name=self.__last_company,
+                                         company_value=self.__last_company_value)
+        self.__update_values_for_view(new_values)
 
     def set_orenburg_value(self, value):
+        value = self.__check_value(value=value, company=self.company_names[4])
         self.orenburg_value.update(value)
-        self.orenburg_fcf.update(self._update_company_fcf(value, i=4))
+        self.__control(company=self.company_names[4], value=value)
+        new_values = self._find_solution(target=self.__last_target,
+                                         company_name=self.__last_company,
+                                         company_value=self.__last_company_value)
+        self.__update_values_for_view(new_values)
 
     def set_hantos_value(self, value):
+        value = self.__check_value(value=value, company=self.company_names[5])
         self.hantos_value.update(value)
-        self.hantos_fcf.update(self._update_company_fcf(value, i=5))
+        self.__control(company=self.company_names[5], value=value)
+        new_values = self._find_solution(target=self.__last_target,
+                                         company_name=self.__last_company,
+                                         company_value=self.__last_company_value)
+        self.__update_values_for_view(new_values)
 
     def set_yamal_value(self, value):
+        value = self.__check_value(value=value, company=self.company_names[6])
         self.yamal_value.update(value)
-        self.yamal_fcf.update(self._update_company_fcf(value, i=6))
+        self.__control(company=self.company_names[6], value=value)
+        new_values = self._find_solution(target=self.__last_target,
+                                         company_name=self.__last_company,
+                                         company_value=self.__last_company_value)
+        self.__update_values_for_view(new_values)
 
 
     def __update_values_for_view(self, values):
-
+        self.company_value.update(self.__last_target)
         self.crude_sum.update(sum(values))
         self.vostok_value.update(values[0])
         self.megion_value.update(values[1])
@@ -237,6 +292,11 @@ class DataModel:
         self.hantos_fcf.update(fcf[5])
         self.yamal_fcf.update(fcf[6])
 
+        self.crude_list = self.__do_result_list()
+        self.result_crude_list = self.__result_crude_list()
+        self.result_crude_sum.update(sum(self.result_crude_list))
+
+
     def _update_company_fcf(self, value, i):
         if self.joint_venture:
             j = 1
@@ -248,7 +308,6 @@ class DataModel:
         else:
             fcf = self.__data[j][self.company_names[i]][0].predict(np.array(value).reshape(-1, 1))
         return float(fcf)
-
 
     def _update_fcf(self, values):
         fcf = np.zeros_like(values)
@@ -268,7 +327,6 @@ class DataModel:
 
     def _find_solution(self, company_name: list = ['All'], company_value: list = [0.0], target: float = 0):
 
-        self.last_target = target
         if self.joint_venture:
             j = 1
         else:
@@ -289,39 +347,20 @@ class DataModel:
                 new_values[i] = self.min_value[self.company_names[i]].toFloat
         return new_values
 
+    def __check_value(self, value, company):
+        if self.__last_company[-1] != 'All':
+            try:
+                i = self.__last_company.index(company)
+            except:
+                i = 50
+            summa = self.__last_target
+            val = 0
+            for j in range(len(self.__last_company_value)):
+                if j != i:
+                    val = val + self.__last_company_value[j]
+            if summa < (val + value):
+                value = summa - val
+        return value
 
-"""
-    def changeValue1(self, value):
-        self.value1.update(value)
-        self.__doMath1()
-
-    def changeValue2(self, value):
-        self.value2.update(value)
-        self.__doMath1()
-
-    def changeValue3(self, value):
-        self.value3.update(value)
-        self.__doMath3()
-
-    def __doMath1(self):
-        value1 = self.value1.toFloat
-        value2 = self.value2.toFloat
-        # for i in range(1000000000000):
-        #     value3 = 0.001 * (value1 + value2)
-        value3 = 0.001 * (value1 + value2)
-        self.__updateValuesForView(value1, value2, value3)
-
-
-    def __doMath3(self):
-        value3 = self.value3.toFloat
-        value1 = value3 / 2
-        value2 = value3 / 2
-        self.__updateValuesForView(value1, value2, value3)
-
-
-    def __updateValuesForView(self, value1, value2, value3):
-        self.value1.update(value1)
-        self.value2.update(value2)
-        self.value3.update(value3)
-"""
-
+    def save_results(self, path):
+        self.__solution.export_results(path=path)
