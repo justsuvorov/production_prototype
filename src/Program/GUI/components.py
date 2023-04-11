@@ -60,6 +60,13 @@ class DefaultDropdown(Component):
         self.__options = options
         super().__init__()
         self.__onSelect = onSelect
+        self.__value = DataValue('0')
+
+    def __onSelectChanged(self, value):
+        #  print(f'new value: {value}')
+        self.__value.update(value)
+        if self.__onSelect:
+            self.__onSelect(value)
 
     def render(self):
         return View(layout="row", style={"margin": 10, "font-weight": 1})(
@@ -70,7 +77,7 @@ class DefaultDropdown(Component):
                      ),
             Label('', style={"width": 30}, ),
             Label('Необходимо срезать добычи, т/сут.', style=default_label(i=1), ),
-            Label(round(self.__label_value.toFloat), style=default_label(i=1), )
+            Label(self.__label_value.toStr, style=default_label(i=1), )
         )
 
 
@@ -81,15 +88,18 @@ class DefaultSlider(Component):
                  fcf_value: DataValue,
                  onChanged: Callable[[str or float], None],
                  min_value: DataValue,
-                 max_value: DataValue
+                 max_value: DataValue,
+
                  ):
         self.__label = label
         self.__value = value
         self.__fcf_value = fcf_value
         self.__min_value = min_value
         self.__max_value = max_value
+
         super().__init__()
         self.__onChanged = onChanged
+
 
     def render(self):
         return View(layout="row", )(
@@ -99,20 +109,29 @@ class DefaultSlider(Component):
                    max_value=self.__max_value.toFloat,
                    #    on_mouse_up=lambda value1: self.control(copmany=name, value=value),
                    #     on_mouse_down=lambda value1: self.control(copmany=name, value=value),
+                   # on_change=self.__onValueChanged,
                    on_change=self.__onValueChanged,
+                   on_mouse_up=self.__onSliderComplete,
                    ),
 
             TextInput(text=self.__value.toStr,
                       #        on_click=lambda value1 :self.control(copmany=name, value=value),
-                      on_change=self.__onValueChanged,
+                 on_change=self.__onValueChanged,
+                 on_edit_finish=self.__onInputComplete,
                       style=default_label(i=6)),
             #  TextInput(round(float(value), 1), on_change=lambda value: self.set_do_value(value=float(value), copmany=name)),
-            Label(self.__fcf_value,
+            Label(self.__fcf_value.toStr,
                   style=default_label(i=3))
         )
 
-    def __onValueChanged(self, value):
-        print(f'new value: {value}')
-        self.__value.update(value)
+    def __onSliderComplete(self, value):
         if self.__onChanged:
-            self.__onChanged(value)
+            self.__onChanged(self.__value.toFloat)
+
+    def __onInputComplete(self):
+        if self.__onChanged:
+            self.__onChanged(self.__value.toFloat)
+
+    def __onValueChanged(self, value):
+      #  print(f'new value: {value}')
+        self.__value.update(value)
