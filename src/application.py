@@ -8,9 +8,9 @@ import click
 from pathlib import Path
 
 
-#@click.command()
-#@click.option('--path')
-path=r'C:\Users\User\Documents\production_prototype\src\program\data'
+@click.command()
+@click.option('--path')
+#path=r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
     #domain_model_full = domain_model(file_path=Path(path))
@@ -24,9 +24,9 @@ def main(path: str):
     data_model = DataModel(scenarios=scenarios, path=path)
     data_model.initializtion()
    # app = Application(scenarios=scenarios, path=path)
-    app = MyApplication(data_model=data_model)
+    app = MyApplication(data_model=data_model, result_path=path)
   #  app.initialization()
     App(app).start()
 
 if __name__ == '__main__':
-    main(path)
+    main()

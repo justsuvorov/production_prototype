@@ -123,6 +123,7 @@ class Application(Component):
             self.max_value_jv[name] = data[1][name][2]
             self.fcf_value_jv[name] = np.array([0])
 
+
         self._choose_scenario()
 
         self.dataframe_list = self.scenarios.dataframe

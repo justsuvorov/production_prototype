@@ -134,7 +134,7 @@ class RegressionScenarios:
                                                             random_state=1)
 
         poly_model = PiecewiseRegressor(verbose=True,
-                                        binner=KBinsDiscretizer(n_bins=30))
+                                        binner=KBinsDiscretizer(n_bins=40))
 
         poly_model.fit(X_train, Y_train)
 
@@ -178,12 +178,13 @@ class SolutionBalancer:
             temp_dataframe = dataframe
             company_filtered_dataframe = pd.DataFrame()
             for i in range(len(company_name)):
+
                 company_dataframe = temp_dataframe.loc[temp_dataframe['ДО'] == company_name[i]]
                 company_result = company_dataframe[[key]].to_numpy()
                 company_data = np.copy(company_result)
                 x_initial = company_data.T[0]
                 x = np.cumsum(x_initial)
-                array_index = np.searchsorted(x, company_value[i], side="left")
+                array_index = np.searchsorted(x, company_value[i], side="right")
                 company_filtered_dataframe = pd.concat([company_filtered_dataframe, company_dataframe.iloc[:array_index+1]])
                 dataframe = dataframe.loc[dataframe['ДО'] != company_name[i]]
 
@@ -191,7 +192,7 @@ class SolutionBalancer:
         data1 = np.copy(result_data)
         x_initial = data1.T[0]
         x = np.cumsum(x_initial)
-        array_index = np.searchsorted(x, crude_value-sum(company_value), side="left")
+        array_index = np.searchsorted(x, crude_value-sum(company_value), side="right")
         try:
             filtered_dataframe = dataframe.iloc[:array_index+1]
         except:

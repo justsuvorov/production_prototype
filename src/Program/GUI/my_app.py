@@ -1,3 +1,5 @@
+import os
+
 from edifice import Label,  Slider, Dropdown, View, CheckBox,TextInput,  Component, StateManager, Window, Button, ScrollView
 from edifice.components.forms import FormDialog, Form
 from edifice.components import plotting
@@ -6,9 +8,11 @@ from Program.GUI.data_value import DataValue
 from Program.GUI.components import default_label, DefaultSlider, add_divider, DefaultDropdown
 import pathlib
 
+
 class MyApplication(Component):
     def __init__(self,
                  data_model: DataModel,
+                 result_path = None
                  ):
         super().__init__()
         self.__enableOnChangeCalback = True
@@ -16,6 +20,7 @@ class MyApplication(Component):
         self.state = StateManager({
             "File": pathlib.Path(""),
         })
+        self.result_path = result_path +'\Results.xlsx'
 
     def __on_dropdown_select(self, value):
         self.__model.choose_month(value)
@@ -28,8 +33,7 @@ class MyApplication(Component):
         self.__enableOnChangeCalback = False
         self.set_state()
         self.__enableOnChangeCalback = True
-        print(self.__model.company_value)
-        print(self.__model.vostok_value)
+
 
     def __on_vostok_changed(self, value):
         self.__model.set_vostok_value(value)
@@ -73,16 +77,63 @@ class MyApplication(Component):
         self.set_state()
         self.__enableOnChangeCalback = True
 
-    def __on_checkbox_changed(self, value):
-        self.__model.choose_scenario()
+    def __on_polar_changed(self, value):
+        self.__model.set_polar_value(value)
         self.__enableOnChangeCalback = False
         self.set_state()
         self.__enableOnChangeCalback = True
 
-    def __onSaveButtonClick(self, value):
-        self.__model.save_results(path=self.state['File'])
+    def __on_shelf_changed(self, value):
+        self.__model.set_shelf_value(value)
         self.__enableOnChangeCalback = False
         self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_meretoyaha_changed(self, value):
+        self.__model.set_meretoyaha_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_spd_changed(self, value):
+        self.__model.set_spd_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_palyan_changed(self, value):
+        self.__model.set_palyan_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_angara_changed(self, value):
+        self.__model.set_angara_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_arctic_changed(self, value):
+        self.__model.set_arctic_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_checkbox_changed(self,value ):
+        self.__model.choose_scenario()
+        self.__enableOnChangeCalback = False
+     #   self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __onSaveButtonClick(self, value):
+        if self.state['File'] ==pathlib.Path(""):
+            path = pathlib.Path(self.result_path)
+        else:
+            path = self.state['File']
+        self.__model.save_results(path=path)
+        os.startfile(path)
+        self.__enableOnChangeCalback = False
+       # self.set_state()
         self.__enableOnChangeCalback = True
 
     def __on_Reset_click_button(self, value):
@@ -140,14 +191,14 @@ class MyApplication(Component):
                         View(layout="row", )(
                             Label('ДО', style=default_label(i=1), ),
                             Label('Сокращение добычи', style={"width": 1.5 * 200, }, ),
-                            Button('Сбросить результаты', on_click=self.__on_Reset_click_button),
+                            Button('Сбросить настройки', on_click=self.__on_Reset_click_button),
                             Label('т/сут.', style=default_label(i=3)),
                             Label('Потери FCF, млн.руб.', style=default_label(i=3)),
 
                                             ),
 
                         DefaultSlider(value=self.__model.company_value,
-                                      fcf_value=self.__model.company_fcf,
+                                      fcf_value=self.__model.fcf_sum,
                                       label='ГПН',
                                       min_value=self.__model.min_value['ГПН'],
                                       max_value=self.__model.max_value['ГПН'],
@@ -223,10 +274,63 @@ class MyApplication(Component):
 
                                       ),
 
+                        DefaultSlider(value=self.__model.polar_value,
+                                      fcf_value=self.__model.polar_fcf,
+                                      label='Заполярье',
+                                      min_value=self.__model.min_value['Заполярье'],
+                                      max_value=self.__model.max_value['Заполярье'],
+                                      onChanged=self.__on_polar_changed if self.__enableOnChangeCalback else None,
+                                      ),
+
+                        DefaultSlider(value=self.__model.shelf_value,
+                                      fcf_value=self.__model.shelf_fcf,
+                                      label='Шельф',
+                                      min_value=self.__model.min_value['Шельф'],
+                                      max_value=self.__model.max_value['Шельф'],
+                                      onChanged=self.__on_shelf_changed if self.__enableOnChangeCalback else None,
+                                      ),
+
+                        DefaultSlider(value=self.__model.meretoyaha_value,
+                                      fcf_value=self.__model.meretoyaha_fcf,
+                                      label='Меретояханефтегаз',
+                                      min_value=self.__model.min_value['Меретояханефтегаз'],
+                                      max_value=self.__model.max_value['Меретояханефтегаз'],
+                                      onChanged=self.__on_meretoyaha_changed if self.__enableOnChangeCalback else None,
+                                      ),
+
+                        DefaultSlider(value=self.__model.palyan_value,
+                                      fcf_value=self.__model.palyan_fcf,
+                                      label='Пальян',
+                                      min_value=self.__model.min_value['Пальян'],
+                                      max_value=self.__model.max_value['Пальян'],
+                                      onChanged=self.__on_palyan_changed if self.__enableOnChangeCalback else None,
+                                      ),
+
+                        DefaultSlider(value=self.__model.spd_value,
+                                      fcf_value=self.__model.spd_fcf,
+                                      label='СПД',
+                                      min_value=self.__model.min_value['СПД'],
+                                      max_value=self.__model.max_value['СПД'],
+                                      onChanged=self.__on_spd_changed if self.__enableOnChangeCalback else None,
+                                      ),
+
+                        DefaultSlider(value=self.__model.arctic_value,
+                                      fcf_value=self.__model.arctic_fcf,
+                                      label='Арктикгаз',
+                                      min_value=self.__model.min_value['Арктикгаз'],
+                                      max_value=self.__model.max_value['Арктикгаз'],
+                                      onChanged=self.__on_arctic_changed if self.__enableOnChangeCalback else None,
+                                      ),
+                        DefaultSlider(value=self.__model.angara_value,
+                                      fcf_value=self.__model.angara_fcf,
+                                      label='Ангара',
+                                      min_value=self.__model.min_value['Ангара'],
+                                      max_value=self.__model.max_value['Ангара'],
+                                      onChanged=self.__on_angara_changed if self.__enableOnChangeCalback else None,
+                                      ),
 
 
-
-                View(layout="row")(
+                        View(layout="row")(
                     Label('', ),
                     Label('Сумма', style={"width": 450, "align": "right"}, ),
                     Label(round(self.__model.crude_sum.toFloat), style=default_label(i=3)),
@@ -237,7 +341,7 @@ class MyApplication(Component):
 
                         View(layout="row", )(
                             CheckBox(text='Учет доли СП', checked=self.__model.joint_venture,
-                                     on_change=self.__on_checkbox_changed if self.__enableOnChangeCalback else None,
+                                     on_change=self.__on_checkbox_changed,
                                      style={"width": 200 / 1.5, "align": "left", "height": 50, }),
                           #  plotting.Figure(lambda ax: self.plot(ax)),  # ),
                         ),
