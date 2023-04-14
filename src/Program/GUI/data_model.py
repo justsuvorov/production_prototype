@@ -16,7 +16,7 @@ class DataModel:
     def __init__(self,
                  scenarios: RegressionScenarios,
                  path: str = None,
-            ) -> None:
+            ):
 
         self.scenarios = scenarios
         self.path = Path(path)
@@ -252,6 +252,7 @@ class DataModel:
     def on_gpn_change(self, company_value):
         self.set_value(company_value)
         new_values = self._find_solution(target=company_value)
+
         self.__update_values_for_view(new_values)
 
     def set_vostok_value(self, value):
@@ -280,7 +281,6 @@ class DataModel:
                                          company_name=self.__last_company,
                                          company_value=self.__last_company_value)
         self.__update_values_for_view(new_values)
-
 
     def set_nng_value(self, value):
 
@@ -422,11 +422,6 @@ class DataModel:
         self.arctic_fcf.update(fcf[12])
         self.angara_fcf.update(fcf[13])
 
-
-
-
-
-
         self.result_crude_list = self.__result_crude_list()
         self.result_crude_sum.update(sum(self.result_crude_list))
 
@@ -501,3 +496,93 @@ class DataModel:
 
     def save_results(self, path):
         self.__solution.export_results(path=path)
+
+
+class DataModelFull(DataModel):
+    def __init__(self,
+                 scenarios: RegressionScenarios,
+                 portu_results: PortuDataFrame,
+                 path: str = None,
+                 ):
+        self.str_path = path
+        super().__init__(scenarios=scenarios, path=path)
+        self.portu_results = portu_results
+        self.portu_names = ['ООО "ГПН-Восток"',  'ПАО_СН_МНГ', 'АО «Мессояханефтегаз»',
+                            'AO «ГПН-ННГ»', 'ООО "ГПН-Оренбург"',
+                             'ООО "ГПН-Хантос"', 'ООО "ГПН - Ямал"',]
+        self.crude_volume = {}
+        self.fcf_volume = {}
+        self.fcf_values = []
+
+    def full_initializtion(self):
+        self.initializtion()
+        self.portu_results = self.portu_results.result()
+
+        df = pd.read_excel(self.str_path + '\Данные_по_объектам_для_балансировки_5тилетка.xlsx')
+        i = 0
+        crude_col = ['Crude 1',	'Crude 2',	'Crude 3',	'Crude 4',	'Crude 5',	'Crude 6',	'Crude 7',	'Crude 8',	'Crude 9',	'Crude 10']
+     #   fcf_col = ['FCF 1',	'FCF 2',	'FCF 3',	'FCF 4',	'FCF 5',	'FCF 6',	'FCF 7',	'FCF 8',	'FCF 9',	'FCF 10']
+        days = [31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        for name in self.company_names:
+           temp_df = df.loc[df['ДО'] == self.portu_names[i]]
+           crude_list = []
+       #    fcf_list = []
+           for j in range(10):
+               a = temp_df[crude_col[j]].to_numpy().sum()
+               crude_list.append(a/days[j]*1000)
+       #        fcf_list.append(temp_df[fcf_col[j]].to_numpy().sum())
+           self.crude_volume[name] = crude_list
+        #   self.fcf_volume[name] = fcf_list
+           i += 1
+
+
+
+    def __get_values_from_portu(self, month: int, solution_index: int = 0):
+        new_values = []
+        fcf_values = []
+        days = [31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        if solution_index == 0:
+            key = 'НДН за первый месяц; т./сут.'
+
+            key = 'НДН за первый месяц; тыс. т'
+        if solution_index == 1:
+            key = 'НДН за первый месяц; т./сут. с долей СП'
+        df = self.portu_results[month]
+        for name in self.portu_names:
+            temp_df = df.loc[df['ДО'] == name]
+            new_values.append(temp_df[key].sum()/days[month]*1000) #- temp_df['Добыча нефти, исходная'].sum()/days[month]*1000)
+            fcf_values.append(temp_df['FCF исходный'].sum() - temp_df['FCF первый месяц'].sum() )
+
+        i = 0
+        for name in self.company_names:
+            new_values[i] = self.crude_volume[name][month]-new_values[i]
+      #      fcf_values[i] = self.fcf_volume[name][month]-fcf_values[i]
+            i += 1
+        for i in range(7):
+            new_values.append(0)
+            fcf_values.append(0)
+
+        return new_values, fcf_values
+
+    def _update_fcf(self, values):
+        return np.array(self.fcf_values)/1000
+
+    def _find_solution(self, company_name: list = ['All'], company_value: list = [0.0], target: float = 0):
+
+        if self.index >= 2:
+           index = self.index - 2
+        else:
+           index = 2
+
+        new_values, fcf_values = self.__get_values_from_portu(month=index)
+        self.fcf_values = fcf_values
+
+        for i in range(len(new_values)):
+            if self.max_value[self.company_names_full[i]].toFloat < new_values[i]:
+                new_values[i] = self.max_value[self.company_names_full[i]].toFloat
+            if self.min_value[self.company_names_full[i]].toFloat > new_values[i]:
+                new_values[i] = self.min_value[self.company_names_full[i]].toFloat
+        return new_values
+
+
+

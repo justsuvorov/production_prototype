@@ -1,12 +1,11 @@
 from Program.DOTests.HierarchyFromRatingsTest import *
-from Program.Production.GfemScenarios import RegressionScenarios, SortedGfemData, GfemDataFrame
+from Program.Production.GfemScenarios import RegressionScenarios, SortedGfemData, GfemDataFrame, PortuDataFrame
 from Program.Production.AppGui import Application
 from Program.GUI.my_app import MyApplication
-from Program.GUI.data_model import DataModel
+from Program.GUI.data_model import DataModel, DataModelFull
 from edifice import App
 import click
 from pathlib import Path
-
 
 @click.command()
 @click.option('--path')
@@ -21,8 +20,10 @@ def main(path: str):
                                                         file_path=path)
                                                                 )
                                     )
-    data_model = DataModel(scenarios=scenarios, path=path)
-    data_model.initializtion()
+   # data_model = DataModel(scenarios=scenarios, path=path)
+    data_model = DataModelFull(scenarios=scenarios, path=path, portu_results=PortuDataFrame(file_path=path))
+  #  data_model.initializtion()
+    data_model.full_initializtion()
    # app = Application(scenarios=scenarios, path=path)
     app = MyApplication(data_model=data_model, result_path=path)
   #  app.initialization()

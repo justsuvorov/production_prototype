@@ -19,8 +19,7 @@ from sklearn.preprocessing import KBinsDiscretizer
 from mlinsights.mlmodel import PiecewiseRegressor
 
 
-
-from Program.ObjectBuilders.Parser import GfemParser
+from Program.ObjectBuilders.Parser import GfemParser, PortuResultsParser
 
 
 class GfemDataFrame:
@@ -66,6 +65,49 @@ class GfemDataFrame:
         prepared_data['НДН за первый месяц; т./сут. с долей СП'] = prepared_data['НДН за первый месяц; тыс. т. с долей СП'] / (365 / 12) * 1000
         prepared_data['Уд.FCF с СП на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц c долей СП']/prepared_data['НДН за первый месяц; т./сут. с долей СП']
         return prepared_data
+
+
+class PortuDataFrame(GfemDataFrame):
+    def __init__(self,
+                 file_path: str):
+        super().__init__(file_path=file_path)
+        self.path = file_path + '\Portu_results.xlsx'
+        self.parser = PortuResultsParser(data_path=self.path)
+        self.company_names = None
+
+    def _recalculate_indicators(self):
+
+        companydict = CompanyDict(path=self.file_path)
+        company_dict = companydict.load(scenario_program=True)
+        self.company_names = list(companydict.joint_venture_crude_part.keys())
+
+        data_full = self._data()
+        result = []
+        for key in data_full:
+            data = data_full[key]
+            prepared_data = pd.DataFrame()
+            prepared_data['Месторождение'] = data['Field']
+            prepared_data['ДО'] = data['Suborganization']
+            prepared_data['Скважина'] = data['WellNumber']
+            prepared_data['Куст'] = data['WellsGroup']
+            prepared_data['FCF первый месяц'] = data['FCF; тыс.р.']
+            prepared_data['FCF исходный'] = data['FCF исходный; тыс.р.']
+            prepared_data['НДН за первый месяц; тыс. т'] = data['Добыча нефти; тыс.т.']
+            prepared_data['НДН за первый месяц; т./сут.'] = prepared_data['НДН за первый месяц; тыс. т']/(365/12)*1000
+            prepared_data['Уд.FCF на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц']/\
+                                                           prepared_data['НДН за первый месяц; т./сут.']
+            prepared_data['Добыча нефти, исходная'] = data['Добыча нефти исходный; тыс.т.']
+            for index, row in prepared_data.iterrows():
+                row['ДО'] = company_dict[row['Месторождение']]
+                prepared_data.at[index,'Доля СП по добыче'] = companydict.joint_venture_crude_part[row['ДО']]
+                prepared_data.at[index,'Доля СП по FCF'] = companydict.joint_venture_fcf_part[row['ДО']]
+
+            prepared_data['НДН за первый месяц; тыс. т. с долей СП'] = prepared_data['НДН за первый месяц; тыс. т'] * prepared_data['Доля СП по добыче']
+            prepared_data['FCF первый месяц c долей СП'] = prepared_data['FCF первый месяц'] * prepared_data['Доля СП по FCF']
+            prepared_data['НДН за первый месяц; т./сут. с долей СП'] = prepared_data['НДН за первый месяц; тыс. т. с долей СП'] / (365 / 12) * 1000
+            prepared_data['Уд.FCF с СП на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц c долей СП']/prepared_data['НДН за первый месяц; т./сут. с долей СП']
+            result.append(prepared_data)
+        return result
 
 
 class SortedGfemData:
@@ -135,6 +177,7 @@ class RegressionScenarios:
 
         poly_model = PiecewiseRegressor(verbose=True,
                                         binner=KBinsDiscretizer(n_bins=40))
+     #   poly_model = LinearRegression()
 
         poly_model.fit(X_train, Y_train)
 

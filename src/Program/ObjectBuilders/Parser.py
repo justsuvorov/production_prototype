@@ -50,3 +50,13 @@ class GfemParser(Parser):
 
     def data(self) -> pd.DataFrame:
         return pd.read_excel(self.data_path,)[['Месторождение','Скважина', 'Куст', 'FCF первый месяц:','НДН за первый месяц; тыс. т']]
+
+
+class PortuResultsParser(Parser):
+    def __init__(self,
+                 data_path: str,
+                 ):
+        self.data_path = data_path
+
+    def data(self) -> dict:
+        return pd.read_excel(self.data_path, None)

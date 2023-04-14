@@ -25,6 +25,7 @@ app_state = StateManager({
             "File": pathlib.Path(""),
         })
 
+
 class Application(Component):
 
     def __init__(self,
