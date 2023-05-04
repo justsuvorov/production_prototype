@@ -9,8 +9,6 @@ from Program.GUI.components import default_label, DefaultSlider, add_divider, De
 import pathlib
 
 
-
-
 class MyApplicationSixMonths(Component):
     def __init__(self,
                  data_model: DataModel,
@@ -699,10 +697,6 @@ class MyApplication(Component):
                 ),
             )
         )
-
-
-
-
 
 
 class MyApp(Component):

@@ -195,3 +195,46 @@ class PreparedDomainModel:
             result_clusters = clusters
             result_fields = fields
         return result_wells, result_clusters, result_fields
+
+
+class NRFPreparedDomainModel(PreparedDomainModel):
+    def __init__(self,
+                 domain_model: dict,
+                 ):
+        super().__init__(domain_model=domain_model,
+                         time_parameters=TimeParameters(),
+                         find_gap=False,
+                         )
+        self.domain_model = domain_model
+
+    def full_domain_model(self):
+        domain_model = self.__copy_domain_model()
+        wells = domain_model[0]
+        pads = domain_model[1]
+        clusters = domain_model[2]
+        fields = domain_model[3]
+
+
+        if self.find_gap:
+            SimpleOperations(domain_model=wells,
+                             indicator_name='FCF',
+                             end_year_index=59,
+                             ).wells_gap()
+            print('ГЭП рассчитан')
+
+        else:
+            if self.path != None:
+                filepath = Path(self.path)
+                DATA = filepath / 'СВОД_Скв_NGT.xlsm'
+                domain_model[0] = self.__export_gap(data=DATA, wells=wells)
+                print('ГЭП импортирован')
+            else:
+                raise FileNotFoundError('Нет файла с GAP')
+        wells, clusters, fields = self.__filter_objects(wells=wells, clusters=clusters, fields=fields)
+        time_parameters = self._discretizate_parameters(domain_model=wells)
+        prepared_domain_model = {}
+        prepared_domain_model['Wells'] = wells
+        prepared_domain_model['Clusters'] = clusters
+        prepared_domain_model['Fields'] = fields
+
+        return prepared_domain_model

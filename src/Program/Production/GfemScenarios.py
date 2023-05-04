@@ -19,7 +19,7 @@ from sklearn.preprocessing import KBinsDiscretizer
 from mlinsights.mlmodel import PiecewiseRegressor
 
 
-from Program.ObjectBuilders.Parser import GfemParser, PortuResultsParser
+from Program.ObjectBuilders.Parser import *
 
 
 class GfemDataFrame:
@@ -108,6 +108,73 @@ class PortuDataFrame(GfemDataFrame):
             prepared_data['Уд.FCF с СП на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц c долей СП']/prepared_data['НДН за первый месяц; т./сут. с долей СП']
             result.append(prepared_data)
         return result
+
+
+class GfemDataFrameAro:
+
+    def __init__(self,
+                 file_path: str,
+                 filter: dict = {'Company': 'All', 'Field': 'All'},
+                 db_export: bool = False):
+
+        self.file_path = file_path
+        self.path = file_path + '\gfem_results.db'
+        self.parser = GfemDataBaseParser(data_path=self.path)
+        self.filter = filter
+        self.black_list_names = ['id','Тип объекта', 'Скважина', 'Куст', 'Объект подготовки','Месторождение', 'ДО', 'Дата внесения']
+        self.db_export = db_export
+
+    def _data(self) -> pd.DataFrame:
+        return self.parser.data()
+
+    def _recalculate_indicators(self):
+        data = self._data()
+
+        prepared_data = data
+        prepared_data['Тип объекта'] ='Скважина'
+        prepared_data['FCF первый месяц'] = data['FCF первый месяц:']
+#        prepared_data['НДН за первый месяц; т./сут.'] = prepared_data['НДН за первый месяц; тыс. т']/(365/12)*1000
+    #    prepared_data['Уд.FCF на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц']/\
+#                                                       prepared_data['НДН за первый месяц; т./сут.']
+
+
+        if self.filter['Company'] != 'All':
+            prepared_data = prepared_data.loc[prepared_data['ДО'] == self.filter['Company']]
+        if self.filter['Field'] != 'All':
+            prepared_data = prepared_data.loc[prepared_data['Месторождение'] == self.filter['Field']]
+        prepared_data = prepared_data.drop(columns=['GAP'])
+        return prepared_data
+
+    def black_list(self, path: str=None):
+        if path is None:
+            path = self.file_path
+        data = self._recalculate_indicators()
+
+        data['Дата внесения'] = pd.to_datetime("3/5/2023")
+        black_list = data[self.black_list_names]
+
+        self.export(data=black_list)
+
+    def black_list_well_info(self, path: str=None):
+        if path is None:
+            path = self.file_path
+        data = self._recalculate_indicators()
+
+        export_list = data.drop(columns=self.black_list_names[:-1])
+
+        export_list.to_excel(path+'\wells_list.xlsx')
+
+
+    def export(self, data: pd.DataFrame):
+        if not self.db_export:
+            BlackListLoaderExcel(data=data, source_path=self.file_path).load_data()
+        else:
+            BlackListLoaderDB(data=data, source_path=self.file_path).load_data()
+
+
+
+
+
 
 
 class SortedGfemData:

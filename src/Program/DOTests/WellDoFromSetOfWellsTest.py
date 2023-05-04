@@ -35,7 +35,7 @@ def prepare_data(file_path):
     pd.options.mode.chained_assignment = None
     df['FCF'] = df.iloc[:, 125:137].sum(axis=1)
     df['Qsum'] = df.iloc[:, 5:17].sum(axis=1)
-    df['FCF/Q'] = df['FCF']/df['Qsum']
+    df['FCF/Q'] = df['FCF']/(df['Qsum']+0.000001)
 
     resdata = df.sort_values(by=['FCF/Q'], ascending=False)
     resdata = resdata.shift()
@@ -51,30 +51,30 @@ def prepare_data(file_path):
 def domain_model(file_path):
 
     filePath = file_path / 'СВОД_скв._NEW_5лет.xlsm'
-   # vbd_initial = file_path / 'VBD.xlsm'
-    #vbd = prepare_data(file_path=file_path)
+    vbd_initial = file_path / 'VBD.xlsm'
+    vbd = prepare_data(file_path=file_path)
     print('Прочитан xlsm формат')
-#    vbd = prepare_data(file_path=file_path)
+  #  vbd = prepare_data(file_path=file_path)
 
 
 
-    domain_model = DomainModelBuilder(parser=SetOfWellsParser(data_path=filePath),
+    domain_model = IterativeDomainModelBuilder(parser=SetOfWellsParser(data_path=filePath),
                                       format_reader=SetOfWellsFormatReader(),
                                       ).build_object(only_wells=False)
 
-    vbd_domain_model = DomainModelBuilder(parser=SetOfWellsParser(data_path=vbd),
+    vbd_domain_model = IterativeDomainModelBuilder(parser=SetOfWellsParser(data_path=vbd),
                                           format_reader=SetOfWellsFormatReader(),
                                           ).build_object(only_wells=False)
     for object in vbd_domain_model[0]:
         object.change_activity()
 
     domain_model_full_wells = domain_model[0] + vbd_domain_model[0]
-    #domain_model_full_pads = domain_model[1]+vbd_domain_model[1]
-    domain_model_full_clusters = domain_model[1]+vbd_domain_model[1]
-    domain_model_full_fields = domain_model[2] + vbd_domain_model[2]
+    domain_model_full_pads = domain_model[1]+vbd_domain_model[1]
+    domain_model_full_clusters = domain_model[2]+vbd_domain_model[2]
+    domain_model_full_fields = domain_model[3] + vbd_domain_model[3]
     result_domain_model = []
     result_domain_model.append(domain_model_full_wells)
-    # result_domain_model.append(domain_model_full_pads)
+    result_domain_model.append(domain_model_full_pads)
     clusters = DomainModelBuilder.merge_objects(domain_model_full_clusters)
     fields = DomainModelBuilder.merge_objects(domain_model_full_fields)
     result_domain_model.append(clusters)

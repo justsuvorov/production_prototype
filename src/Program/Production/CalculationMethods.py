@@ -143,3 +143,10 @@ class SimpleOperations:
                 print('SimpleOperations. Corrupted data for well ', object.name)
         sum = round(sum, 2)
         return sum
+
+
+class HierarchyIndicatorsTransfer:
+    def __init__(self,
+                 domain_model: list):
+        self.domain_model = domain_model
+

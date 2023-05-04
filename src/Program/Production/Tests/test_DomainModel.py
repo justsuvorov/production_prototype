@@ -10,18 +10,19 @@ class TestDomainModelFromSetOfWells(unittest.TestCase):
 
     def test_objects_count(self):
         self.assertEqual(len(self.domain_model[0]), 1939)
-        self.assertEqual(len(self.domain_model[1]), 12)
-        self.assertEqual(len(self.domain_model[2]), 4)
+        self.assertEqual(len(self.domain_model[1]), 392)
+        self.assertEqual(len(self.domain_model[2]), 13)
+        self.assertEqual(len(self.domain_model[3]), 4)
 
     def test_objects_names(self):
         self.assertEqual(self.domain_model[0][0].name[0], '1002')
         self.assertEqual(self.domain_model[0][-1].name[0], '6246')
 
-        self.assertEqual(self.domain_model[1][0].name[0], 'ДНС-1 Арчинского')
-        self.assertEqual(self.domain_model[1][-1].name[0], 'ЦППН-1')
+        self.assertEqual(self.domain_model[2][0].name[0], 'ДНС-1 Арчинского')
+        self.assertEqual(self.domain_model[2][-1].name[0], 'ЦППН-1')
 
-        self.assertEqual(self.domain_model[2][0].name[0], 'Арчинское')
-        self.assertEqual(self.domain_model[2][-1].name[0], 'Вынгапуровское')
+        self.assertEqual(self.domain_model[3][0].name[0], 'Арчинское')
+        self.assertEqual(self.domain_model[3][-1].name[0], 'Вынгапуровское')
 
     def test_objects_links(self):
         self.assertEqual(self.domain_model[0][0].link['Fields'][0].name[0], 'Арчинское')

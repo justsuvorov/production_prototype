@@ -103,6 +103,7 @@ class DataModel:
         self.__constraints.load_constraints()
 
         self.company_names = self.scenarios.company_names.copy()
+
         self.company_names_full = self.company_names.copy()
         self.company_names_full.append('Шельф')
         self.company_names_full.append('Заполярье')
@@ -125,7 +126,7 @@ class DataModel:
             self.__min_value_jv[name] = DataValue(str(0))
             self.__max_value_jv[name] = DataValue(str(self.__data[1][name][2]))
         names = ['Заполярье', 'Шельф', 'Меретояханефтегаз', 'Пальян', 'СПД', 'Арктикгаз', 'Ангара']
-        for name  in names:
+        for name in names:
             self.__max_value_full[name] = DataValue(str(1))
             self.__max_value_jv[name] = DataValue(str(1))
         self.__dataframe_list = self.scenarios.dataframe
