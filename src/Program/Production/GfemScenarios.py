@@ -17,6 +17,7 @@ from sklearn.utils._testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.preprocessing import KBinsDiscretizer
 from mlinsights.mlmodel import PiecewiseRegressor
+from Program.Production.config_db import CompanyDictionary
 
 
 from Program.ObjectBuilders.Parser import *
@@ -99,8 +100,8 @@ class PortuDataFrame(GfemDataFrame):
             prepared_data['Добыча нефти, исходная'] = data['Добыча нефти исходный; тыс.т.']
             for index, row in prepared_data.iterrows():
                 row['ДО'] = company_dict[row['Месторождение']]
-                prepared_data.at[index,'Доля СП по добыче'] = companydict.joint_venture_crude_part[row['ДО']]
-                prepared_data.at[index,'Доля СП по FCF'] = companydict.joint_venture_fcf_part[row['ДО']]
+                prepared_data.at[index, 'Доля СП по добыче'] = companydict.joint_venture_crude_part[row['ДО']]
+                prepared_data.at[index, 'Доля СП по FCF'] = companydict.joint_venture_fcf_part[row['ДО']]
 
             prepared_data['НДН за первый месяц; тыс. т. с долей СП'] = prepared_data['НДН за первый месяц; тыс. т'] * prepared_data['Доля СП по добыче']
             prepared_data['FCF первый месяц c долей СП'] = prepared_data['FCF первый месяц'] * prepared_data['Доля СП по FCF']
@@ -110,19 +111,21 @@ class PortuDataFrame(GfemDataFrame):
         return result
 
 
-class GfemDataFrameAro:
+class AroMonitoring:
 
     def __init__(self,
                  file_path: str,
                  filter: dict = {'Company': 'All', 'Field': 'All'},
-                 db_export: bool = False):
+                 ):
 
         self.file_path = file_path
         self.path = file_path + '\gfem_results.db'
-        self.parser = GfemDataBaseParser(data_path=self.path)
+        self.parser = GfemDataBaseParser(data_path=self.path,
+                                         file_path=self.file_path,
+                                         add_data_from_excel=True)
         self.filter = filter
-        self.black_list_names = ['id','Тип объекта', 'Скважина', 'Куст', 'Объект подготовки','Месторождение', 'ДО', 'Дата внесения']
-        self.db_export = db_export
+        self.black_list_names = ['id', 'Тип объекта', 'Скважина', 'Куст', 'Объект подготовки','Месторождение', 'ДО', 'Дата внесения', 'Статус по рентабельности']
+        self.__monitoring_base = MonitoringSQLSpeakingObject(path=self.path)
 
     def _data(self) -> pd.DataFrame:
         return self.parser.data()
@@ -131,12 +134,10 @@ class GfemDataFrameAro:
         data = self._data()
 
         prepared_data = data
-        prepared_data['Тип объекта'] ='Скважина'
-        prepared_data['FCF первый месяц'] = data['FCF первый месяц:']
-#        prepared_data['НДН за первый месяц; т./сут.'] = prepared_data['НДН за первый месяц; тыс. т']/(365/12)*1000
-    #    prepared_data['Уд.FCF на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц']/\
-#                                                       prepared_data['НДН за первый месяц; т./сут.']
-
+        prepared_data.loc[prepared_data['Тип объекта'].str[0] == 'W', 'Тип объекта'] = 'Скважина'
+        prepared_data.loc[prepared_data['Тип объекта'] == 'GROUP_ECONOMIC', 'Тип объекта'] = 'Куст'
+        prepared_data.loc[prepared_data['Тип объекта'] == 'PREPARATION_OBJECT_ECONOMIC', 'Тип объекта'] = 'Объект подготовки'
+        prepared_data = prepared_data.loc[~prepared_data['Тип объекта'].isin(['GROUP_OPEX','PREPARATION_OBJECT_OPEX'])]
 
         if self.filter['Company'] != 'All':
             prepared_data = prepared_data.loc[prepared_data['ДО'] == self.filter['Company']]
@@ -145,36 +146,107 @@ class GfemDataFrameAro:
         prepared_data = prepared_data.drop(columns=['GAP'])
         return prepared_data
 
-    def black_list(self, path: str=None):
+    def __prepare_df(self, df: pd.DataFrame, new_data: bool = False):
+        df['Скважина'].replace(to_replace=[None], value='-', inplace=True)
+        df['Куст'].replace(to_replace=[None], value='-', inplace=True)
+        df['Объект подготовки'].replace(to_replace=[None], value='-', inplace=True)
+        df['temp_id'] = df.loc[:, 'Скважина'] + df.loc[:,'Скважина'] + df.loc[:, 'Объект подготовки'] + df.loc[:,'Месторождение']
+        if new_data:
+            df['Дата внесения'] = pd.to_datetime("today")
+    #        df['Статус по рентабельности'] = 'Нерентабельная'
+        return df
+
+    def black_list(self, excel_export: bool = False):
+        db_path = self.file_path + '/monitoring.db'
+        db_black_list_data = MonitoringBaseParser(data_path=db_path).data()
+   #     db_full_list_data = MonitoringFullParser(data_path=db_path).data()
+      #  db_black_list_data = self.__monitoring_base.black_list_from_db()
+     #   db_full_list_data = self.__monitoring_base.full_data_black_list_from_db()
+        db_black_list_data = self.__prepare_df(df=db_black_list_data)
+
+        data = self._recalculate_indicators()
+        data = self.__prepare_df(df=data, new_data=True)
+
+        black_list = data.loc[:, :]
+
+        black_list['temp_id'] = data['Скважина'] + data['Скважина'] + data['Объект подготовки'] + data['Месторождение']
+
+        black_list = black_list.loc[~black_list['temp_id'].isin(db_black_list_data['temp_id'])]
+        black_list = self.__merge_prep_objects(data=black_list)
+
+   #     black_list = pd.concat([black_list, db_black_list_data])
+        export_list = black_list.drop(columns=self.black_list_names[1:-2])
+        black_list = black_list.loc[:, self.black_list_names]
+
+        self.__export_black_list(data=black_list, excel_export=excel_export)
+        self.__export_full_list(data=export_list, excel_export=excel_export)
+
+    def __merge_prep_objects(self, data: pd.DataFrame):
+        prep_obj_names = data['Объект подготовки'].unique()
+        for name in prep_obj_names:
+            a = data.loc[data['Объект подготовки'] == name].groupby(by=['Скважина', 'Объект подготовки', 'Куст']).apply(lambda x: x)
+
+            if data['Объект подготовки'][name].groupby(by=['Скважина', 'Объект подготовки','Куст'], as_index=False).shape > 1:
+               data['Объект подготовки'][name].groupby([])
+        new_data = data.groupby(by=['Скважина', 'Объект подготовки','Куст'], as_index=False).agg({'id': 'id',
+                                                                                                  'Тип объекта':'Тип объекта',
+                                                                                                  'NPV_MAX' :'sum',
+                                'FCF первый месяц:':'sum', 'НДН за весь период; тыс. т':'sum',
+                                 'НДЖ за весь период; тыс. т':'sum', 'FCF за весь период; тыс. руб.':'sum',
+                                'НДН до ГЭП; тыс. т':'sum',
+                                 'НДЖ до ГЭП; тыс. т':'sum',	'FCF до ГЭП; тыс. руб.':'sum',
+                                'НДН за скользящий год; тыс. т':'sum',	'НДЖ за скользящий год; тыс. т':'sum',
+                                'FCF за скользящий год; тыс. руб.':'sum',})
+        return new_data
+
+
+
+    def aro_full_info_black_list(self, path: str=None, excel_export: bool = False):
         if path is None:
             path = self.file_path
         data = self._recalculate_indicators()
 
-        data['Дата внесения'] = pd.to_datetime("3/5/2023")
-        black_list = data[self.black_list_names]
+        export_list = data.drop(columns=self.black_list_names[1:-2])
+        export_list = export_list.drop(columns='Лицензионный участок')
+        self.__export_full_list(data=export_list, excel_export=excel_export)
 
-        self.export(data=black_list)
-
-    def black_list_well_info(self, path: str=None):
-        if path is None:
-            path = self.file_path
-        data = self._recalculate_indicators()
-
-        export_list = data.drop(columns=self.black_list_names[:-1])
-
-        export_list.to_excel(path+'\wells_list.xlsx')
-
-
-    def export(self, data: pd.DataFrame):
-        if not self.db_export:
+    def __export_black_list(self, data: pd.DataFrame, excel_export: bool):
+        if excel_export:
             BlackListLoaderExcel(data=data, source_path=self.file_path).load_data()
-        else:
-            BlackListLoaderDB(data=data, source_path=self.file_path).load_data()
 
+        BlackListLoaderDB(data=data, source_path=self.file_path).load_data()
 
+    def __export_full_list(self, data: pd.DataFrame, excel_export: bool):
+        if excel_export:
+            data.to_excel(self.file_path + '/Full_list.xlsx')
+        data =data.drop(
+            columns=['Лицензионный участок', 'temp_id', 'Дата внесения', 'Статус по рентабельности',])
+        #data = data.drop(columns=['Статус по рентабельности', 'Дата внесения'])
+        AROFullLoaderDB(data=data, source_path=self.file_path).load_data()
+        self.parser.transfer_month_table(path=self.file_path)
 
+    def export_company_form(self):
+        db_path = self.file_path + '/monitoring.db'
+        parser = MonitoringBaseParser(data_path=db_path)
+        prepared_data = parser.data()
+        if self.filter['Company'] != 'All':
+            prepared_data = prepared_data.loc[prepared_data['ДО'] == self.filter['Company']]
+        if self.filter['Field'] != 'All':
+            prepared_data = prepared_data.loc[prepared_data['Месторождение'] == self.filter['Field']]
+        prepared_data['Мероприятие'] = ''
+        prepared_data['Комментарии к мероприятию'] = ''
+        prepared_data['Дата выполнения мероприятия (План)'] = ''
+        prepared_data['Дата выполнения мероприятия (Факт)'] = ''
+        prepared_data['Отвественный(название должности)'] = ''
+        prepared_data['Статус по эффективности'] = ''
+        prepared_data['Наличие отказа'] = ''
+        prepared_data.drop(columns=['Дата внесения', 'id'])
+        prepared_data.to_excel(self.file_path + '\Форма для ДО.xlsx')
 
-
+    def load_company_form_to_db(self, data: pd.DataFrame):
+        db_path = self.file_path + '/monitoring.db'
+        db_activity_data = MonitoringActivityParser(data_path=db_path).data()
+        data = data.loc[~data['id'].isin(db_activity_data['object_id'].isin(data['id']))]
 
 
 class SortedGfemData:
@@ -379,7 +451,7 @@ class Constraints:
 
     def load_constraints(self):
         self._data()
-        self.months_index = self.dataframe.columns[1:]
+        self.months_index=self.dataframe.columns[1:]
         self.months = np.datetime_as_string(np.array(self.dataframe.columns[1:], dtype='datetime64'), unit='M')
 
     def extract_value(self, index: int):

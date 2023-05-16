@@ -3,7 +3,7 @@ import os
 from edifice import Label,  Slider, Dropdown, View, CheckBox,TextInput,  Component, StateManager, Window, Button, ScrollView
 from edifice.components.forms import FormDialog, Form
 from edifice.components import plotting
-from Program.GUI.data_model import DataModel
+from Program.GUI.data_model import DataModel, DataModelMonitoring
 from Program.GUI.data_value import DataValue
 from Program.GUI.components import default_label, DefaultSlider, add_divider, DefaultDropdown
 import pathlib
@@ -148,8 +148,8 @@ class MyApplicationSixMonths(Component):
                                              "font-weight": 1},)  # """ style={"margin": 10, "font-weight": 1},"""
                     (
                     DefaultDropdown(value=self.__model.target,
-                                     options=self.__model.months,
-                                     onSelect=self.__on_dropdown_select if self.__enableOnChangeCalback else None),
+                                    options=self.__model.months,
+                                    onSelect=self.__on_dropdown_select if self.__enableOnChangeCalback else None),
 
 
                     ScrollView(layout="column")
@@ -696,6 +696,93 @@ class MyApplication(Component):
                                    on_click=self.__onSaveButtonClick),)
                 ),
             )
+        )
+
+
+class MonitoringApp(Component):
+    def __init__(self,
+                 data_model: DataModelMonitoring,
+                 result_path=None
+                 ):
+        super().__init__()
+        self.__enableOnChangeCalback = True
+        self.__model = data_model
+        self.state = StateManager({
+            "File": pathlib.Path(""),
+        })
+        self.result_path = result_path + '\Results.xlsx'
+
+    def __set_field_list(self, value):
+        self.__model.set_do(value)
+        self.set_state()
+
+    def __set_field(self, value):
+        self.__model.set_field(value)
+        self.set_state()
+
+    def __onBlackListButtonClick(self, value):
+        self.__model.black_list()
+        self.set_state()
+
+    def __onExcelCheckBox(self, value):
+        self.__model.excel_export_option()
+    #    self.set_state()
+
+    def __onCompanyFormExport(self, value):
+        self.__model.company_form()
+        self.set_state()
+
+    def __onImportButtonClick(self, value):
+        if self.state['File'] is None:
+            print('Не выбран файл!')
+        else:
+            self.__model.import_company_form(file_path=self.state['File'])
+    def render(self):
+        return  Window(title='Программа мониторинга', )(
+                View(layout="column", style={'background-color': 'white', "margin": 10,
+                                             "font-weight": 1},)
+                (View(layout="row", style={ "margin": 10,})(
+                    Label(text='Выбор ДО', style={'align': 'center'}),
+                    Label(text='Выбор месторождения', style={'align': 'center'})
+                                     ),
+                 View(layout="row", style={ "margin": 10,})(
+                    Dropdown(selection='ДО',
+                             options=self.__model.do_list,
+                             on_select=self.__set_field_list,
+                             style={"margin": 10, }
+                             ),
+                    Dropdown(selection='Месторождение',
+                             options=self.__model.field_list_for_view,
+                             on_select=self.__set_field,
+                             style={"margin": 10, }
+                             ),
+                                            ),
+                    View(layout="row", style={ "margin": 10, 'align': 'center'})(Label('Обновление базы мониторинга')),
+
+                    View(layout="row", style={ "margin": 10,})(
+                        Button("Обновить данные черного списка",
+                               #style={"margin": 10, },
+                               on_click=self.__onBlackListButtonClick),
+
+                        CheckBox(text='Выгрузка данных в Excel',
+                                 on_change=self.__onExcelCheckBox,
+                                 style={"margin": 10, }
+                                 ),
+                    ),
+
+                    View(layout="row", style={"margin": 10, })(
+                        Button("Выгрузить форму для ДО",
+                               # style={"margin": 10, },
+                               on_click=self.__onCompanyFormExport),
+
+                    ),
+                    View(layout="row", style={"margin": 10, "align": 'center' })(Label('Меню загрузки форм отчета ДО')),
+
+                    View(layout="row")(
+                        Form(self.state, ),
+                        Button("Загрузить заполненную форму от ДО в базу", style={"width": 200 * 2},
+                               on_click=self.__onImportButtonClick), )
+                )
         )
 
 
