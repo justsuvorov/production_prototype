@@ -135,32 +135,31 @@ class GfemDataBaseParser(Parser):
         data = sqlite3.connect(self.data_path)
         curs = data.cursor()
         mdb_path = path + '\monitoring.db'
-
         curs.execute('ATTACH "' + mdb_path + '" AS m')
-    #    curs.execute('''INSERT OR IGNORE INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent in (SELECT id FROM arf_prod_obj_information WHERE gap_period = 0)'''
         curs.execute(
             '''INSERT OR IGNORE INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent in (SELECT object_id FROM m.monitoring_ecm_prod_full)'''
-
             )
 
         data.commit()
 
         data.close()
-        """
+
+
+    def merge_prep_objects(self, path: str):
         data = sqlite3.connect(self.data_path)
-     #   df = self.data()
+        curs = data.cursor()
+        mdb_path = path + '\monitoring.db'
 
-     #   df = df.loc[df['GAP'] == 0]
+        curs.execute('ATTACH "' + mdb_path + '" AS m')
+        #    curs.execute('''INSERT OR IGNORE INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent in (SELECT id FROM arf_prod_obj_information WHERE gap_period = 0)'''
+        curs.execute(
+            '''INSERT OR IGNORE INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent in (SELECT object_id FROM m.monitoring_ecm_prod_full)'''
 
+        )
 
-        df_full = pd.read_sql_query('SELECT * FROM arf_prod_ecm', data)
+        data.commit()
 
-        df_full = df_full.loc[df_full['id_parent'].isin(df['id'])]
-        engine = sqlite3.connect(path + '\monitoring.db')
-
-        df_full.to_sql('monitoring_ecm_prod_month', con=engine, if_exists='replace', index=False)
-        print('Результаты записаны в Базу данных')
-        """
+        data.close()
 
 
 class GfemMonthDataParser(Parser):
@@ -226,7 +225,7 @@ class MonitoringActivityParser(Parser):
     def __init__(self,
                  data_path: str):
         self.data_path = data_path
-    #    self.series_names = ['id', 'Тип объекта', 'Скважина', 'Куст', 'Объект подготовки', 'Месторождение',	'ДО', 'Дата внесения', 'Статус']
+    #  self.series_names = ['id объекта', 'ДО','Месторождение', 'Скважина', 'Куст', 'ДНС', 	'ДО', 'Дата внесения', 'Статус']
         self.initial_names = None
 
     def data(self):
@@ -236,7 +235,7 @@ class MonitoringActivityParser(Parser):
         df = pd.read_sql_query('SELECT * FROM activity_unprofit', data)
     #    self.initial_names = list(df.columns)
 
-    #    df = df.set_axis(self.series_names, axis=1, )
+       # df = df.set_axis(self.series_names, axis=1, )
 
         return df
 
@@ -315,6 +314,23 @@ class AROFullLoaderDB(Loader):
         self.data.to_sql('monitoring_ecm_prod_full', con=engine, if_exists='replace', index=False)
         print('Результаты записаны в Базу данных')
 
+
+class ActivityLoaderDB(Loader):
+    def __init__(self,
+                 data: pd.DataFrame,
+                 source_path: str,
+                 ):
+        super().__init__(data=data,
+                         source_path=source_path)
+        self.initial_names = ['object_id', 'activity_id', 'activity_comment', 'date_planning', 'date_fact',
+                              'responsible_person', 'obj_status', 'date_creation', ]
+
+    def load_data(self):
+
+        engine = sqlite3.connect(self.source_path+'\monitoring.db')
+        self.data.columns = self.initial_names
+        self.data.to_sql('activity_unprofit', con=engine, if_exists='replace', index=False)
+        print('Результаты записаны в Базу данных')
 
 class AROMonthTableLoaderDB(Loader):
 

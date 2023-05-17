@@ -764,10 +764,10 @@ class MonitoringApp(Component):
                                #style={"margin": 10, },
                                on_click=self.__onBlackListButtonClick),
 
-                        CheckBox(text='Выгрузка данных в Excel',
-                                 on_change=self.__onExcelCheckBox,
-                                 style={"margin": 10, }
-                                 ),
+                    #    CheckBox(text='Выгрузка данных в Excel',
+                    #             on_change=self.__onExcelCheckBox,
+                    #             style={"margin": 10, }
+                    #             ),
                     ),
 
                     View(layout="row", style={"margin": 10, })(

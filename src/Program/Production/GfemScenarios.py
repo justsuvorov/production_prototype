@@ -144,6 +144,7 @@ class AroMonitoring:
         if self.filter['Field'] != 'All':
             prepared_data = prepared_data.loc[prepared_data['Месторождение'] == self.filter['Field']]
         prepared_data = prepared_data.drop(columns=['GAP'])
+
         return prepared_data
 
     def __prepare_df(self, df: pd.DataFrame, new_data: bool = False):
@@ -172,34 +173,15 @@ class AroMonitoring:
         black_list['temp_id'] = data['Скважина'] + data['Скважина'] + data['Объект подготовки'] + data['Месторождение']
 
         black_list = black_list.loc[~black_list['temp_id'].isin(db_black_list_data['temp_id'])]
-        black_list = self.__merge_prep_objects(data=black_list)
+   #     black_list = self.__merge_prep_objects(data=black_list)
 
    #     black_list = pd.concat([black_list, db_black_list_data])
+
         export_list = black_list.drop(columns=self.black_list_names[1:-2])
         black_list = black_list.loc[:, self.black_list_names]
 
         self.__export_black_list(data=black_list, excel_export=excel_export)
         self.__export_full_list(data=export_list, excel_export=excel_export)
-
-    def __merge_prep_objects(self, data: pd.DataFrame):
-        prep_obj_names = data['Объект подготовки'].unique()
-        for name in prep_obj_names:
-            a = data.loc[data['Объект подготовки'] == name].groupby(by=['Скважина', 'Объект подготовки', 'Куст']).apply(lambda x: x)
-
-            if data['Объект подготовки'][name].groupby(by=['Скважина', 'Объект подготовки','Куст'], as_index=False).shape > 1:
-               data['Объект подготовки'][name].groupby([])
-        new_data = data.groupby(by=['Скважина', 'Объект подготовки','Куст'], as_index=False).agg({'id': 'id',
-                                                                                                  'Тип объекта':'Тип объекта',
-                                                                                                  'NPV_MAX' :'sum',
-                                'FCF первый месяц:':'sum', 'НДН за весь период; тыс. т':'sum',
-                                 'НДЖ за весь период; тыс. т':'sum', 'FCF за весь период; тыс. руб.':'sum',
-                                'НДН до ГЭП; тыс. т':'sum',
-                                 'НДЖ до ГЭП; тыс. т':'sum',	'FCF до ГЭП; тыс. руб.':'sum',
-                                'НДН за скользящий год; тыс. т':'sum',	'НДЖ за скользящий год; тыс. т':'sum',
-                                'FCF за скользящий год; тыс. руб.':'sum',})
-        return new_data
-
-
 
     def aro_full_info_black_list(self, path: str=None, excel_export: bool = False):
         if path is None:
@@ -238,16 +220,22 @@ class AroMonitoring:
         prepared_data['Дата выполнения мероприятия (План)'] = ''
         prepared_data['Дата выполнения мероприятия (Факт)'] = ''
         prepared_data['Отвественный(название должности)'] = ''
-        prepared_data['Статус по эффективности'] = ''
-        prepared_data['Наличие отказа'] = ''
-        prepared_data.drop(columns=['Дата внесения', 'id'])
+        prepared_data['Статус. В работе/остановлена'] = ''
+        prepared_data['Наличие отказа. Да/Нет'] = ''
+        prepared_data.drop(columns=['Дата внесени2я', 'id'])
         prepared_data.to_excel(self.file_path + '\Форма для ДО.xlsx')
 
     def load_company_form_to_db(self, data: pd.DataFrame):
         db_path = self.file_path + '/monitoring.db'
         db_activity_data = MonitoringActivityParser(data_path=db_path).data()
-        data = data.loc[~data['id'].isin(db_activity_data['object_id'].isin(data['id']))]
+       # db_activity_data
+       # data = data.loc[~data['id'].isin(db_activity_data['object_id'].isin(data['id']))]
 
+        export_data = data[['id', 'Мероприятие', 'Комментарии к мероприятию',
+                                'Дата выполнения мероприятия (План)', 'Дата выполнения мероприятия (Факт)',
+                                'Отвественный (название должности)', 'Статус. В работе/остановлена',
+                                'Наличие отказа. Да/Нет', ]]
+        ActivityLoaderDB(data=export_data, source_path=self.file_path).load_data()
 
 class SortedGfemData:
 
