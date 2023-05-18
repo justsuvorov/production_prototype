@@ -125,24 +125,29 @@ class AroMonitoring:
                                          add_data_from_excel=True)
         self.filter = filter
         self.black_list_names = ['id', 'Тип объекта', 'Скважина', 'Куст', 'Объект подготовки','Месторождение', 'ДО', 'Дата внесения', 'Статус по рентабельности']
-        self.__monitoring_base = MonitoringSQLSpeakingObject(path=self.path)
+        self.__monitoring_base = MonitoringSQLSpeakingObject(path=self.file_path)
 
     def _data(self) -> pd.DataFrame:
+
         return self.parser.data()
 
     def _recalculate_indicators(self):
         data = self._data()
-
+        print('Aro Monitoring||Gfem data is read')
         prepared_data = data
         prepared_data.loc[prepared_data['Тип объекта'].str[0] == 'W', 'Тип объекта'] = 'Скважина'
         prepared_data.loc[prepared_data['Тип объекта'] == 'GROUP_ECONOMIC', 'Тип объекта'] = 'Куст'
         prepared_data.loc[prepared_data['Тип объекта'] == 'PREPARATION_OBJECT_ECONOMIC', 'Тип объекта'] = 'Объект подготовки'
         prepared_data = prepared_data.loc[~prepared_data['Тип объекта'].isin(['GROUP_OPEX','PREPARATION_OBJECT_OPEX'])]
-
-        if self.filter['Company'] != 'All':
-            prepared_data = prepared_data.loc[prepared_data['ДО'] == self.filter['Company']]
-        if self.filter['Field'] != 'All':
-            prepared_data = prepared_data.loc[prepared_data['Месторождение'] == self.filter['Field']]
+        try:
+            if self.filter['Company'] != 'All':
+                prepared_data = prepared_data.loc[prepared_data['ДО'] == self.filter['Company']]
+                print('Выбрано ДО: ', self.filter['Company'])
+            if self.filter['Field'] != 'All':
+                prepared_data = prepared_data.loc[prepared_data['Месторождение'] == self.filter['Field']]
+                print('Выбрано месторождение: ', self.filter['Field'])
+        except:
+            print('Aro Monitoring||Ошибка выбора ДО-Месторождения. Фильтры сброшены')
         prepared_data = prepared_data.drop(columns=['GAP'])
 
         return prepared_data
@@ -159,9 +164,9 @@ class AroMonitoring:
 
     def black_list(self, excel_export: bool = False):
         db_path = self.file_path + '/monitoring.db'
-        db_black_list_data = MonitoringBaseParser(data_path=db_path).data()
+     #   db_black_list_data = MonitoringBaseParser(data_path=db_path).data()
    #     db_full_list_data = MonitoringFullParser(data_path=db_path).data()
-      #  db_black_list_data = self.__monitoring_base.black_list_from_db()
+        db_black_list_data = self.__monitoring_base.black_list_from_db()
      #   db_full_list_data = self.__monitoring_base.full_data_black_list_from_db()
         db_black_list_data = self.__prepare_df(df=db_black_list_data)
 
@@ -196,7 +201,8 @@ class AroMonitoring:
         if excel_export:
             BlackListLoaderExcel(data=data, source_path=self.file_path).load_data()
 
-        BlackListLoaderDB(data=data, source_path=self.file_path).load_data()
+        #BlackListLoaderDB(data=data, source_path=self.file_path).load_data()
+        self.__monitoring_base.load_black_list_to_db(data=data)
 
     def __export_full_list(self, data: pd.DataFrame, excel_export: bool):
         if excel_export:
@@ -204,7 +210,9 @@ class AroMonitoring:
         data =data.drop(
             columns=['Лицензионный участок', 'temp_id', 'Дата внесения', 'Статус по рентабельности',])
         #data = data.drop(columns=['Статус по рентабельности', 'Дата внесения'])
-        AROFullLoaderDB(data=data, source_path=self.file_path).load_data()
+       # AROFullLoaderDB(data=data, source_path=self.file_path).load_data()
+        self.__monitoring_base.load_full_data_to_db(data=data)
+
         self.parser.transfer_month_table(path=self.file_path)
 
     def export_company_form(self):
@@ -222,12 +230,12 @@ class AroMonitoring:
         prepared_data['Отвественный(название должности)'] = ''
         prepared_data['Статус. В работе/остановлена'] = ''
         prepared_data['Наличие отказа. Да/Нет'] = ''
-        prepared_data.drop(columns=['Дата внесени2я', 'id'])
+        prepared_data.drop(columns=['Дата внесения', 'id'])
         prepared_data.to_excel(self.file_path + '\Форма для ДО.xlsx')
 
     def load_company_form_to_db(self, data: pd.DataFrame):
         db_path = self.file_path + '/monitoring.db'
-        db_activity_data = MonitoringActivityParser(data_path=db_path).data()
+     #   db_activity_data = MonitoringActivityParser(data_path=db_path).data()
        # db_activity_data
        # data = data.loc[~data['id'].isin(db_activity_data['object_id'].isin(data['id']))]
 
@@ -235,7 +243,8 @@ class AroMonitoring:
                                 'Дата выполнения мероприятия (План)', 'Дата выполнения мероприятия (Факт)',
                                 'Отвественный (название должности)', 'Статус. В работе/остановлена',
                                 'Наличие отказа. Да/Нет', ]]
-        ActivityLoaderDB(data=export_data, source_path=self.file_path).load_data()
+        self.__monitoring_base.load_activity_data_to_db(data=export_data)
+    #    ActivityLoaderDB(data=export_data, source_path=self.file_path).load_data()
 
 class SortedGfemData:
 

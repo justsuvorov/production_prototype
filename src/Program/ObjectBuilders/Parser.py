@@ -195,14 +195,14 @@ class MonitoringBaseParser(Parser):
         self.initial_names = None
 
     def data(self):
-        print('Connecting to monitoring db')
+        print('MonitoringBaseParser||Connecting to monitoring db')
         data = sqlite3.connect(self.data_path)
 
         df = pd.read_sql_query('SELECT * FROM monitoring_unprofit_obj', data)
         self.initial_names = list(df.columns)
 
         df = df.set_axis(self.series_names, axis=1, )
-
+        print('Data is read')
         return df
 
 
@@ -214,10 +214,11 @@ class MonitoringFullParser(Parser):
 
 
     def data(self):
+        print('MonitoringFullParser||Connecting to monitoring db')
         data = sqlite3.connect(self.data_path)
 
         df = pd.read_sql_query('SELECT * FROM monitoring_ecm_prod_full', data)
-
+        print('MonitoringFullParser||Data is read')
         return df
 
 
@@ -229,12 +230,12 @@ class MonitoringActivityParser(Parser):
         self.initial_names = None
 
     def data(self):
-        print('Connecting to monitoring db')
+        print('MonitoringFullParser||Connecting to monitoring db')
         data = sqlite3.connect(self.data_path)
 
         df = pd.read_sql_query('SELECT * FROM activity_unprofit', data)
     #    self.initial_names = list(df.columns)
-
+        print('MonitoringFullParser||Data is read')
        # df = df.set_axis(self.series_names, axis=1, )
 
         return df
@@ -279,7 +280,7 @@ class BlackListLoaderDB(Loader):
         engine = sqlite3.connect(self.source_path+'\monitoring.db')
         self.data.columns = self.initial_names
         self.data.to_sql('monitoring_unprofit_obj', con=engine, if_exists='replace', index=False)
-        print('Результаты записаны в Базу данных')
+        print('BlackListLoaderDB||Результаты записаны в Базу данных')
 
 
 class AROFullLoaderDB(Loader):
@@ -312,7 +313,7 @@ class AROFullLoaderDB(Loader):
      #   for row in self.data.iterrows():
 
         self.data.to_sql('monitoring_ecm_prod_full', con=engine, if_exists='replace', index=False)
-        print('Результаты записаны в Базу данных')
+        print('AROFullLoaderDB||Результаты записаны в Базу данных')
 
 
 class ActivityLoaderDB(Loader):
@@ -330,7 +331,8 @@ class ActivityLoaderDB(Loader):
         engine = sqlite3.connect(self.source_path+'\monitoring.db')
         self.data.columns = self.initial_names
         self.data.to_sql('activity_unprofit', con=engine, if_exists='replace', index=False)
-        print('Результаты записаны в Базу данных')
+        print('ActivityLoaderDB||Результаты записаны в Базу данных')
+
 
 class AROMonthTableLoaderDB(Loader):
 
@@ -351,9 +353,11 @@ class SQLSpeakingObject:
         try:
             connection = sqlite3.connect(self.db_name)
             self.cursor = connection.cursor()
+            print('Connected to ', db_name)
+          #  connection.close()
         except:
             print('Unable to connect to db', self.db_name)
-    
+
 
 class GfemSQLSpeakingObject(SQLSpeakingObject):
     def __init__(self,
@@ -370,12 +374,12 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
     def __init__(self,
                  path: str,):
         self.path = path
-        self.db_name = self.path+ '\monitoring.db'
+        self.db_name = self.path + '\monitoring.db'
         super().__init__(db_name=self.db_name)
 
-        self.__monitoring_base_parser = MonitoringBaseParser(data_path=self.path)
-        self.__monitoring_full_parser = MonitoringFullParser(data_path=self.path)
-        self.__monitoring_activity_parser = MonitoringActivityParser(data_path=self.path)
+        self.__monitoring_base_parser = MonitoringBaseParser(data_path=self.db_name )
+        self.__monitoring_full_parser = MonitoringFullParser(data_path=self.db_name )
+        self.__monitoring_activity_parser = MonitoringActivityParser(data_path=self.db_name )
 
     def black_list_from_db(self):
         return self.__monitoring_base_parser.data()
@@ -385,6 +389,9 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
 
     def activity_data_from_db(self):
         return self.__monitoring_activity_parser.data()
+
+    def load_activity_data_to_db(self, data):
+        ActivityLoaderDB(data=data, source_path=self.path).load_data()
 
     def load_black_list_to_db(self, data: pd.DataFrame):
         BlackListLoaderDB(data=data, source_path=self.path).load_data()
