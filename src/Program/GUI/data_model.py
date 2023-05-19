@@ -5,6 +5,7 @@ import pandas as pd
 from copy import deepcopy, copy
 from typing import Callable
 
+from Program.AROMonitoring.aro_monitoring import AroMonitoring
 from Program.Production.GfemScenarios import *
 from Program.Production.config_db import CompanyDictionary
 
@@ -637,3 +638,6 @@ class DataModelMonitoring:
     def import_company_form(self, file_path: pathlib.Path):
         data = pd.read_excel(file_path)
         self.__monitoring_module.load_company_form_to_db(data)
+
+    def map_status_from_mor_db(self,):
+        self.__monitoring_module.map_status_from_mor_db()

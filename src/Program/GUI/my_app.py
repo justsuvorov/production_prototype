@@ -737,6 +737,12 @@ class MonitoringApp(Component):
             print('Не выбран файл!')
         else:
             self.__model.import_company_form(file_path=self.state['File'])
+
+    def __onMappingMorButtonClick(self, value):
+        self.__model.map_status_from_mor_db()
+
+
+
     def render(self):
         return  Window(title='Программа мониторинга', )(
                 View(layout="column", style={'background-color': 'white', "margin": 10,
@@ -781,7 +787,12 @@ class MonitoringApp(Component):
                     View(layout="row")(
                         Form(self.state, ),
                         Button("Загрузить заполненную форму от ДО в базу", style={"width": 200 * 2},
-                               on_click=self.__onImportButtonClick), )
+                               on_click=self.__onImportButtonClick), ),
+
+                    View(layout="row")(
+
+                        Button("Мэппинг объектов с базой МЭР", style={"margin": 10, },
+                               on_click=self.__onMappingMorButtonClick), ),
                 )
         )
 
