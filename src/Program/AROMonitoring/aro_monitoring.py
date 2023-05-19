@@ -122,9 +122,9 @@ class AroMonitoring:
 
     def map_status_from_mor_db(self):
         df_active = self.__mor_db_base.last_month_active_data()
-        print('ARO Monitoring || МЭР. Действующие скважины ',len(df_active.shape[0]))
-        df_inactive = self.__mor_db_base.last_month_active_data()
-        print('ARO Monitoring || МЭР. Остановленные скважины ', len(df_inactive.shape[0]))
+        print('ARO Monitoring || МЭР. Действующие скважины ',df_active.shape[0])
+        df_inactive = self.__mor_db_base.last_month_inactive_data()
+        print('ARO Monitoring || МЭР. Остановленные скважины ', df_inactive.shape[0])
 
         black_list = self.__monitoring_base.black_list_from_db()
         black_list['temp_id'] = black_list['Скважина'] + black_list['Месторождение']

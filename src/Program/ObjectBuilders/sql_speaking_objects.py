@@ -92,7 +92,7 @@ class SQLMorDBSpeakingObject(SQLSpeakingObject):
     def last_month_active_data(self):
         self.connection = sqlite3.connect(self.db_name)
 
-        df = pd.read_sql_query('''SELECT * FROM mor_info WHERE id in (SELECT id_parent FROM mor_prod WHERE (date IN (SELECT max(date) FROM mor_prod)) AND (end_month_status = 'РАБ.' OR end_month_status = 'ПЬЕЗ.' )''', self.connection)
+        df = pd.read_sql_query('''SELECT * FROM mor_info WHERE id in (SELECT id_parent FROM mor_prod WHERE (date IN (SELECT max(date) FROM mor_prod)) AND (end_month_status = 'РАБ.' OR end_month_status = 'ПЬЕЗ.' ))''', self.connection)
 
 
         return df
@@ -101,7 +101,7 @@ class SQLMorDBSpeakingObject(SQLSpeakingObject):
         self.connection = sqlite3.connect(self.db_name)
         #    df = pd.read_sql_query('SELECT * FROM mor_prod WHERE date IN (SELECT max(date) FROM mor_prod)', self.connection)
         df = pd.read_sql_query(
-            '''SELECT * FROM mor_info WHERE id in (SELECT id_parent FROM mor_prod WHERE (date IN (SELECT max(date) FROM mor_prod)) AND (end_month_status = 'ОСТ.' OR  end_month_status = 'ЛИК')''',
+            '''SELECT * FROM mor_info WHERE id in (SELECT id_parent FROM mor_prod WHERE (date IN (SELECT max(date) FROM mor_prod)) AND (end_month_status = 'ОСТ.' OR  end_month_status = 'ЛИК'))''',
             self.connection)
         # AND end_month_status = РАБ.
 
