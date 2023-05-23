@@ -57,6 +57,9 @@ class AroMonitoring:
         db_black_list_data = self.__monitoring_base.black_list_from_db()
         db_black_list_data = self.__prepare_df(df=db_black_list_data)
 
+        db_export_list = self.__monitoring_base.full_data_black_list_from_db()
+
+
         data = self._recalculate_indicators()
         data = self.__prepare_df(df=data, new_data=True)
 
@@ -64,8 +67,12 @@ class AroMonitoring:
         black_list['temp_id'] = data['Скважина'] + data['Скважина'] + data['Объект подготовки'] + data['Месторождение']
         black_list = black_list.loc[~black_list['temp_id'].isin(db_black_list_data['temp_id'])]
 
+
+
         export_list = black_list.drop(columns=self.black_list_names[1:-2])
         black_list = black_list.loc[:, self.black_list_names]
+        black_list = pd.concat([db_black_list_data, black_list])
+        export_list = pd.concat([db_export_list, export_list])
 
         self.__export_black_list(data=black_list, excel_export=excel_export)
         self.__export_full_list(data=export_list, excel_export=excel_export)
@@ -110,14 +117,22 @@ class AroMonitoring:
 
     def load_company_form_to_db(self, data: pd.DataFrame):
 
-     #   db_activity_data = MonitoringActivityParser(data_path=db_path).data()
+        db_activity_data = self.__monitoring_base.activity_data_from_db()
+        print(db_activity_data)
        # db_activity_data
        # data = data.loc[~data['id'].isin(db_activity_data['object_id'].isin(data['id']))]
 
-        export_data = data[['id', 'Мероприятие', 'Комментарии к мероприятию',
+        filtered_data = data[['id', 'Мероприятие', 'Комментарии к мероприятию',
                                 'Дата выполнения мероприятия (План)', 'Дата выполнения мероприятия (Факт)',
                                 'Отвественный (название должности)', 'Статус. В работе/остановлена',
                                 'Наличие отказа. Да/Нет', ]]
+
+        filtered_data.columns = ['object_id', 'activity_id', 'activity_comment', 'date_planning', 'date_fact',
+                               'responsible_person', 'obj_status', 'date_creation']
+
+        a = db_activity_data.loc[~db_activity_data['object_id'].isin(filtered_data['object_id'])]
+
+        export_data = pd.concat([a, filtered_data])
         self.__monitoring_base.load_activity_data_to_db(data=export_data)
 
     def map_status_from_mor_db(self):

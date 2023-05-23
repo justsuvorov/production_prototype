@@ -480,6 +480,17 @@ class MyApplication(Component):
        # self.set_state()
         self.__enableOnChangeCalback = True
 
+    def __onSaveWholeTableButtonClick(self, value):
+        if self.state['File'] == pathlib.Path(""):
+            path = pathlib.Path(self.result_path)
+        else:
+            path = self.state['File']
+        self.__model.save_overal_results(path=path)
+        os.startfile(path)
+        self.__enableOnChangeCalback = False
+        # self.set_state()
+        self.__enableOnChangeCalback = True
+
     def __on_Reset_click_button(self, value):
         self.__model.reset_results()
         self.__enableOnChangeCalback = False
@@ -693,7 +704,12 @@ class MyApplication(Component):
                         View(layout="row")(
                             Form(self.state, ),
                             Button("Загрузить объекты в Excel", style={"width": 200 * 2},
-                                   on_click=self.__onSaveButtonClick),)
+                                   on_click=self.__onSaveButtonClick),),
+
+                        View(layout="row")(
+                            Form(self.state, ),
+                            Button("Выгрузить сводную таблицу в Excel", style={"width": 200 * 2},
+                                   on_click=self.__onSaveWholeTableButtonClick), )
                 ),
             )
         )
@@ -763,7 +779,7 @@ class MonitoringApp(Component):
                              style={"margin": 10, }
                              ),
                                             ),
-                    View(layout="row", style={ "margin": 10, 'align': 'center'})(Label('Обновление базы мониторинга')),
+                    View(layout="row", style={ "margin": 20, 'align': 'center'})(Label('Обновление базы мониторинга')),
 
                     View(layout="row", style={ "margin": 10,})(
                         Button("Обновить данные черного списка",
@@ -782,16 +798,16 @@ class MonitoringApp(Component):
                                on_click=self.__onCompanyFormExport),
 
                     ),
-                    View(layout="row", style={"margin": 10, "align": 'center' })(Label('Меню загрузки форм отчета ДО')),
+                    View(layout="row", style={"margin": 20, "align": 'center' })(Label('Меню загрузки форм отчета ДО')),
 
                     View(layout="row")(
                         Form(self.state, ),
-                        Button("Загрузить заполненную форму от ДО в базу", style={"width": 200 * 2},
+                        Button("Загрузить заполненную форму от ДО в базу",
                                on_click=self.__onImportButtonClick), ),
 
-                    View(layout="row")(
+                    View(layout="row", style={"margin": 10, })(
 
-                        Button("Мэппинг объектов с базой МЭР", style={"margin": 10, },
+                        Button("Мэппинг объектов с базой МЭР",
                                on_click=self.__onMappingMorButtonClick), ),
                 )
         )

@@ -18,22 +18,23 @@ from Program.GUI.data_model import DataModel, DataModelFull, DataModelMonitoring
 path=r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
-    """
+
     #domain_model_full = domain_model(file_path=Path(path))
 
 
- #   scenarios = RegressionScenarios(sorted_data=SortedGfemData(
+    scenarios = RegressionScenarios(sorted_data=SortedGfemData(
                                                 prepared_data=GfemDataFrame(
                                                         file_path=path)
                                                                 )
                                     )
-   # data_model = DataModel(scenarios=scenarios, path=path)
+    data_model = DataModel(scenarios=scenarios, path=path)
   #  data_model = DataModelFull(scenarios=scenarios, path=path, portu_results=PortuDataFrame(file_path=path))
-  #  data_model.initializtion()
+    data_model.initializtion()
  #   data_model.full_initializtion()
    # app = Application(scenarios=scenarios, path=path)
- #   app = MyApplication(data_model=data_model, result_path=path)
-  #  app.initialization()
+    app = MyApplication(data_model=data_model, result_path=path)
+ #   app.initialization()
+    App(app).start()
     """
 
     filtered = {'Company': 'All', 'Field': 'All'}
@@ -41,7 +42,9 @@ def main(path: str):
     monitoring_module = AroMonitoring(file_path=path, filter=filtered, )
     app = MonitoringApp(data_model=DataModelMonitoring(monitoring_module=monitoring_module),
                         result_path=path)
+
     App(app).start()
+    """
 
 
 if __name__ == '__main__':

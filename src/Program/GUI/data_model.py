@@ -500,6 +500,13 @@ class DataModel:
     def save_results(self, path):
         self.__solution.export_results(path=path)
 
+    def save_overal_results(self, path):
+        if self.joint_venture:
+            j = 1
+        else:
+            j = 0
+        self.__solution.export_overal_results(path=path, solution_index=j, month=self.__constraints.months[self.index])
+
 
 class DataModelFull(DataModel):
     def __init__(self,

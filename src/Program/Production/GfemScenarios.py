@@ -270,6 +270,58 @@ class SolutionBalancer:
         else:
             self.data_for_excel.to_excel(path)
 
+    def export_overal_results(self, month,path=None,   solution_index: int = 1,):
+        if path is None:
+            print('Не задан путь к файлу!')
+        else:
+            dataframe = self.dataframe_list[solution_index]
+            overal_data = self.__overal_data(init_data=dataframe, result_data=self.data_for_excel, month=month)
+            overal_data.to_excel(path)
+
+
+    def __overal_data(self, init_data: pd.DataFrame, result_data: pd.DataFrame, month):
+
+
+        temp_df = pd.DataFrame( columns=['Месяц расчета','ДО','Отключено скважин', 'Исходная добыча, т/сут.', 'Итоговая добыча, т/сут.',
+                                        'Сокращение добычи, т/сут.','Исходный FCF, млн руб.','Итоговый FCF, млн руб.',
+                                        'Потери FCF, млн руб.'])
+        overal_data = pd.DataFrame(columns=['Месяц расчета', 'ДО','Отключено скважин', 'Исходная добыча, т/сут.', 'Итоговая добыча, т/сут.',
+                                        'Сокращение добычи, т/сут.','Исходный FCF, млн руб.','Итоговый FCF, млн руб.',
+                                        'Потери FCF, млн руб.'])
+        """
+        overal_data['ДО'] = ''
+        overal_data['Отключено скважин'] = ''
+        overal_data['Исходная добыча, т/сут.'] = ''
+        overal_data['Итоговая добыча, т/сут.'] = ''
+        overal_data['Сокращение добычи, т/сут.'] = ''
+        overal_data['Исходный FCF, млн руб.'] = ''
+        overal_data['Итоговый FCF, млн руб.'] = ''
+        overal_data['Потери FCF, млн руб.'] = ''
+        """
+
+        for name in self.company_names:
+
+            init_filtered = init_data.loc[init_data['ДО'] == name]
+            result_filtered = result_data.loc[result_data['ДО'] == name]
+
+
+            temp_df['ДО']= [name]
+            temp_df['Отключено скважин'] = [result_filtered.shape[0]]
+            temp_df['Исходная добыча, т/сут.'] = [init_filtered['НДН за первый месяц; т./сут. с долей СП'].sum().round(1)]
+
+            temp_df['Итоговая добыча, т/сут.'] =[ init_filtered['НДН за первый месяц; т./сут. с долей СП'].sum().round(1) - \
+                                                 result_filtered['НДН за первый месяц; т./сут. с долей СП'].sum().round(1)]
+            temp_df['Сокращение добычи, т/сут.'] = [result_filtered['НДН за первый месяц; т./сут. с долей СП'].sum().round(1)]
+            temp_df['Исходный FCF, млн руб.'] = [init_filtered['FCF первый месяц c долей СП'].sum().round(2)]
+            temp_df['Итоговый FCF, млн руб.'] = [init_filtered['FCF первый месяц c долей СП'].sum().round(2) - \
+                                                result_filtered['FCF первый месяц c долей СП'].sum().round(2)]
+            temp_df['Потери FCF, млн руб.'] = [result_filtered['FCF первый месяц c долей СП'].sum().round(2)]
+            temp_df['Месяц расчета'] = [month]
+
+
+            overal_data = pd.concat([overal_data, temp_df], ignore_index=True, )
+
+        return overal_data
 
 class CompanyDict:
     def __init__(self,
