@@ -59,13 +59,74 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
         return self.__monitoring_activity_parser.data()
 
     def load_activity_data_to_db(self, data):
-        ActivityLoaderDB(data=data, source_path=self.path).load_data()
+     #   ActivityLoaderDB(data=data, source_path=self.path).load_data()
+        self.cursor.execute()
+        self.connection.commit()
 
-    def load_black_list_to_db(self, data: pd.DataFrame):
-        BlackListLoaderDB(data=data, source_path=self.path).load_data()
+    def load_black_list_to_db(self, data: pd.DataFrame, gfem_base: SQLSpeakingObject):
+     #   BlackListLoaderDB(data=data, source_path=self.path).load_data()
+        new_data = data.loc[data['monitoring_id'] == 'New_id']
+        new_data['Дата внесения'] = new_data['Дата внесения'].dt.strftime('%d/%m/%Y').astype(str)
+        export_new_data = new_data.loc[:, ['id', 'Тип объекта', 'Скважина', 'Куст', 'Объект подготовки',
+                                           'Месторождение', 'ДО', 'Дата внесения', 'Статус по рентабельности',
+                                           'Статус по МЭР']]
+        print(export_new_data.values.tolist())
+        query = '''
+            INSERT INTO monitoring_unprofit_obj (id_aro, obj_type, well_name, well_group_name, preparation_obj_name,
+            field_name, company_name, date_creation, status, status_mer  ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        '''
+        self.cursor.executemany(query, export_new_data.values.tolist())
+        self.load_full_data_to_db(data=new_data, gfem_base=gfem_base)
+        self.connection.commit()
 
-    def load_full_data_to_db(self, data: pd.DataFrame):
-        AROFullLoaderDB(data=data, source_path=self.path).load_data()
+#        old_data = data.loc[data['monitoring_id'] != 'New_id'].to
+
+
+    #    self.connection.commit()
+
+    def load_full_data_to_db(self, data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
+      #  AROFullLoaderDB(data=data, source_path=self.path).load_data()
+        gfem_base.
+        query1 = '''
+                    SELECT id_parent, timeindex_dataframe, dobycha_nefti FROM 
+        '''
+        self.cursor.execute('')
+
+        export_new_data = data.loc[:, ['id',
+                                       'date',
+                                       'NPV_MAX',
+                                       'FCF первый месяц:',
+                                       'НДН за первый месяц',
+                                         'НДН за весь период; тыс. т',
+                                         'НДЖ за весь период; тыс. т',
+                                         'FCF за весь период; тыс. руб.',
+                                         'НДН до ГЭП; тыс. т',
+                                         'НДЖ до ГЭП; тыс. т',
+                                         'FCF до ГЭП; тыс. руб.',
+                                         'Период расчета; мес.',
+                                         'НДН за скользящий год; тыс. т',
+                                         'НДЖ за скользящий год; тыс. т',
+                                         'FCF за скользящий год; тыс. руб.',]]
+        query = '''
+            INSERT INTO monitoring_ecm_prod_full (object_id
+                                                    date_aro
+                                                    npv_max
+                                                    fcf_first_month
+                                                    oil_production_first_month
+                                                    oil_production_full
+                                                    fluid_extraction_full
+                                                    fcf_full
+                                                    oil_production_gap
+                                                    fluid_extraction_gap
+                                                    fcf_gap
+                                                    calculation_horizon
+                                                    oil_production_year
+                                                    fluid_extraction_year
+                                                    fcf_year
+                                                ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, )
+        '''
+        self.cursor.executemany(query, export_new_data.values.tolist())
+        self.connection.commit()
 
     def insert(self):
         if self.df is None:

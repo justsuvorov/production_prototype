@@ -105,16 +105,19 @@ class GfemDataBaseParser(Parser):
         if self.__add_data_from_excel:
             add_df = self.__add_query()
             df1 = df.loc[(df['GAP'] == 0)]
-            df1['Статус по рентабельности'] = 'Нерентабельная'
+            df1.loc[:,'Статус по рентабельности'] = 'Нерентабельная'
             df['temp_name'] = df['Месторождение'] + df['Скважина']
+            df1['temp_name'] = df1['Месторождение'] + df1['Скважина']
             df2 = df.loc[df['temp_name'].isin(add_df['id'])]
-            df2['Статус по рентабельности'] = 'Рентабельная до первого ремонта'
+            df2.loc[:,'Статус по рентабельности'] = 'Рентабельная до первого ремонта'
+            print(df1.columns, df2.columns)
+            df1 = df1.loc[~df1['temp_name'].isin(df2['temp_name'])]
             df1 = pd.concat([df1, df2])
             df1 = df1.drop(columns=['temp_name'])
 
         else:
             df1 = df.loc[df['GAP'] == 0]
-            df1['Статус по рентабельности'] = 'Нерентабельная'
+            df1.loc[:, 'Статус по рентабельности'] = 'Нерентабельная'
 
         return df1
 
@@ -141,7 +144,6 @@ class GfemDataBaseParser(Parser):
             )
 
         data.commit()
-
         data.close()
 
 
@@ -191,7 +193,8 @@ class MonitoringBaseParser(Parser):
                  data_path: str,
                  ):
         self.data_path = data_path
-        self.series_names = ['id', 'Тип объекта', 'Скважина', 'Куст', 'Объект подготовки', 'Месторождение',	'ДО', 'Дата внесения', 'Статус']
+        self.series_names = ['id', 'id_aro',  'Тип объекта', 'Скважина', 'Куст', 'Объект подготовки', 'Месторождение',	'ДО',
+                             'Дата внесения', 'Статус по рентабельности', 'Статус по МЭР' ]
         self.initial_names = None
 
     def data(self):

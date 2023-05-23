@@ -15,13 +15,13 @@ from Program.GUI.data_model import DataModel, DataModelFull, DataModelMonitoring
 
 #@click.command()
 #@click.option('--path')
-path=r'C:\Users\User\Documents\production_prototype\src\program\data'
+path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
 
+
     #domain_model_full = domain_model(file_path=Path(path))
-
-
+    """
     scenarios = RegressionScenarios(sorted_data=SortedGfemData(
                                                 prepared_data=GfemDataFrame(
                                                         file_path=path)
@@ -38,14 +38,11 @@ def main(path: str):
     """
 
     filtered = {'Company': 'All', 'Field': 'All'}
-
     monitoring_module = AroMonitoring(file_path=path, filter=filtered, )
     app = MonitoringApp(data_model=DataModelMonitoring(monitoring_module=monitoring_module),
                         result_path=path)
 
     App(app).start()
-    """
-
 
 if __name__ == '__main__':
     main(path)
