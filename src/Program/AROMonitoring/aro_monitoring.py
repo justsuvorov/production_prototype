@@ -54,8 +54,8 @@ class AroMonitoring:
         return df
 
     def __prepare_new_data_for_export(self, df: pd.DataFrame):
-        df.loc[:,'Статус по МЭР'] = ''
-        df.loc[:, 'monitoring_id'] = 'New_id'
+        df['Статус по МЭР'] = ''
+        df['monitoring_id'] = 'New_id'
         return df
 
     def __prepare_old_data_for_export(self, df: pd.DataFrame, db_black_list_data: pd.DataFrame):
@@ -65,8 +65,6 @@ class AroMonitoring:
         df.loc[:, 'monitoring_id'] = db_black_list_data['id']
 
         return df
-
-
     def black_list(self, excel_export: bool = False):
         db_black_list_data = self.__prepare_df(self.__monitoring_base.black_list_from_db()) #черный список из базы
         data = self.__prepare_df(df=self._recalculate_indicators(), new_data=True)  #результаты АРО
@@ -78,11 +76,8 @@ class AroMonitoring:
             db_black_list_data=db_black_list_data,
             df=data.loc[data['temp_id'].isin(db_black_list_data['temp_id'])]
                                                             )
-
-        black_list = pd.concat([black_list_old , black_list_new], ignore_index=False)
-
+        black_list = pd.concat([black_list_old, black_list_new], ignore_index=False)
         self.__export_black_list(data=black_list, excel_export=excel_export)
-
 
     def aro_full_info_black_list(self, path: str=None, excel_export: bool = False):
         if path is None:
@@ -97,7 +92,7 @@ class AroMonitoring:
         if excel_export:
             BlackListLoaderExcel(data=data, source_path=self.file_path).load_data()
         self.__monitoring_base.load_black_list_to_db(data=data, gfem_base=self.__gfem_base)
-        self.__gfem_base.transfer_month_table()
+      #  self.__gfem_base.transfer_month_table()
 
     def __export_full_list(self, data: pd.DataFrame, excel_export: bool):
         if excel_export:

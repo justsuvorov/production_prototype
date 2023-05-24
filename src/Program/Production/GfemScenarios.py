@@ -281,7 +281,6 @@ class SolutionBalancer:
 
     def __overal_data(self, init_data: pd.DataFrame, result_data: pd.DataFrame, month):
 
-
         temp_df = pd.DataFrame( columns=['Месяц расчета','ДО','Отключено скважин', 'Исходная добыча, т/сут.', 'Итоговая добыча, т/сут.',
                                         'Сокращение добычи, т/сут.','Исходный FCF, млн руб.','Итоговый FCF, млн руб.',
                                         'Потери FCF, млн руб.'])

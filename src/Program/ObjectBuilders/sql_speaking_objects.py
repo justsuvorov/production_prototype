@@ -37,6 +37,29 @@ class GfemSQLSpeakingObject(SQLSpeakingObject):
     def transfer_month_table(self):
         self.__gfem_base_parser.transfer_month_table(path=self.path)
 
+    def transfer_data_month_table(self, id_parent: pd.DataFrame, mdb: str):
+
+        self.cursor.execute('ATTACH "' + mdb+ '" AS m')
+        for id in id_parent:
+            self.cursor.execute('''
+            
+            INSERT OR IGNORE INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent = (?)
+            
+                        
+            ''', (id,))
+        self.connection.commit()
+
+    def get_crude_first_month(self):
+        data = pd.read_sql_query(
+            '''SELECT id_parent, timeindex_dataframe, dobycha_nefti FROM arf_prod_ecm GROUP BY id_parent HAVING timeindex_dataframe = MIN(timeindex_dataframe)''', con=self.connection)
+        return data
+
+    def new_month_table(self, id: pd.DataFrame):
+
+        data = pd.read_sql_query(
+            'SELECT * FROM arf_prod_ecm WHERE id_parent in "' + id.values.tolist() + '"',
+        con=self.connection)
+        return data
 
 class MonitoringSQLSpeakingObject(SQLSpeakingObject):
     def __init__(self,
@@ -59,40 +82,102 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
         return self.__monitoring_activity_parser.data()
 
     def load_activity_data_to_db(self, data):
-     #   ActivityLoaderDB(data=data, source_path=self.path).load_data()
-        self.cursor.execute()
-        self.connection.commit()
+        ActivityLoaderDB(data=data, source_path=self.path).load_data()
+      #  self.cursor.execute()
+    #    self.connection.commit()
 
-    def load_black_list_to_db(self, data: pd.DataFrame, gfem_base: SQLSpeakingObject):
-     #   BlackListLoaderDB(data=data, source_path=self.path).load_data()
-        new_data = data.loc[data['monitoring_id'] == 'New_id']
+    def __load_new_data_to_db(self, new_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
         new_data['Дата внесения'] = new_data['Дата внесения'].dt.strftime('%d/%m/%Y').astype(str)
         export_new_data = new_data.loc[:, ['id', 'Тип объекта', 'Скважина', 'Куст', 'Объект подготовки',
                                            'Месторождение', 'ДО', 'Дата внесения', 'Статус по рентабельности',
                                            'Статус по МЭР']]
-        print(export_new_data.values.tolist())
         query = '''
-            INSERT INTO monitoring_unprofit_obj (id_aro, obj_type, well_name, well_group_name, preparation_obj_name,
-            field_name, company_name, date_creation, status, status_mer  ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        '''
-        self.cursor.executemany(query, export_new_data.values.tolist())
-        self.load_full_data_to_db(data=new_data, gfem_base=gfem_base)
-        self.connection.commit()
+                    INSERT INTO monitoring_unprofit_obj (id_aro, obj_type, well_name, well_group_name, preparation_obj_name,
+                    field_name, company_name, date_creation, status, status_mer  ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                '''
 
-#        old_data = data.loc[data['monitoring_id'] != 'New_id'].to
+        try:
+            self.cursor.executemany(query, export_new_data.values.tolist())
+            self.connection.commit()
+            print('Добавлены новые объекты в черный список: ', new_data.shape[0])
+            new_data_id = self.__prepare_new_data_id(new_data=new_data, gfem_base=gfem_base)
+            export_new_data = new_data_id.loc[:, ['id_main',
+                                               'date',
+                                               'NPV_MAX',
+                                               'FCF первый месяц:',
+                                               'НДН за первый месяц',
+                                               'НДН за весь период; тыс. т',
+                                               'НДЖ за весь период; тыс. т',
+                                               'FCF за весь период; тыс. руб.',
+                                               'НДН до ГЭП; тыс. т',
+                                               'НДЖ до ГЭП; тыс. т',
+                                               'FCF до ГЭП; тыс. руб.',
+                                               'Период расчета; мес.',
+                                               'НДН за скользящий год; тыс. т',
+                                               'НДЖ за скользящий год; тыс. т',
+                                               'FCF за скользящий год; тыс. руб.', ]]
+            query = '''
+                       INSERT INTO monitoring_ecm_prod_full (object_id,
+                                                               date_aro,
+                                                               npv_max,
+                                                               fcf_first_month,
+                                                               oil_production_first_month,
+                                                               oil_production_full,
+                                                               fluid_extraction_full,
+                                                               fcf_full,
+                                                               oil_production_gap,
+                                                               fluid_extraction_gap,
+                                                               fcf_gap,
+                                                               calculation_horizon,
+                                                               oil_production_year,
+                                                               fluid_extraction_year,
+                                                               fcf_year
+                                                           ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                   '''
+            self.cursor.executemany(query, export_new_data.values.tolist())
+            self.connection.commit()
+            self.connection.close()
+            gfem_base.transfer_data_month_table(id_parent=new_data_id['id'], mdb=self.db_name)
+            self.connection = sqlite3.connect(self.db_name)
+            self.cursor = self.connection.cursor()
+            self.connection.commit()
+
+        except sqlite3.Error:
+            self.connection.rollback()
+            self.connection.close()
+            raise print('Ошибка добавления новых объектов')
+
+    def load_black_list_to_db(self, data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
+     #   BlackListLoaderDB(data=data, source_path=self.path).load_data()
+        new_data = data.loc[data['monitoring_id'] == 'New_id'] # новый скважины в черный список
+        self.__load_new_data_to_db(new_data=new_data, gfem_base=gfem_base)
+        old_data = data.loc[data['monitoring_id'] != 'New_id']
+        self.__update_old_data_to_db(old_data=old_data, gfem_base=gfem_base)
+        self.connection.close()
 
 
-    #    self.connection.commit()
+    def __update_old_data_to_db(self, old_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
+        pass
 
-    def load_full_data_to_db(self, data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
+
+    def __prepare_new_data_id(self, new_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
+        black_list = self.black_list_from_db().sort_values(by='id_aro')
+        add_data = gfem_base.get_crude_first_month()
+        add_data.columns = ['id', 'date', 'НДН за первый месяц']
+        add_data = add_data.loc[add_data['id'].isin(new_data['id'])]
+        add_data = add_data.set_index('id')
+        new_data = new_data.set_index('id')
+        new_data = new_data.join(add_data)
+        new_data = new_data.reset_index()
+        new_data = new_data.sort_values(by='id')
+        new_data['id_main'] = black_list.loc[:, 'id']
+        return new_data
+
+    def load_full_data_to_db(self, new_data: pd.DataFrame, old_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
       #  AROFullLoaderDB(data=data, source_path=self.path).load_data()
-        gfem_base.
-        query1 = '''
-                    SELECT id_parent, timeindex_dataframe, dobycha_nefti FROM 
-        '''
-        self.cursor.execute('')
-
-        export_new_data = data.loc[:, ['id',
+        new_data = self.__prepare_new_data_id(new_data=new_data, gfem_base=gfem_base)
+  #      old_data =
+        export_new_data = new_data.loc[:, ['id_main',
                                        'date',
                                        'NPV_MAX',
                                        'FCF первый месяц:',
@@ -108,25 +193,32 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                                          'НДЖ за скользящий год; тыс. т',
                                          'FCF за скользящий год; тыс. руб.',]]
         query = '''
-            INSERT INTO monitoring_ecm_prod_full (object_id
-                                                    date_aro
-                                                    npv_max
-                                                    fcf_first_month
-                                                    oil_production_first_month
-                                                    oil_production_full
-                                                    fluid_extraction_full
-                                                    fcf_full
-                                                    oil_production_gap
-                                                    fluid_extraction_gap
-                                                    fcf_gap
-                                                    calculation_horizon
-                                                    oil_production_year
-                                                    fluid_extraction_year
+            INSERT INTO monitoring_ecm_prod_full (object_id,
+                                                    date_aro,
+                                                    npv_max,
+                                                    fcf_first_month,
+                                                    oil_production_first_month,
+                                                    oil_production_full,
+                                                    fluid_extraction_full,
+                                                    fcf_full,
+                                                    oil_production_gap,
+                                                    fluid_extraction_gap,
+                                                    fcf_gap,
+                                                    calculation_horizon,
+                                                    oil_production_year,
+                                                    fluid_extraction_year,
                                                     fcf_year
-                                                ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, )
+                                                ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         '''
+
         self.cursor.executemany(query, export_new_data.values.tolist())
-        self.connection.commit()
+    #    self.transfer_month_table(data=black_list['id_aro'], gfem_base=gfem_base)
+
+    def transfer_month_table(self, data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
+        id_aro = data
+        new_month_data = gfem_base.new_month_table(id=id_aro)
+
+
 
     def insert(self):
         if self.df is None:
