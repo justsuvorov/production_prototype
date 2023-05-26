@@ -87,13 +87,11 @@ class ActivityLoaderDB(Loader):
                  ):
         super().__init__(data=data,
                          source_path=source_path)
-        self.initial_names = ['object_id', 'activity_id', 'activity_comment', 'date_planning', 'date_fact',
-                              'responsible_person', 'obj_status', 'date_creation', ]
 
     def load_data(self):
 
         engine = sqlite3.connect(self.source_path+'\monitoring.db')
-        self.data.columns = self.initial_names
+
         self.data.to_sql('activity_unprofit', con=engine, if_exists='replace', index=False)
         print('ActivityLoaderDB||Результаты записаны в Базу данных')
 

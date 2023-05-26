@@ -69,7 +69,6 @@ class DataModel:
         self.crude_list = []
         self.result_crude_list = []
 
-
         self.joint_venture = False
 
         self.__constraints = None
@@ -80,7 +79,6 @@ class DataModel:
         self.months = None
         self.__control_option = False
         self.control_option = False
-
 
         self.__min_value_full = {}
         self.__max_value_full = {}

@@ -102,23 +102,31 @@ class GfemDataBaseParser(Parser):
         data = sqlite3.connect(self.data_path)
         df = pd.read_sql_query('SELECT * FROM arf_prod_obj_information', data)
         df = df.set_axis(self.series_names, axis=1, )
+        pd.set_option('mode.chained_assignment', None)
+        # This code will not complain!
+
         if self.__add_data_from_excel:
-            add_df = self.__add_query()
-            df1 = df.loc[(df['GAP'] == 0)]
-            df1.loc[:,'Статус по рентабельности'] = 'Нерентабельная'
-            df['temp_name'] = df['Месторождение'] + df['Скважина']
-            df1['temp_name'] = df1['Месторождение'] + df1['Скважина']
-            df2 = df.loc[df['temp_name'].isin(add_df['id'])]
-            df2.loc[:,'Статус по рентабельности'] = 'Рентабельная до первого ремонта'
-            print(df1.columns, df2.columns)
-            df1 = df1.loc[~df1['temp_name'].isin(df2['temp_name'])]
-            df1 = pd.concat([df1, df2])
-            df1 = df1.drop(columns=['temp_name'])
+            try:
+                add_df = self.__add_query()
+                df1 = df.loc[(df['GAP'] == 0)]
+                df1.loc[:,'Статус по рентабельности'] = 'Нерентабельная'
+                df['temp_name'] = df['Месторождение'] + df['Скважина']
+                df1['temp_name'] = df1['Месторождение'] + df1['Скважина']
+                df2 = df.loc[df['temp_name'].isin(add_df['id'])]
+                df2.loc[:,'Статус по рентабельности'] = 'Рентабельная до первого ремонта'
+
+                df1 = df1.loc[~df1['temp_name'].isin(df2['temp_name'])]
+                df1 = pd.concat([df1, df2])
+                df1 = df1.drop(columns=['temp_name'])
+            except:
+                print('Отсутсвуют скважины с ремонтом')
+                df1 = df.loc[df['GAP'] == 0]
+                df1.loc[:, 'Статус по рентабельности'] = 'Нерентабельная'
 
         else:
             df1 = df.loc[df['GAP'] == 0]
             df1.loc[:, 'Статус по рентабельности'] = 'Нерентабельная'
-
+        pd.reset_option("mode.chained_assignment")
         return df1
 
     def __add_query(self):
