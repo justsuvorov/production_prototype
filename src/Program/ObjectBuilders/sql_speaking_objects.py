@@ -11,6 +11,7 @@ class SQLSpeakingObject:
         self.db_name = db_name
         self.cursor = None
         self.connection = None
+
         try:
             self.connection = sqlite3.connect(self.db_name)
             self.cursor = self.connection.cursor()
@@ -116,7 +117,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                 self.cursor.executemany(query, export_new_data.values.tolist())
                 self.connection.commit()
                 new_data_id = self.__prepare_new_data_id(new_data=new_data, gfem_base=gfem_base)
-                aa = export_new_data.values.tolist()
+
                 export_new_data = new_data_id.loc[:, ['id_main',
                                                       'date',
                                                       'NPV_MAX',
@@ -157,7 +158,6 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                 print('Добавлены новые объекты в черный список: ', new_data.shape[0])
 
             except sqlite3.Error:
-              #  self.connection.rollback()
                print('Ошибка добавления новых объектов')
         else:
             print('Нет новых объектов')
@@ -172,7 +172,10 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
             self.__insert_new_data_to_full_table(data=data_for_full_table)
             self.__delete_old_month_data(id_aro_old=old_data['old_id_aro'])
             self.cursor.close()
-            gfem_base.transfer_data_month_table(id_parent=old_data['id'], mdb=self.db_name)
+            try:
+                gfem_base.transfer_data_month_table(id_parent=old_data['id'], mdb=self.db_name)
+            except:
+                print('Экспорт таблицы помесячного прогноза не выполнен, повторите снова')
             self.check_connection()
             print('Обновлено данных для скважин: ', old_data.shape[0])
 

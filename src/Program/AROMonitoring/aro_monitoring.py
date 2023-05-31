@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from Program.ObjectBuilders.sql_speaking_objects import  *
-
+from Program.ObjectBuilders.sql_speaking_objects import *
+from Program.AROMonitoring.connector import *
 
 class AroMonitoring:
 
@@ -13,6 +13,8 @@ class AroMonitoring:
         self.add_data_from_excel = True
         self.file_path = file_path
         self.filter = filter
+        self.connection = GfemDBConnection(path=self.file_path,
+                                           add_data_from_excel=self.add_data_from_excel)
         self.__monitoring_base = MonitoringSQLSpeakingObject(path=self.file_path)
         self.__gfem_base = GfemSQLSpeakingObject(path=self.file_path,
                                                  add_data_from_excel=self.add_data_from_excel)
@@ -37,7 +39,7 @@ class AroMonitoring:
                 prepared_data = prepared_data.loc[prepared_data['Месторождение'] == self.filter['Field']]
                 print('Выбрано месторождение: ', self.filter['Field'])
         except:
-            print('Aro Monitoring||Ошибка выбора ДО-Месторождения. Фильтры сброшены')
+            raise print('Aro Monitoring||Ошибка выбора ДО-Месторождения. Фильтры сброшены')
         prepared_data = prepared_data.drop(columns=['GAP'])
 
         return prepared_data
@@ -46,7 +48,7 @@ class AroMonitoring:
         df['Скважина'].replace(to_replace=[None], value='-', inplace=True)
         df['Куст'].replace(to_replace=[None], value='-', inplace=True)
         df['Объект подготовки'].replace(to_replace=[None], value='-', inplace=True)
-        df['temp_id'] = df.loc[:,'Скважина'] + df.loc[:, 'Объект подготовки'] + df.loc[:,'Месторождение']
+        df['temp_id'] = df.loc[:,'Скважина'] + df.loc[:, 'Куст'] + df.loc[:, 'Объект подготовки'] + df.loc[:,'Месторождение']
        # df['Статус по МЭР'] = ''
 
         if new_data:
@@ -60,11 +62,9 @@ class AroMonitoring:
         return df
 
     def __prepare_old_data_for_export(self, df: pd.DataFrame, db_black_list_data: pd.DataFrame):
-        df = df.sort_values(by='id')
-        db_black_list_data = db_black_list_data.loc[db_black_list_data['id_aro'].isin(df['id'])]
-        db_black_list_data = db_black_list_data.sort_values(by='id_aro')
-
-   #     db_black_list_data =
+        df = df.sort_values(by='temp_id')
+        db_black_list_data = db_black_list_data.loc[db_black_list_data['temp_id'].isin(df['temp_id'])]
+        db_black_list_data = db_black_list_data.sort_values(by='temp_id')
         df['Статус по МЭР'] = db_black_list_data['Статус по МЭР'].values
         df['monitoring_id'] = db_black_list_data['id'].values
         df['old_id_aro'] = db_black_list_data['id_aro'].values
@@ -72,22 +72,27 @@ class AroMonitoring:
         return df
 
     def black_list(self, excel_export: bool = False):
-        self.__monitoring_base.check_connection()
-        self.__gfem_base.check_connection()
-        db_black_list_data = self.__prepare_df(self.__monitoring_base.black_list_from_db()) #черный список из базы
-        data = self.__prepare_df(df=self._recalculate_indicators(), new_data=True)  #результаты АРО
+        if self.__check_base(db=self.__gfem_base):
+            self.__monitoring_base.check_connection()
+            self.__gfem_base.check_connection()
+            db_black_list_data = self.__prepare_df(self.__monitoring_base.black_list_from_db()) #черный список из базы
+            data = self.__prepare_df(df=self._recalculate_indicators(), new_data=True)  #результаты АРО
 
-        black_list_new = self.__prepare_new_data_for_export(
-            df=data.loc[~data['temp_id'].isin(db_black_list_data['temp_id'])]
-                                                            )  #новые объекты
-        black_list_old = self.__prepare_old_data_for_export(
-            db_black_list_data=db_black_list_data,
-            df=data.loc[data['temp_id'].isin(db_black_list_data['temp_id'])]
-                                                            )
-        black_list = pd.concat([black_list_old, black_list_new], ignore_index=False)
-        self.__export_black_list(data=black_list, excel_export=excel_export)
-        self.__monitoring_base.connection.close()
-        self.__gfem_base.connection.close()
+            black_list_new = self.__prepare_new_data_for_export(
+                df=data.loc[~data['temp_id'].isin(db_black_list_data['temp_id'])]
+                                                                )  #новые объекты
+            black_list_old = self.__prepare_old_data_for_export(
+                db_black_list_data=db_black_list_data,
+                df=data.loc[data['temp_id'].isin(db_black_list_data['temp_id'])]
+                                                                )
+            black_list = pd.concat([black_list_old, black_list_new], ignore_index=False)
+            self.__export_black_list(data=black_list, excel_export=excel_export)
+
+          #  self.__transfer_to_archive(id=id)
+            self.__monitoring_base.connection.close()
+            self.__gfem_base.connection.close()
+        else:
+            print('ARO Monitoring || База ГФЭМ содержит неактуальыне даынне. Мэппинг непроизведен')
 
     def __export_black_list(self, data: pd.DataFrame, excel_export: bool):
         if excel_export:
@@ -129,29 +134,35 @@ class AroMonitoring:
         print('Company form is loaded')
 
     def map_status_from_mor_db(self):
-        df_active = self.__mor_db_base.last_month_active_data()
-        print('ARO Monitoring || МЭР. Действующие скважины ',df_active.shape[0])
-        df_inactive = self.__mor_db_base.last_month_inactive_data()
-        print('ARO Monitoring || МЭР. Остановленные скважины ', df_inactive.shape[0])
-        black_list = self.__monitoring_base.black_list_from_db()
-        black_list['temp_id'] = black_list['Скважина'] + black_list['Месторождение']
-        df_inactive['temp_id'] = df_inactive['well_number'] + df_inactive['field']
-        df_active['temp_id'] = df_active['well_number'] + df_active['field']
-        black_list_on = black_list.loc[black_list['temp_id'].isin(df_active['temp_id'])]
-        black_list_on['Статус по МЭР'] = 'Раб.'
-        black_list_off = black_list.loc[black_list['temp_id'].isin(df_inactive['temp_id'])]
-        black_list_off['Статус по МЭР'] = 'Ост.'
-        black_list = pd.concat([black_list_on, black_list_off])
-        export_list = black_list.drop(columns='temp_id')
-        self.__monitoring_base.write_mer_status(id=export_list['id'], status_mer=export_list['Статус по МЭР'])
-     #   self.__monitoring_base.load_black_list_to_db(data=export_list)
-       # self.__monitoring_base.delete_inactive()
+        if self.__check_base(db=self.__mor_db_base):
+            df_active = self.__mor_db_base.last_month_active_data()
+            print('ARO Monitoring || МЭР. Действующие скважины ',df_active.shape[0])
+            df_inactive = self.__mor_db_base.last_month_inactive_data()
+            print('ARO Monitoring || МЭР. Остановленные скважины ', df_inactive.shape[0])
+            black_list = self.__monitoring_base.black_list_from_db()
+            black_list['temp_id'] = black_list['Скважина'] + black_list['Месторождение']
+            df_inactive['temp_id'] = df_inactive['well_number'] + df_inactive['field']
+            df_active['temp_id'] = df_active['well_number'] + df_active['field']
+            black_list_on = black_list.loc[black_list['temp_id'].isin(df_active['temp_id'])]
+            black_list_on['Статус по МЭР'] = 'Раб.'
+            black_list_off = black_list.loc[black_list['temp_id'].isin(df_inactive['temp_id'])]
+            black_list_off['Статус по МЭР'] = 'Ост.'
+            black_list = pd.concat([black_list_on, black_list_off])
+            export_list = black_list.drop(columns='temp_id')
+            self.__monitoring_base.write_mer_status(id=export_list['id'], status_mer=export_list['Статус по МЭР'])
+         #   self.__monitoring_base.load_black_list_to_db(data=export_list)
+           # self.__monitoring_base.delete_inactive()
+            print('ARO Monitoring || МЭР. Мэппинг произведен')
+        else:
+            print('ARO Monitoring || МЭР. База МЭР содержит неактуальные данные. Мэппинг не произведен')
 
-        print('ARO Monitoring || МЭР. Мэппинг произведен')
-
-
-
-
+    def __check_base(self, db: SQLSpeakingObject) -> bool:
+        if isinstance(db, GfemSQLSpeakingObject):
+            return GfemDBConnection(db=db).check_status()
+        elif isinstance(db, SQLMorDBSpeakingObject):
+            return MorDBConnection(db=db).check_status()
+        else:
+            return False
 
 
 
