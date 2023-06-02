@@ -1,3 +1,5 @@
+import datetime
+
 from Program.DOTests.HierarchyFromRatingsTest import *
 from Program.Production.GfemScenarios import RegressionScenarios, SortedGfemData, GfemDataFrame, PortuDataFrame
 from Program.Production.AppGui import Application
@@ -12,13 +14,11 @@ from Program.ObjectBuilders.Parser import *
 from Program.GUI.my_app import MonitoringApp
 from Program.GUI.data_model import DataModel, DataModelFull, DataModelMonitoring
 
-
 @click.command()
 @click.option('--path')
 #path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
-
 
     #domain_model_full = domain_model(file_path=Path(path))
     """
@@ -36,9 +36,11 @@ def main(path: str):
  #   app.initialization()
     App(app).start()
     """
+   # date = datetime.datetime(day=20, month=4, year=2023)
+
 
     filtered = {'Company': 'All', 'Field': 'All'}
-    monitoring_module = AroMonitoring(file_path=path, filter=filtered, )
+    monitoring_module = AroMonitoring(file_path=path, filter=filtered,)# date=date)
     app = MonitoringApp(data_model=DataModelMonitoring(monitoring_module=monitoring_module),
                         result_path=path)
 

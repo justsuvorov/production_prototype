@@ -98,6 +98,14 @@ class GfemDataBaseParser(Parser):
         self.__add_data_from_excel = add_data_from_excel
         self.file_path = file_path
 
+    def names(self):
+        data = sqlite3.connect(self.data_path)
+        df = pd.read_sql_query('SELECT * FROM arf_prod_obj_information', data)
+        df = df.set_axis(self.series_names, axis=1, )
+        pd.set_option('mode.chained_assignment', None)
+        df = df.loc[(df['GAP'] > 0)]
+        return df[['Месторождение', 'Объект подготовки', 'Куст', 'Скважина']]
+
     def data(self):
         data = sqlite3.connect(self.data_path)
         df = pd.read_sql_query('SELECT * FROM arf_prod_obj_information', data)
@@ -154,21 +162,16 @@ class GfemDataBaseParser(Parser):
         data.commit()
         data.close()
 
-
     def merge_prep_objects(self, path: str):
         data = sqlite3.connect(self.data_path)
         curs = data.cursor()
         mdb_path = path + '\monitoring.db'
-
         curs.execute('ATTACH "' + mdb_path + '" AS m')
         #    curs.execute('''INSERT OR IGNORE INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent in (SELECT id FROM arf_prod_obj_information WHERE gap_period = 0)'''
         curs.execute(
             '''INSERT OR IGNORE INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent in (SELECT object_id FROM m.monitoring_ecm_prod_full)'''
-
         )
-
         data.commit()
-
         data.close()
 
 

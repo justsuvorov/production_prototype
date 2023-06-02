@@ -41,6 +41,9 @@ class GfemSQLSpeakingObject(SQLSpeakingObject):
                                                      add_data_from_excel=add_data_from_excel,
                                                      file_path=self.path)
 
+    def names(self):
+        return self.__gfem_base_parser.names()
+
     def data(self):
         return self.__gfem_base_parser.data()
 
@@ -69,6 +72,16 @@ class GfemSQLSpeakingObject(SQLSpeakingObject):
             con=self.connection)
         return data
 
+
+class ArchiveMonitoringSQLSpeakingObject(SQLSpeakingObject):
+    def __init__(self,
+                 path: str, ):
+        self.path = path
+        self.db_name = self.path + '\monitoring_archive.db'
+        super().__init__(db_name=self.db_name)
+
+    def insert_to_archive(self, data: pd.DataFrame):
+        pass
 
 class MonitoringSQLSpeakingObject(SQLSpeakingObject):
     def __init__(self,
@@ -104,7 +117,9 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
 
     def __load_new_data_to_db(self, new_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
         if new_data.shape[0] > 0:
+            pd.set_option("mode.chained_assignment", None)
             new_data['Дата внесения'] = new_data['Дата внесения'].dt.strftime('%d/%m/%Y').astype(str)
+            pd.reset_option("mode.chained_assignment")
             export_new_data = new_data.loc[:, ['id', 'Тип объекта', 'Скважина', 'Куст', 'Объект подготовки',
                                                'Месторождение', 'ДО', 'Дата внесения', 'Статус по рентабельности',
                                                'Статус по МЭР']]
@@ -171,7 +186,9 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                                                                          gfem_base=gfem_base)
             self.__insert_new_data_to_full_table(data=data_for_full_table)
             self.__delete_old_month_data(id_aro_old=old_data['old_id_aro'])
-            self.cursor.close()
+            self.connection.commit()
+
+        #    self.cursor.close()
             try:
                 gfem_base.transfer_data_month_table(id_parent=old_data['id'], mdb=self.db_name)
             except:
@@ -246,6 +263,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
 
     def __prepare_new_data_id(self, new_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
         black_list = self.black_list_from_db().sort_values(by='id_aro')
+        black_list = black_list.loc[black_list['id_aro'].isin(new_data['id'])]
         add_data = gfem_base.get_crude_first_month()
         add_data.columns = ['id', 'date', 'НДН за первый месяц']
         add_data = add_data.loc[add_data['id'].isin(new_data['id'])]
@@ -257,6 +275,49 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
         black_list = black_list.loc[:, 'id'].reset_index()
         new_data['id_main'] = black_list.loc[:, 'id']
         return new_data
+
+    def delete_from_base(self, gfem_id: pd.DataFrame, stopped_id: pd.DataFrame):
+
+        id_to_stop = stopped_id.to_list()
+        id_to_run  = gfem_id.to_list()
+        archive_base = self.path + '\monitoring_archive.db'
+        self.cursor.execute('ATTACH "' + archive_base + '" AS m')
+        query1 = '''
+                   DELETE FROM monitoring_unprofit_obj WHERE id = (?) 
+                '''
+        query_transfer_1 = '''
+                    INSERT INTO m.monitoring_obj_archive (id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name, company_name, date_creation, status_mer) SELECT id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name, company_name, date_creation, status_mer FROM monitoring_unprofit_obj WHERE id = (?);
+                          '''
+        query_transfer_2 = '''
+                     INSERT INTO m.monitoring_ecm_prod_full_arc SELECT * FROM monitoring_ecm_prod_full WHERE object_id = (?);
+                             '''
+        query_transfer_3 = '''
+                        INSERT INTO m.activity_unprofit_archive SELECT * FROM activity_unprofit WHERE object_id = (?);          
+                        '''
+        query_update_1 = '''
+                UPDATE m.monitoring_obj_archive SET status = (?) WHERE id = (?)
+        '''
+
+      #  try:
+        i = 0
+        for id in id_to_stop:
+            self.connection.execute(query_transfer_1, (id,))
+            self.connection.execute(query_transfer_2, (id,))
+            self.connection.execute(query_transfer_3, (id,))
+            self.connection.execute(query_update_1, ('Остановлена', id,))
+            self.connection.execute(query1, (id,))
+            i += 1
+        for id in id_to_run:
+            self.connection.execute(query_transfer_1, (id,))
+            self.connection.execute(query_transfer_2, (id,))
+            self.connection.execute(query_transfer_3, (id,))
+            self.connection.execute(query_update_1, ('Выведена в рентабельную зону', id,))
+            self.connection.execute(query1, (id,))
+            i += 1
+        print('ARO|Monitoring Отправлено в архив объектов: ', i)
+     #   except:
+      #      print('Ошибка отправления скважин в архив')
+        self.connection.commit()
 
     def load_full_data_to_db(self, new_data: pd.DataFrame, old_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
         #  AROFullLoaderDB(data=data, source_path=self.path).load_data()
@@ -351,7 +412,8 @@ class SQLMorDBSpeakingObject(SQLSpeakingObject):
         self.connection = sqlite3.connect(self.db_name)
 
         df = pd.read_sql_query(
-            '''SELECT * FROM mor_info WHERE id in (SELECT id_parent FROM mor_prod WHERE (date IN (SELECT max(date) FROM mor_prod)) AND (end_month_status = 'раб.' OR end_month_status = 'пьез' ))''',
+            '''SELECT * FROM mor_info WHERE id in (SELECT id_parent FROM mor_prod WHERE (date IN (SELECT max(date) 
+            FROM mor_prod)) AND (end_month_status = 'раб.'))''',
             self.connection)
 
         return df
@@ -360,7 +422,8 @@ class SQLMorDBSpeakingObject(SQLSpeakingObject):
         self.connection = sqlite3.connect(self.db_name)
         #    df = pd.read_sql_query('SELECT * FROM mor_prod WHERE date IN (SELECT max(date) FROM mor_prod)', self.connection)
         df = pd.read_sql_query(
-            '''SELECT * FROM mor_info WHERE id in (SELECT id_parent FROM mor_prod WHERE (date IN (SELECT max(date) FROM mor_prod)) AND (end_month_status = 'ост.' OR  end_month_status = 'лик'))''',
+            '''SELECT * FROM mor_info WHERE id in (SELECT id_parent FROM mor_prod 
+            WHERE (date IN (SELECT max(date) FROM mor_prod)) AND (end_month_status = 'ост.' OR  end_month_status = 'лик'))''',
             self.connection)
         # AND end_month_status = РАБ.
 

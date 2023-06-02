@@ -1,3 +1,5 @@
+import datetime
+
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -9,12 +11,13 @@ class AroMonitoring:
     def __init__(self,
                  file_path: str,
                  filter: dict = {'Company': 'All', 'Field': 'All'},
+                 date: datetime.datetime = pd.to_datetime("today", format="%d/%m/%Y"),
                  ):
         self.add_data_from_excel = True
         self.file_path = file_path
         self.filter = filter
-        self.connection = GfemDBConnection(path=self.file_path,
-                                           add_data_from_excel=self.add_data_from_excel)
+        self.date = date
+
         self.__monitoring_base = MonitoringSQLSpeakingObject(path=self.file_path)
         self.__gfem_base = GfemSQLSpeakingObject(path=self.file_path,
                                                  add_data_from_excel=self.add_data_from_excel)
@@ -52,17 +55,20 @@ class AroMonitoring:
        # df['Статус по МЭР'] = ''
 
         if new_data:
-            df['Дата внесения'] = pd.to_datetime("today", format="%d/%m/%Y")
-    #        df['Статус по рентабельности'] = 'Нерентабельная'
+            df['Дата внесения'] = self.date
+    #       df['Статус по рентабельности'] = 'Нерентабельная'
         return df
 
     def __prepare_new_data_for_export(self, df: pd.DataFrame):
+        pd.set_option('mode.chained_assignment', None)
         df['Статус по МЭР'] = ''
         df['monitoring_id'] = 'New_id'
+        pd.reset_option("mode.chained_assignment")
         return df
 
     def __prepare_old_data_for_export(self, df: pd.DataFrame, db_black_list_data: pd.DataFrame):
         df = df.sort_values(by='temp_id')
+
         db_black_list_data = db_black_list_data.loc[db_black_list_data['temp_id'].isin(df['temp_id'])]
         db_black_list_data = db_black_list_data.sort_values(by='temp_id')
         df['Статус по МЭР'] = db_black_list_data['Статус по МЭР'].values
@@ -77,7 +83,7 @@ class AroMonitoring:
             self.__gfem_base.check_connection()
             db_black_list_data = self.__prepare_df(self.__monitoring_base.black_list_from_db()) #черный список из базы
             data = self.__prepare_df(df=self._recalculate_indicators(), new_data=True)  #результаты АРО
-
+            black_list_delete = db_black_list_data.loc[~db_black_list_data['temp_id'].isin(data['temp_id'])]
             black_list_new = self.__prepare_new_data_for_export(
                 df=data.loc[~data['temp_id'].isin(db_black_list_data['temp_id'])]
                                                                 )  #новые объекты
@@ -87,12 +93,23 @@ class AroMonitoring:
                                                                 )
             black_list = pd.concat([black_list_old, black_list_new], ignore_index=False)
             self.__export_black_list(data=black_list, excel_export=excel_export)
-
-          #  self.__transfer_to_archive(id=id)
+            self.__monitoring_base.check_connection()
+            self.__check_status_and_transfer_to_archive(data=black_list_delete)
             self.__monitoring_base.connection.close()
+
             self.__gfem_base.connection.close()
         else:
             print('ARO Monitoring || База ГФЭМ содержит неактуальыне даынне. Мэппинг непроизведен')
+
+    def __check_status_and_transfer_to_archive(self, data: pd.DataFrame):
+        df_gfem = self.__prepare_df(df=self.__gfem_base.names())
+        gfem_data = data.loc[data['temp_id'].isin(df_gfem['temp_id'])]
+        gfem_data['Статус по рентабельности'] = 'Выведен в рентабельную зону'
+        stopped_data = data.loc[~data['temp_id'].isin(df_gfem['temp_id'])]
+        stopped_data['Статус по рентабельности'] = 'Остановлен'
+        self.__monitoring_base.delete_from_base(gfem_id=gfem_data['id'],
+                                                stopped_id=stopped_data['id']
+                                                )
 
     def __export_black_list(self, data: pd.DataFrame, excel_export: bool):
         if excel_export:
@@ -135,6 +152,8 @@ class AroMonitoring:
 
     def map_status_from_mor_db(self):
         if self.__check_base(db=self.__mor_db_base):
+            pd.set_option('mode.chained_assignment', None)
+
             df_active = self.__mor_db_base.last_month_active_data()
             print('ARO Monitoring || МЭР. Действующие скважины ',df_active.shape[0])
             df_inactive = self.__mor_db_base.last_month_inactive_data()
@@ -152,6 +171,8 @@ class AroMonitoring:
             self.__monitoring_base.write_mer_status(id=export_list['id'], status_mer=export_list['Статус по МЭР'])
          #   self.__monitoring_base.load_black_list_to_db(data=export_list)
            # self.__monitoring_base.delete_inactive()
+
+            pd.reset_option("mode.chained_assignment")
             print('ARO Monitoring || МЭР. Мэппинг произведен')
         else:
             print('ARO Monitoring || МЭР. База МЭР содержит неактуальные данные. Мэппинг не произведен')
