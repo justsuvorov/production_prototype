@@ -609,11 +609,14 @@ class DataModelMonitoring:
         self.__field_list = {}
         self.__company = 'All'
 
+
         for name in self.do_list:
             self.__field_list[name] = ['Все месторождения']
             for key in self.company_dict:
                 if name == self.company_dict[key]:
                     self.__field_list[name].append(key)
+
+        print(self.do_list,  self.__field_list)
 
     def excel_export_option(self):
         self.excel_export = not self.excel_export

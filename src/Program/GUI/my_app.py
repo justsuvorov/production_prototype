@@ -761,30 +761,30 @@ class MonitoringApp(Component):
 
     def render(self):
         return  Window(title='Программа мониторинга', )(
-                View(layout="column", style={'background-color': 'white', "margin": 10,
-                                             "font-weight": 1},)
-                (View(layout="row", style={ "margin": 10,})(
-                    Label(text='Выбор ДО', style={'align': 'center'}),
-                    Label(text='Выбор месторождения', style={'align': 'center'})
+                View(layout="column", style={'background-color': '#31363b', "margin": 10,
+                                             "font-weight": 1, "font-size": 10},)
+                (View(layout="row", style={ "margin": 10,"height": 50,})(
+                    Label(text='Выбор ДО', style={'align': 'center', "font-size": 20, 'color': 'white' }),
+                    Label(text='Выбор месторождения', style={'align': 'center', "font-size": 20, 'color': 'white',  })
                                      ),
                  View(layout="row", style={ "margin": 10,})(
                     Dropdown(selection='ДО',
                              options=self.__model.do_list,
                              on_select=self.__set_field_list,
-                             style={"margin": 10, }
+                             style={"margin": 40, "font-size": 20, 'height': 40 , 'background-color': '#232629', 'color': 'white'}
                              ),
                     Dropdown(selection='Месторождение',
                              options=self.__model.field_list_for_view,
                              on_select=self.__set_field,
-                             style={"margin": 10, }
+                             style={"margin": 40, "font-size": 20, 'height': 40, 'background-color': '#232629', 'color': 'white'}
                              ),
                                             ),
-                    View(layout="row", style={ "margin": 20, 'align': 'center'})(Label('Обновление базы мониторинга')),
+                    View(layout="row", style={ "margin": 40, 'align': 'center'})(Label('Обновление базы мониторинга', style={"font-size": 20,'color': 'white', 'height': 80, 'width': 350, 'align': 'center'})),
 
-                    View(layout="row", style={ "margin": 10,})(
-                        Button("Обновить данные черного списка",
+                    View(layout="row", style={ "margin": 40,})(
+                        Button("Обновление базы мониторинга",
                                #style={"margin": 10, },
-                               on_click=self.__onBlackListButtonClick),
+                               on_click=self.__onBlackListButtonClick, style={ "font-size": 20,'background-color': '#448aff', 'color': 'white', 'height': 80}),
 
                     #    CheckBox(text='Выгрузка данных в Excel',
                     #             on_change=self.__onExcelCheckBox,
@@ -792,23 +792,23 @@ class MonitoringApp(Component):
                     #             ),
                     ),
 
-                    View(layout="row", style={"margin": 10, })(
+                    View(layout="row", style={"margin": 40, })(
                         Button("Выгрузить форму для ДО",
                                # style={"margin": 10, },
-                               on_click=self.__onCompanyFormExport),
+                               on_click=self.__onCompanyFormExport, style={ "font-size": 20,'background-color': '#448aff', 'color': 'white', 'height': 80}),
 
                     ),
-                    View(layout="row", style={"margin": 20, "align": 'center' })(Label('Меню загрузки форм отчета ДО')),
+                    View(layout="row", style={"margin": 40, "align": 'center' })(Label('Меню загрузки форм отчета ДО', style={ "font-size": 20, 'color': 'white', 'width': 350, 'align': 'center'})),
 
-                    View(layout="row")(
+                    View(layout="column")(
                         Form(self.state, ),
                         Button("Загрузить заполненную форму от ДО в базу",
-                               on_click=self.__onImportButtonClick), ),
+                               on_click=self.__onImportButtonClick, style={ "margin": 40, "font-size": 20,'background-color': '#448aff', 'color': 'white', 'height': 80}), ),
 
-                    View(layout="row", style={"margin": 10, })(
+                    View(layout="row", style={"margin": 40, })(
 
                         Button("Мэппинг объектов с базой МЭР",
-                               on_click=self.__onMappingMorButtonClick), ),
+                               on_click=self.__onMappingMorButtonClick, style={ "font-size": 20, 'background-color': '#448aff', 'color': 'white', 'height': 80}), ),
                 )
         )
 
