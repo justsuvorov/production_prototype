@@ -141,12 +141,13 @@ class GfemDataBaseParser(Parser):
         try:
             gfem_excel = self.file_path + '\СВОД_Скв_2мес.xlsm'
             add_data = GfemParser(data_path=gfem_excel).add_data()
-            print('Файл Excel прочитан')
+            print('Файл Excel прочитан. Условно-рентабельных скважин: ', add_data.shape[0])
             add_data['Статус по рентабельности'] = 'Рентабельная до первого ремонта'
 
         except:
             print('Отсутствует файл excel или неправильное название')
             add_data = pd.DataFrame(columns=self.series_names)
+
         return add_data
 
     def transfer_month_table(self, path: str):

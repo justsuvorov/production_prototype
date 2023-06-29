@@ -30,6 +30,7 @@ def main(path: str):
     data_model = DataModel(scenarios=scenarios, path=path)
   #  data_model = DataModelFull(scenarios=scenarios, path=path, portu_results=PortuDataFrame(file_path=path))
     data_model.initializtion()
+
  #   data_model.full_initializtion()
    # app = Application(scenarios=scenarios, path=path)
     app = MyApplication(data_model=data_model, result_path=path)

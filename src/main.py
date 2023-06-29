@@ -2,8 +2,8 @@
 from Program.ProductionTests import ScenarioViewerTest, OperationalProductionBalancerTest, CompensatoryProductionMalancerTest
 import click
 
-#@click.command()
-#@click.option('--path')
+@click.command()
+@click.option('--path')
 """
 #path=r'C:\Users\User\Documents\production_prototype\src\program\data'
 def main(path):
@@ -17,7 +17,7 @@ if __name__ == '__main__':
 from Program.Production.GfemScenarios import RegressionScenarios, SortedGfemData, GfemDataFrame
 from Program.Production.AppGui import Application
 from edifice import App
-path=r'C:\Users\User\Documents\production_prototype\src\program\data'
+#path=r'C:\Users\User\Documents\production_prototype\src\program\data'
 def main(file_path: str):
 
     scenarios = RegressionScenarios(sorted_data=SortedGfemData(
@@ -30,4 +30,4 @@ def main(file_path: str):
     App(app).start()
 
 if __name__ == '__main__':
-    main(path)
+    main()

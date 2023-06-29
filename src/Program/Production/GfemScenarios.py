@@ -10,7 +10,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 from sklearn.base import BaseEstimator, TransformerMixin
-from matplotlib.pyplot import plot, show
+from matplotlib.pyplot import plot, show, xlabel, ylabel, legend
 import timeit
 from sklearn.linear_model import  LinearRegression, Lasso
 from sklearn.utils._testing import ignore_warnings
@@ -171,6 +171,9 @@ class RegressionScenarios:
         x1 = np.cumsum(x_initial)
         x = x1[:, np.newaxis]
         y = np.cumsum(y_initial)
+        plot(x, y, label = 'Исходный профиль')
+        xlabel('НДН, тыс.т')
+        ylabel("FCF, тыс. руб")
 
         X_train, X_test, Y_train, Y_test = train_test_split(x, y,
                                                             test_size=1,
@@ -178,10 +181,14 @@ class RegressionScenarios:
 
         poly_model = PiecewiseRegressor(verbose=True,
                                         binner=KBinsDiscretizer(n_bins=40))
-     #   poly_model = LinearRegression()
-
+        poly = PolynomialFeatures(2)
+        poly_model2 = make_pipeline(poly, LinearRegression())
         poly_model.fit(X_train, Y_train)
-
+        poly_model2.fit(X_train, Y_train)
+        plot(x, poly_model.predict(x),'g--', label='Кусочно-линейная аппрокимация',)
+      #  plot(x, poly_model2.predict(x), label='Апроксимация полиномом 2й степени')
+        legend()
+        show()
         return [poly_model, x.min(), x.max()]
 
     def data_for_regression(self):
