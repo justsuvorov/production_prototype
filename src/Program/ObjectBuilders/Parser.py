@@ -116,6 +116,7 @@ class GfemDataBaseParser(Parser):
         if self.__add_data_from_excel:
             try:
                 add_df = self.__add_query()
+                print(add_df.shape[0])
                 df1 = df.loc[(df['GAP'] == 0)]
                 df1.loc[:,'Статус по рентабельности'] = 'Нерентабельная'
                 df['temp_name'] = df['Месторождение'] + df['Скважина']

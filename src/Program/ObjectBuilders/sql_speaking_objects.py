@@ -126,6 +126,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
             pd.set_option("mode.chained_assignment", None)
             new_data['Дата внесения'] = new_data['Дата внесения'].dt.strftime('%d/%m/%Y').astype(str)
             pd.reset_option("mode.chained_assignment")
+
             export_new_data = new_data.loc[:, ['id', 'Тип объекта', 'Скважина', 'Куст', 'Объект подготовки',
                                                'Месторождение', 'ДО', 'Дата внесения', 'Статус по рентабельности',
                                                'Статус по МЭР']]
@@ -133,55 +134,54 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                         INSERT INTO monitoring_unprofit_obj (id_aro, obj_type, well_name, well_group_name, preparation_obj_name,
                         field_name, company_name, date_creation, status, status_mer  ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     '''
+      #      try:
 
-            try:
-                self.cursor.executemany(query, export_new_data.values.tolist())
-                self.connection.commit()
-                new_data_id = self.__prepare_new_data_id(new_data=new_data, gfem_base=gfem_base)
+            self.cursor.executemany(query, export_new_data.values.tolist())
+            new_data_id = self.__prepare_new_data_id(new_data=new_data, gfem_base=gfem_base)
 
-                export_new_data = new_data_id.loc[:, ['id_main',
-                                                      'date',
-                                                      'NPV_MAX',
-                                                      'FCF первый месяц:',
-                                                      'НДН за первый месяц',
-                                                      'НДН за весь период; тыс. т',
-                                                      'НДЖ за весь период; тыс. т',
-                                                      'FCF за весь период; тыс. руб.',
-                                                      'НДН до ГЭП; тыс. т',
-                                                      'НДЖ до ГЭП; тыс. т',
-                                                      'FCF до ГЭП; тыс. руб.',
-                                                      'Период расчета; мес.',
-                                                      'НДН за скользящий год; тыс. т',
-                                                      'НДЖ за скользящий год; тыс. т',
-                                                      'FCF за скользящий год; тыс. руб.',
-                                                      'НДЖ за первый месяц']]
-                query = '''
-                           INSERT INTO monitoring_ecm_prod_full (object_id,
-                                                                   date_aro,
-                                                                   npv_max,
-                                                                   fcf_first_month,
-                                                                   oil_production_first_month,
-                                                                   oil_production_full,
-                                                                   fluid_extraction_full,
-                                                                   fcf_full,
-                                                                   oil_production_gap,
-                                                                   fluid_extraction_gap,
-                                                                   fcf_gap,
-                                                                   calculation_horizon,
-                                                                   oil_production_year,
-                                                                   fluid_extraction_year,
-                                                                   fcf_year,
-                                                                   liquid_production_first_month,
-                                                               ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                       '''
-                self.cursor.executemany(query, export_new_data.values.tolist())
-                self.connection.commit()
-                gfem_base.transfer_data_month_table(id_parent=new_data_id['id'], mdb=self.db_name)
-                self.connection.commit()
-                print('Добавлены новые объекты в черный список: ', new_data.shape[0])
+            export_new_data = new_data_id.loc[:, ['id_main',
+                                                  'date',
+                                                  'NPV_MAX',
+                                                  'FCF первый месяц:',
+                                                  'НДН за первый месяц',
+                                                  'НДН за весь период; тыс. т',
+                                                  'НДЖ за весь период; тыс. т',
+                                                  'FCF за весь период; тыс. руб.',
+                                                  'НДН до ГЭП; тыс. т',
+                                                  'НДЖ до ГЭП; тыс. т',
+                                                  'FCF до ГЭП; тыс. руб.',
+                                                  'Период расчета; мес.',
+                                                  'НДН за скользящий год; тыс. т',
+                                                  'НДЖ за скользящий год; тыс. т',
+                                                  'FCF за скользящий год; тыс. руб.',
+                                                  'НДЖ за первый месяц']]
+            query = '''
+                                   INSERT INTO monitoring_ecm_prod_full (object_id,
+                                                                           date_aro,
+                                                                           npv_max,
+                                                                           fcf_first_month,
+                                                                           oil_production_first_month,
+                                                                           oil_production_full,
+                                                                           fluid_extraction_full,
+                                                                           fcf_full,
+                                                                           oil_production_gap,
+                                                                           fluid_extraction_gap,
+                                                                           fcf_gap,
+                                                                           calculation_horizon,
+                                                                           oil_production_year,
+                                                                           fluid_extraction_year,
+                                                                           fcf_year,
+                                                                           liquid_production_first_month
+                                                                       ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                               '''
+            self.cursor.executemany(query, export_new_data.values.tolist())
+            self.connection.commit()
+            gfem_base.transfer_data_month_table(id_parent=new_data_id['id'], mdb=self.db_name)
+            self.connection.commit()
+            print('Добавлены новые объекты в черный список: ', new_data.shape[0])
 
-            except sqlite3.Error:
-               print('Ошибка добавления новых объектов')
+       #     except sqlite3.Error:
+       #        print('Ошибка добавления новых объектов')
         else:
             print('Нет новых объектов')
 
@@ -219,8 +219,9 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                                                                    calculation_horizon,
                                                                    oil_production_year,
                                                                    fluid_extraction_year,
-                                                                   fcf_year
-                                                               ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                                   fcf_year,
+                                                                   liquid_production_first_month
+                                                               ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     '''
         try:
             self.cursor.executemany(query, data.values.tolist())
@@ -344,7 +345,8 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                                            'Период расчета; мес.',
                                            'НДН за скользящий год; тыс. т',
                                            'НДЖ за скользящий год; тыс. т',
-                                           'FCF за скользящий год; тыс. руб.', ]]
+                                           'FCF за скользящий год; тыс. руб.',
+                                           'НДЖ за первый месяц']]
         query = '''
             INSERT INTO monitoring_ecm_prod_full (object_id,
                                                     date_aro,
@@ -360,8 +362,10 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                                                     calculation_horizon,
                                                     oil_production_year,
                                                     fluid_extraction_year,
-                                                    fcf_year
-                                                ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                    fcf_year,
+                                                    liquid_production_first_month
+                                                    
+                                                ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         '''
 
         self.cursor.executemany(query, export_new_data.values.tolist())
