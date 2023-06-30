@@ -137,6 +137,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
       #      try:
 
             self.cursor.executemany(query, export_new_data.values.tolist())
+            self.connection.commit()
             new_data_id = self.__prepare_new_data_id(new_data=new_data, gfem_base=gfem_base)
 
             export_new_data = new_data_id.loc[:, ['id_main',
@@ -176,8 +177,8 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                                '''
             self.cursor.executemany(query, export_new_data.values.tolist())
             self.connection.commit()
-            gfem_base.transfer_data_month_table(id_parent=new_data_id['id'], mdb=self.db_name)
-            self.connection.commit()
+       #     gfem_base.transfer_data_month_table(id_parent=new_data_id['id'], mdb=self.db_name)
+       #     self.connection.commit()
             print('Добавлены новые объекты в черный список: ', new_data.shape[0])
 
        #     except sqlite3.Error:
@@ -194,8 +195,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                                                                          gfem_base=gfem_base)
             self.__insert_new_data_to_full_table(data=data_for_full_table)
             self.__delete_old_month_data(id_aro_old=old_data['old_id_aro'])
-            self.connection.commit()
-
+            self.connection.close()
         try:
             gfem_base.transfer_data_month_table(id_parent=old_data['id'], mdb=self.db_name)
         except:
@@ -204,6 +204,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
             print('Обновлено данных для скважин: ', old_data.shape[0])
 
     def __insert_new_data_to_full_table(self, data: pd.DataFrame, ):
+
         query = '''
                 INSERT OR IGNORE INTO monitoring_ecm_prod_full (object_id,
                                                                    date_aro,
@@ -223,12 +224,12 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                                                                    liquid_production_first_month
                                                                ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     '''
-        try:
-            self.cursor.executemany(query, data.values.tolist())
-            self.connection.commit()
-        except sqlite3.Error:
-            print('Ошибка обновления старых объектов. Rollback')
-            self.connection.rollback()
+      #  try:
+        self.cursor.executemany(query, data.values.tolist())
+        self.connection.commit()
+     #   except sqlite3.Error:
+       #     print('Ошибка обновления старых объектов. Rollback')
+       #     self.connection.rollback()
 
     def __update_id_aro_in_black_list(self, new_id_aro: pd.DataFrame, id: pd.DataFrame, status: pd.DataFrame):
         new_id_aro = new_id_aro.values.tolist()
@@ -266,7 +267,8 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                                          'Период расчета; мес.',
                                          'НДН за скользящий год; тыс. т',
                                          'НДЖ за скользящий год; тыс. т',
-                                         'FCF за скользящий год; тыс. руб.', ]]
+                                         'FCF за скользящий год; тыс. руб.',
+                                         'НДЖ за первый месяц']]
         return prepared_data
 
     def __prepare_new_data_id(self, new_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
