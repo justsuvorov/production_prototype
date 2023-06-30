@@ -51,19 +51,24 @@ class GfemSQLSpeakingObject(SQLSpeakingObject):
         self.__gfem_base_parser.transfer_month_table(path=self.path)
 
     def transfer_data_month_table(self, id_parent: pd.DataFrame, mdb: str, ):
+        print('Трансфер таблицы прогноза...')
         if id_parent.shape[0]:
             self.cursor.execute('ATTACH "' + mdb + '" AS m')
             for id in id_parent:
                 self.cursor.execute('''
                 INSERT OR IGNORE INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent = (?)              
                 ''', (id,))
-            self.connection.commit()
+        self.connection.commit()
+
+        print('Трансфер закончен')
 
     def get_crude_first_month(self):
         data = pd.read_sql_query(
-            '''SELECT id_parent, timeindex_dataframe, dobycha_nefti FROM arf_prod_ecm GROUP BY id_parent HAVING timeindex_dataframe = MIN(timeindex_dataframe)''',
+            '''SELECT id_parent, timeindex_dataframe, dobycha_nefti,dobycha_zhidkosti FROM arf_prod_ecm GROUP BY id_parent HAVING timeindex_dataframe = MIN(timeindex_dataframe)''',
             con=self.connection)
         return data
+
+
 
     def new_month_table(self, id: pd.DataFrame):
 
@@ -82,6 +87,7 @@ class ArchiveMonitoringSQLSpeakingObject(SQLSpeakingObject):
 
     def insert_to_archive(self, data: pd.DataFrame):
         pass
+
 
 class MonitoringSQLSpeakingObject(SQLSpeakingObject):
     def __init__(self,
@@ -147,7 +153,8 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                                                       'Период расчета; мес.',
                                                       'НДН за скользящий год; тыс. т',
                                                       'НДЖ за скользящий год; тыс. т',
-                                                      'FCF за скользящий год; тыс. руб.', ]]
+                                                      'FCF за скользящий год; тыс. руб.',
+                                                      'НДЖ за первый месяц']]
                 query = '''
                            INSERT INTO monitoring_ecm_prod_full (object_id,
                                                                    date_aro,
@@ -163,8 +170,9 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                                                                    calculation_horizon,
                                                                    oil_production_year,
                                                                    fluid_extraction_year,
-                                                                   fcf_year
-                                                               ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                                   fcf_year,
+                                                                   liquid_production_first_month,
+                                                               ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                        '''
                 self.cursor.executemany(query, export_new_data.values.tolist())
                 self.connection.commit()
@@ -188,11 +196,10 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
             self.__delete_old_month_data(id_aro_old=old_data['old_id_aro'])
             self.connection.commit()
 
-        #    self.cursor.close()
-            try:
-                gfem_base.transfer_data_month_table(id_parent=old_data['id'], mdb=self.db_name)
-            except:
-                print('Экспорт таблицы помесячного прогноза не выполнен, повторите снова')
+        try:
+            gfem_base.transfer_data_month_table(id_parent=old_data['id'], mdb=self.db_name)
+        except:
+            print('Экспорт таблицы помесячного прогноза не выполнен, повторите снова')
             self.check_connection()
             print('Обновлено данных для скважин: ', old_data.shape[0])
 
@@ -238,7 +245,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
 
     def __prepare_old_data_for_full_table(self, old_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
         add_data = gfem_base.get_crude_first_month()
-        add_data.columns = ['id', 'date', 'НДН за первый месяц']
+        add_data.columns = ['id', 'date', 'НДН за первый месяц', 'НДЖ за первый месяц']
         add_data = add_data.loc[add_data['id'].isin(old_data['id'])]
         add_data = add_data.set_index('id')
         old_data = old_data.set_index('id')
@@ -265,7 +272,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
         black_list = self.black_list_from_db().sort_values(by='id_aro')
         black_list = black_list.loc[black_list['id_aro'].isin(new_data['id'])]
         add_data = gfem_base.get_crude_first_month()
-        add_data.columns = ['id', 'date', 'НДН за первый месяц']
+        add_data.columns = ['id', 'date', 'НДН за первый месяц', 'НДЖ за первый месяц']
         add_data = add_data.loc[add_data['id'].isin(new_data['id'])]
         add_data = add_data.set_index('id')
         new_data = new_data.set_index('id')
