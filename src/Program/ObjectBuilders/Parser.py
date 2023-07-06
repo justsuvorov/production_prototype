@@ -103,6 +103,7 @@ class GfemDataBaseParser(Parser):
         data = sqlite3.connect(self.data_path)
         df = pd.read_sql_query('SELECT * FROM arf_prod_obj_information', data)
         df = df.set_axis(self.series_names, axis=1, )
+        df = df.drop(columns=['НДН за первый месяц'])
         pd.set_option('mode.chained_assignment', None)
         df = df.loc[(df['GAP'] > 0)]
         return df[['Месторождение', 'Объект подготовки', 'Куст', 'Скважина']]
@@ -137,6 +138,7 @@ class GfemDataBaseParser(Parser):
             df1 = df.loc[df['GAP'] == 0]
             df1.loc[:, 'Статус по рентабельности'] = 'Нерентабельная'
         pd.reset_option("mode.chained_assignment")
+        df1 = df1.drop(columns=['НДН за первый месяц'])
         return df1
 
     def __add_query(self):
