@@ -37,11 +37,11 @@ def main(path: str):
  #   app.initialization()
     App(app).start()
     """
-    date = datetime.datetime(day=20, month=4, year=2023)
+   # date = datetime.datetime(day=20, month=4, year=2023)
 
 
     filtered = {'Company': 'All', 'Field': 'All'}
-    monitoring_module = AroMonitoring(file_path=path, filter=filtered,date=date)
+    monitoring_module = AroMonitoring(file_path=path, filter=filtered ) #,date=date)
     app = MonitoringApp(data_model=DataModelMonitoring(monitoring_module=monitoring_module),
                         result_path=path)
 

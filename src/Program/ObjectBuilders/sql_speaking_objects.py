@@ -2,6 +2,7 @@ import pandas as pd
 import sqlite3
 from Program.ObjectBuilders.Parser import *
 from Program.ObjectBuilders.loaders import *
+from Program.Production.Logger import Logger
 
 
 class SQLSpeakingObject:
@@ -40,6 +41,7 @@ class GfemSQLSpeakingObject(SQLSpeakingObject):
         self.__gfem_base_parser = GfemDataBaseParser(data_path=self.db_name,
                                                      add_data_from_excel=add_data_from_excel,
                                                      file_path=self.path)
+        self.__log = Logger()
 
     def names(self):
         return self.__gfem_base_parser.names()
@@ -51,7 +53,7 @@ class GfemSQLSpeakingObject(SQLSpeakingObject):
         self.__gfem_base_parser.transfer_month_table(path=self.path)
 
     def transfer_data_month_table(self,  mdb: str, id_parent: pd.DataFrame = None,):
-        print('Трансфер таблицы прогноза...')
+        self.__log.log('Трансфер таблицы прогноза...')
         self.cursor.execute('ATTACH "' + mdb + '" AS m')
         if id_parent is not None:
             if id_parent.shape[0]:
@@ -65,7 +67,7 @@ class GfemSQLSpeakingObject(SQLSpeakingObject):
                                INSERT INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent IN
                                 (SELECT id_aro FROM m.monitoring_unprofit_obj)              
                                ''')
-        print('Трансфер закончен')
+        self.__log.log('Трансфер закончен')
         self.connection.commit()
 
     def get_crude_first_month(self):
@@ -103,16 +105,16 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
         self.__monitoring_base_parser = MonitoringBaseParser(data_path=self.db_name)
         self.__monitoring_full_parser = MonitoringFullParser(data_path=self.db_name)
         self.__monitoring_activity_parser = MonitoringActivityParser(data_path=self.db_name)
+        self.__log = Logger(info='MonitoringSQLSpeakingObject')
 
     def load_black_list_to_db(self, data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
-        #   BlackListLoaderDB(data=data, source_path=self.path).load_data()
         new_data = data.loc[data['monitoring_id'] == 'New_id']  # новый скважины в черный список
         self.__load_new_data_to_db(new_data=new_data, gfem_base=gfem_base)
         old_data = data.loc[data['monitoring_id'] != 'New_id']
         self.__update_old_data_to_db(old_data=old_data, gfem_base=gfem_base)
         gfem_base.transfer_data_month_table(mdb=self.db_name)
         self.connection.close()
-        print('Актуализация списка выполнена')
+        self.__log.log('Актуализация списка выполнена')
 
     def black_list_from_db(self):
         return self.__monitoring_base_parser.data()
@@ -183,9 +185,9 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                 print('Добавлены новые объекты в черный список: ', new_data.shape[0])
 
             except sqlite3.Error:
-               print('Ошибка добавления новых объектов')
+               self.__log.log('Ошибка добавления новых объектов')
         else:
-            print('Нет новых объектов')
+            self.__log.log('Нет новых объектов')
 
     def __update_old_data_to_db(self, old_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
         if old_data.shape[0] > 0:
@@ -200,7 +202,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
             print('Обновлено данных для скважин: ', old_data.shape[0])
 
     def __insert_new_data_to_full_table(self, data: pd.DataFrame, ):
-        print('Inserting new data prod_full')
+        self.__log.log('Запись данных в таблицу prod_full')
         query = '''
                 INSERT OR IGNORE INTO monitoring_ecm_prod_full (object_id,
                                                                    date_aro,
@@ -222,14 +224,14 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                     '''
         try:
             self.cursor.executemany(query, data.values.tolist())
-            print('Выполнено')
             self.connection.commit()
+            self.__log.log('Данные записаны')
         except sqlite3.Error:
-            print('Ошибка обновления старых объектов. Rollback')
+            self.__log.log('Ошибка обновления старых объектов. Rollback')
             self.connection.rollback()
 
     def __update_id_aro_in_black_list(self, new_id_aro: pd.DataFrame, id: pd.DataFrame, status: pd.DataFrame):
-        print('Обновление id aro...')
+        self.__log.log('Обновление id aro для старых объектов')
         new_id_aro = new_id_aro.values.tolist()
         status = status.values.tolist()
         query = '''
@@ -242,10 +244,10 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
             self.cursor.execute(query, (new_id_aro[j], status[j], i,))
             j += 1
         self.connection.commit()
-        print('Обновлено')
+        self.__log.log('Обновлено')
 
     def __prepare_old_data_for_full_table(self, old_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
-        print('Подготовлка старых объектов к обновлению...')
+        self.__log.log('Подготовлка старых объектов к обновлению...')
         add_data = gfem_base.get_crude_first_month()
         add_data.columns = ['id', 'date', 'НДН за первый месяц', 'НДЖ за первый месяц']
         add_data = add_data.loc[add_data['id'].isin(old_data['id'])]
@@ -269,7 +271,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                                          'НДЖ за скользящий год; тыс. т',
                                          'FCF за скользящий год; тыс. руб.',
                                          'НДЖ за первый месяц']]
-        print('Обновлено')
+        self.__log.log('Обновлено')
         return prepared_data
 
     def __prepare_new_data_id(self, new_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
@@ -291,7 +293,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
 
     def delete_from_base(self, gfem_id: pd.DataFrame, stopped_id: pd.DataFrame):
 
-        print('Перенос объектов в архив')
+        self.__log.log('Перенос объектов в архив')
         id_to_stop = stopped_id.to_list()
         id_to_run  = gfem_id.to_list()
         archive_base = self.path + '\monitoring_archive.db'

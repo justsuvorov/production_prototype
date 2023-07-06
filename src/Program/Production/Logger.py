@@ -61,7 +61,7 @@ class Logger(object):
         self.__init_time = datetime.now()
 
         self._log_('New Logger instance created ({})'.format(self.__total_instances))
-        self._log_('Class version: ' + self.__version__, 1)
+     #   self._log_('Class version: ' + self.__version__, 1)
 
     def __repr__(self):
         return self.__filename
