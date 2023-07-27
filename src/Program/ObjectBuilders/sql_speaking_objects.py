@@ -126,9 +126,30 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
         return self.__monitoring_activity_parser.data()
 
     def load_activity_data_to_db(self, data):
-        sqlite3.connect(self.db_name)
+      #  print(1)
+     #   self.check_connection()
+      #  print(2)
         ActivityLoaderDB(data=data, source_path=self.path).load_data()
-
+    #    data_to_insert = data.values.tolist()
+   #     print(3)
+        """
+            query = '''
+                       INSERT OR IGNORE INTO activity_unprofit (object_id, activity_id, 
+                       activity_comment, date_planning, date_fact, responsible_person, obj_status, 
+                       failure, date_creation) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    '''
+       #     try:
+            self.cursor.executemany(query, data.values.tolist())
+            print(1)
+            self.connection.commit()
+            print(1)
+            self.__log.log('Данные по мероприятиям загружены')
+    
+        #    except:
+        #        self.__log.log('Данные по мероприятиям не загружены загружены. Проверить excel')
+         #   finally:
+            self.connection.close()
+        """
     def __load_new_data_to_db(self, new_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
         if new_data.shape[0] > 0:
             pd.set_option("mode.chained_assignment", None)
@@ -236,8 +257,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
         status = status.values.tolist()
         query = '''
             UPDATE monitoring_unprofit_obj SET id_aro = (?), status = (?) WHERE id = (?)
-    
-                    '''
+                '''
         j = 0
         self.check_connection()
         for i in id:
@@ -302,13 +322,13 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
                    DELETE FROM monitoring_unprofit_obj WHERE id = (?) 
                 '''
         query_transfer_1 = '''
-                    INSERT INTO m.monitoring_obj_archive (id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name, company_name, date_creation, status_mer) SELECT id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name, company_name, date_creation, status_mer FROM monitoring_unprofit_obj WHERE id = (?);
+                    INSERT OR IGNORE INTO m.monitoring_obj_archive (id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name, company_name, date_creation, status_mer) SELECT id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name, company_name, date_creation, status_mer FROM monitoring_unprofit_obj WHERE id = (?);
                           '''
         query_transfer_2 = '''
-                     INSERT INTO m.monitoring_ecm_prod_full_arc SELECT * FROM monitoring_ecm_prod_full WHERE object_id = (?);
+                     INSERT OR IGNORE INTO m.monitoring_ecm_prod_full_arc SELECT * FROM monitoring_ecm_prod_full WHERE object_id = (?);
                              '''
         query_transfer_3 = '''
-                        INSERT INTO m.activity_unprofit_archive SELECT * FROM activity_unprofit WHERE object_id = (?);          
+                     INSERT OR IGNORE INTO m.activity_unprofit_archive SELECT * FROM activity_unprofit WHERE object_id = (?);          
                         '''
         query_update_1 = '''
                 UPDATE m.monitoring_obj_archive SET status = (?) WHERE id = (?)

@@ -92,7 +92,8 @@ class ActivityLoaderDB(Loader):
 
         engine = sqlite3.connect(self.source_path+'\monitoring.db')
 
-        self.data.to_sql('activity_unprofit', con=engine, if_exists='replace', index=False)
+        self.data.to_sql('activity_unprofit', con=engine, if_exists='append', index=False)
+        engine.cursor()
         print('ActivityLoaderDB||Результаты записаны в Базу данных')
 
 

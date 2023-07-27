@@ -106,7 +106,7 @@ class GfemDataBaseParser(Parser):
         df = df.drop(columns=['НДН за первый месяц'])
         pd.set_option('mode.chained_assignment', None)
         df = df.loc[(df['GAP'] > 0)]
-        return df[['Месторождение', 'Объект подготовки', 'Куст', 'Скважина']]
+        return df[['ДО', 'Месторождение', 'Объект подготовки', 'Куст', 'Скважина']]
 
     def data(self):
         data = sqlite3.connect(self.data_path)

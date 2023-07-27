@@ -103,6 +103,9 @@ class AroMonitoring:
 
     def __check_status_and_transfer_to_archive(self, data: pd.DataFrame):
         df_gfem = self.__prepare_df(df=self.__gfem_base.names())
+        if self.filter['Company'] != 'All':
+            df_gfem = df_gfem.loc[df_gfem['ДО'] == self.filter['Company']]
+            data = data.loc[data['ДО']==self.filter['Company']]
         gfem_data = data.loc[data['temp_id'].isin(df_gfem['temp_id'])]
         gfem_data['Статус по рентабельности'] = 'Выведен в рентабельную зону'
         stopped_data = data.loc[~data['temp_id'].isin(df_gfem['temp_id'])]
@@ -144,9 +147,11 @@ class AroMonitoring:
 
         filtered_data.columns = ['object_id', 'activity_id', 'activity_comment', 'date_planning', 'date_fact',
                                 'responsible_person', 'obj_status', 'failure', 'date_creation']
-
-        a = db_activity_data.loc[~db_activity_data['object_id'].isin(filtered_data['object_id'])]
-        export_data = pd.concat([a, filtered_data])
+     #   filtered_data = filtered_data.fillna(' ')
+   #     filtered_data['date_creation'] = filtered_data['date_creation'].astype('str')
+      # a = db_activity_data.loc[~db_activity_data['object_id'].isin(filtered_data['object_id'])]
+      # export_data = pd.concat([a, filtered_data])
+        export_data = filtered_data
         self.__monitoring_base.load_activity_data_to_db(data=export_data)
         print('Company form is loaded')
 
@@ -169,8 +174,8 @@ class AroMonitoring:
             black_list = pd.concat([black_list_on, black_list_off])
             export_list = black_list.drop(columns='temp_id')
             self.__monitoring_base.write_mer_status(id=export_list['id'], status_mer=export_list['Статус по МЭР'])
-         #   self.__monitoring_base.load_black_list_to_db(data=export_list)
-           # self.__monitoring_base.delete_inactive()
+        #    self.__monitoring_base.load_black_list_to_db(data=export_list)
+         #   self.__monitoring_base.delete_inactive()
 
             pd.reset_option("mode.chained_assignment")
             print('ARO Monitoring || МЭР. Мэппинг произведен')
