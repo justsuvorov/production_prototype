@@ -219,9 +219,11 @@ class AroMonitoring:
        economics_and_crude['Добыча жидкости за первый месяц, тыс.т.'] = economics_and_crude['Добыча жидкости за первый месяц, тыс.т.'].round(5)
 
        activity_list = self.__monitoring_base.activity_data_from_db()
+       activity_list['Статус'] = np.where(activity_list['date_fact'], 'Выполнено', 'Не выполнено')
        activity_list_archive = pd.read_sql_query('SELECT * FROM activity_unprofit_archive', archive)
+       activity_list_archive['Статус'] = 'Выполнено'
        activity_list = pd.concat([activity_list, activity_list_archive])
-       activity_list['Статус'] = np.where(activity_list['date_fact'] != '', 'Выполнено', 'Не выполнено')
+
 
        predict_list = pd.read_sql_query('SELECT * FROM monitoring_ecm_prod_monthly', sqlite3.connect(self.file_path+'\monitoring.db'))
        predict_list = predict_list.loc[:, ['id_object', 'timeindex_dataframe', 'dobycha_nefti', 'dobycha_gaza', 'neft_tovarnaya', 'opex', 'dobycha_zhidkosti', 'fcf']]
