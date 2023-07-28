@@ -647,5 +647,9 @@ class DataModelMonitoring:
         data = pd.read_excel(file_path)
         self.__monitoring_module.load_company_form_to_db(data)
 
+    def upload_data_for_dashboard(self):
+        self.__monitoring_module.upload_data_for_dashboard()
+
     def map_status_from_mor_db(self,):
         self.__monitoring_module.map_status_from_mor_db()
+

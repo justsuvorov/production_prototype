@@ -190,6 +190,11 @@ class AroMonitoring:
         else:
             return False
 
+    def upload_data_for_dashboard(self):
+       self.__monitoring_base.check_connection()
+       black_list = self.__monitoring_base.black_list_from_db()
+
+
 
 
 
