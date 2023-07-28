@@ -236,7 +236,7 @@ class AroMonitoring:
        activity_list = pd.concat([activity_list, activity_list_archive])
 
 
-       predict_list = pd.read_sql_query('SELECT * FROM monitoring_ecm_prod_monthly', sqlite3.connect(self.file_path+'\monitoring.db'))
+       predict_list = pd.read_sql_query('SELECT * FROM monitoring_ecm_prod_monthly', sqlite3.connect(self.file_path / 'monitoring.db'))
        predict_list = predict_list.loc[:, ['id_object', 'timeindex_dataframe', 'dobycha_nefti', 'dobycha_gaza', 'neft_tovarnaya', 'opex', 'dobycha_zhidkosti', 'fcf']]
        predict_list_names = ['id_object', 'timeindex_dataframe', 'Добыча нефти, тыс.т.', 'Добыча газа', 'Нефть товарная', 'OPEX', 'Добыча жидкости, тыс.т.', 'FCF, тыс. руб.']
        predict_list  = predict_list.set_axis(predict_list_names, axis=1, )
@@ -250,7 +250,7 @@ class AroMonitoring:
 'Прочие ограничения'
 ]}
 
-       with pd.ExcelWriter(self.file_path+'\qlik_results.xlsx') as writer:
+       with pd.ExcelWriter(self.file_path / 'qlik_results.xlsx') as writer:
            black_list.to_excel(writer, sheet_name='BlackList', index=False)
            economics_and_crude.to_excel(writer, sheet_name='Экономика и добыча', index=False)
            activity_list.to_excel(writer, sheet_name='Мероприятия', index=False)
