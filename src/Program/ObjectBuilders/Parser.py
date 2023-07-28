@@ -249,12 +249,12 @@ class MonitoringActivityParser(Parser):
         self.initial_names = None
 
     def data(self):
-        print('MonitoringFullParser||Connecting to monitoring db')
+        print('MonitoringActivityParser||Connecting to monitoring db')
         data = sqlite3.connect(self.data_path)
 
         df = pd.read_sql_query('SELECT * FROM activity_unprofit', data)
     #    self.initial_names = list(df.columns)
-        print('MonitoringFullParser||Data is read')
+        print('MonitoringActivityParser||Data is read')
        # df = df.set_axis(self.series_names, axis=1, )
 
         return df

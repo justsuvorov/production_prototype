@@ -191,10 +191,50 @@ class AroMonitoring:
             return False
 
     def upload_data_for_dashboard(self):
+
        self.__monitoring_base.check_connection()
+       archive = sqlite3.connect(self.file_path + '\monitoring_archive.db')
+
        black_list = self.__monitoring_base.black_list_from_db()
+       black_list_archive = pd.read_sql_query('SELECT * FROM monitoring_obj_archive', archive)
+       series_names = ['id', 'id_aro', 'Тип объекта', 'Скважина', 'Куст', 'Объект подготовки', 'Месторождение', 'ДО',
+                       'Дата внесения', 'Статус по рентабельности', 'Статус по МЭР', 'Дата попадания в архив']
+       black_list_archive = black_list_archive.set_axis(series_names, axis=1, )
+       black_list = pd.concat([black_list,black_list_archive])
+       black_list = black_list.rename(columns={'Статус по рентабельности': 'Статус'})
 
+       economics_and_crude = self.__monitoring_base.full_data_black_list_from_db()
+       economics_and_crude_archive = pd.read_sql_query('SELECT * FROM monitoring_ecm_prod_full_arc', archive)
+       economics_and_crude = pd.concat([economics_and_crude, economics_and_crude_archive])
+       series_names_2 = ['id', 'дата АРО', 'NPV',
+                       'FCF, тыс.руб.', 'Добыча нефти, тыс. т.','Добыча нефти за весь период; тыс. т',
+                       'НДЖ за весь период; тыс. т', 'FCF за весь период; тыс. руб.',
 
+                       'НДН до ГЭП; тыс. т', 'НДЖ до ГЭП; тыс. т', 'FCF до ГЭП; тыс. руб.',
+                       'Период расчета; мес.', 'НДН за скользящий год; тыс. т', 'НДЖ за скользящий год; тыс. т',
+                         'FCF за скользящий год; тыс. руб.',
+                       'Добыча жидкости за первый месяц, тыс.т.']
+       economics_and_crude = economics_and_crude.set_axis(series_names_2, axis=1)
+       economics_and_crude['Добыча нефти, тыс. т.'] = economics_and_crude['Добыча нефти, тыс. т.'].round(5)
+       economics_and_crude['Добыча жидкости за первый месяц, тыс.т.'] = economics_and_crude['Добыча жидкости за первый месяц, тыс.т.'].round(5)
+
+       activity_list = self.__monitoring_base.activity_data_from_db()
+       activity_list_archive = pd.read_sql_query('SELECT * FROM activity_unprofit_archive', archive)
+       activity_list = pd.concat([activity_list, activity_list_archive])
+       activity_list['Статус'] = np.where(activity_list['date_fact'] != '', 'Выполнено', 'Не выполнено')
+
+       predict_list = pd.read_sql_query('SELECT * FROM monitoring_ecm_prod_monthly', sqlite3.connect(self.file_path+'\monitoring.db'))
+       predict_list = predict_list.loc[:, ['id_object', 'timeindex_dataframe', 'dobycha_nefti', 'dobycha_gaza', 'neft_tovarnaya', 'opex', 'dobycha_zhidkosti', 'fcf']]
+       predict_list_names = ['id_object', 'timeindex_dataframe', 'Добыча нефти, тыс.т.', 'Добыча газа', 'Нефть товарная', 'OPEX', 'Добыча жидкости, тыс.т.', 'FCF, тыс. руб.']
+       predict_list  = predict_list.set_axis(predict_list_names, axis=1, )
+
+       with pd.ExcelWriter(self.file_path+'\qlik_results.xlsx') as writer:
+           black_list.to_excel(writer, sheet_name='BlackList', index=False)
+           economics_and_crude.to_excel(writer, sheet_name='Экономика и добыча', index=False)
+           activity_list.to_excel(writer, sheet_name='Мероприятия', index=False)
+           predict_list.to_excel(writer, sheet_name='Прогноз', index=False)
+
+       print('Данные выгружены')
 
 
 
