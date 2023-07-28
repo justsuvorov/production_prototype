@@ -15,8 +15,8 @@ from Program.constants import (
     OISNames,
 )
 from Program.constants import ConstantsForCalc as Const
-from Program.utils.parsers import parse_date
-from Program.utils.service import to_numeric
+# from Program.utils.parsers import parse_date
+# from Program.utils.service import to_numeric
 
 
 

@@ -1,5 +1,6 @@
 import pandas as pd
 import sqlite3
+from pathlib import Path
 from Program.ObjectBuilders.Parser import *
 from Program.ObjectBuilders.loaders import *
 from Program.Production.Logger import Logger
@@ -32,11 +33,11 @@ class SQLSpeakingObject:
 
 class GfemSQLSpeakingObject(SQLSpeakingObject):
     def __init__(self,
-                 path: str,
+                 path: Path,
                  add_data_from_excel: bool = False
                  ):
         self.path = path
-        self.db_name = self.path + '\gfem_results.db'
+        self.db_name = self.path / 'gfem_results.db'
         super().__init__(db_name=self.db_name)
         self.__gfem_base_parser = GfemDataBaseParser(data_path=self.db_name,
                                                      add_data_from_excel=add_data_from_excel,
@@ -96,10 +97,9 @@ class ArchiveMonitoringSQLSpeakingObject(SQLSpeakingObject):
 
 
 class MonitoringSQLSpeakingObject(SQLSpeakingObject):
-    def __init__(self,
-                 path: str, ):
+    def __init__(self, path: Path):
         self.path = path
-        self.db_name = self.path + '\monitoring.db'
+        self.db_name = self.path / 'monitoring.db'
         super().__init__(db_name=self.db_name)
 
         self.__monitoring_base_parser = MonitoringBaseParser(data_path=self.db_name)
@@ -438,10 +438,10 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
 
 class SQLMorDBSpeakingObject(SQLSpeakingObject):
     def __init__(self,
-                 path: str,
+                 path: Path,
                  ):
         self.path = path
-        self.db_name = self.path + '\mor_db.db'
+        self.db_name = self.path / 'mor_db.db'
         super().__init__(db_name=self.db_name)
 
     def last_month_active_data(self):

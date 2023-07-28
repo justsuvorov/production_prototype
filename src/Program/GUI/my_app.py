@@ -726,7 +726,7 @@ class MonitoringApp(Component):
         self.state = StateManager({
             "File": pathlib.Path(""),
         })
-        self.result_path = result_path + '\Results.xlsx'
+        self.result_path = result_path / 'Results.xlsx'
 
     def __set_field_list(self, value):
         self.__model.set_do(value)
@@ -812,7 +812,7 @@ class MonitoringApp(Component):
                         Button("Мэппинг объектов с базой МЭР",
                                on_click=self.__onMappingMorButtonClick, style={ "font-size": 20, 'background-color': '#448aff', 'color': 'white', 'height': 80}),
                         Button("Выгрузка данных для дашборда",
-                               on_click=self.__onDataUploadButtonClick(),
+                               on_click=self.__onDataUploadButtonClick,
                                style={"font-size": 20, 'background-color': '#448aff', 'color': 'white', 'height': 80})
                     ),
                 )
