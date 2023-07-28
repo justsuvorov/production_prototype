@@ -1,21 +1,32 @@
 import datetime
-
-import pandas as pd
-import numpy as np
+import sqlite3
 from pathlib import Path
-from Program.ObjectBuilders.sql_speaking_objects import *
-from Program.AROMonitoring.connector import *
+from typing import Optional
+
+import numpy as np
+import pandas as pd
+
+from Program.AROMonitoring.connector import (
+    MonitoringSQLSpeakingObject,
+    GfemSQLSpeakingObject,
+    SQLMorDBSpeakingObject,
+    BlackListLoaderExcel,
+    SQLSpeakingObject,
+    GfemDBConnection,
+    MorDBConnection,
+)
+
 
 class AroMonitoring:
 
     def __init__(self,
-                 file_path: str,
-                 filter: dict = {'Company': 'All', 'Field': 'All'},
+                 file_path: Path,
+                 filter: Optional[dict] = None,
                  date: datetime.datetime = pd.to_datetime("today", format="%d/%m/%Y"),
                  ):
         self.add_data_from_excel = True
         self.file_path = file_path
-        self.filter = filter
+        self.filter = filter or {'Company': 'All', 'Field': 'All'}
         self.date = date
 
         self.__monitoring_base = MonitoringSQLSpeakingObject(path=self.file_path)
@@ -134,7 +145,7 @@ class AroMonitoring:
         prepared_data['Статус. В работе/остановлена'] = ''
         prepared_data['Наличие отказа. Да/Нет'] = ''
         prepared_data = prepared_data.drop(columns=['Дата внесения', 'id_aro'])
-        prepared_data.to_excel(self.file_path + '\Форма для ДО.xlsx')
+        prepared_data.to_excel(self.file_path / 'Форма для ДО.xlsx')
         print('Company ford is exported')
 
     def load_company_form_to_db(self, data: pd.DataFrame):

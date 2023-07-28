@@ -55,10 +55,10 @@ class GfemSQLSpeakingObject(SQLSpeakingObject):
 
     def transfer_data_month_table(self,  mdb: str, id_parent: pd.DataFrame = None,):
         self.__log.log('Трансфер таблицы прогноза...')
-        self.cursor.execute('ATTACH "' + mdb + '" AS m')
+        self.cursor.execute('ATTACH "' + str(mdb) + '" AS m')
         if id_parent is not None:
             if id_parent.shape[0]:
-                self.cursor.execute('ATTACH "' + mdb + '" AS m')
+                self.cursor.execute('ATTACH "' + str(mdb) + '" AS m')
                 for id in id_parent:
                     self.cursor.execute('''
                     INSERT OR IGNORE INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent = (?)              
@@ -316,13 +316,16 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
         self.__log.log('Перенос объектов в архив')
         id_to_stop = stopped_id.to_list()
         id_to_run  = gfem_id.to_list()
-        archive_base = self.path + '\monitoring_archive.db'
+        archive_base = str(self.path / 'monitoring_archive.db')
         self.cursor.execute('ATTACH "' + archive_base + '" AS m')
         query1 = '''
                    DELETE FROM monitoring_unprofit_obj WHERE id = (?) 
                 '''
         query_transfer_1 = '''
-                    INSERT OR IGNORE INTO m.monitoring_obj_archive (id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name, company_name, date_creation, status_mer) SELECT id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name, company_name, date_creation, status_mer FROM monitoring_unprofit_obj WHERE id = (?);
+                    INSERT OR IGNORE INTO m.monitoring_obj_archive (id, id_aro, obj_type, well_name, well_group_name,
+                    preparation_obj_name, field_name, company_name, date_creation, status_mer)
+                    SELECT id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name,
+                    company_name, date_creation, status_mer FROM monitoring_unprofit_obj WHERE id = (?);
                           '''
         query_transfer_2 = '''
                      INSERT OR IGNORE INTO m.monitoring_ecm_prod_full_arc SELECT * FROM monitoring_ecm_prod_full WHERE object_id = (?);
