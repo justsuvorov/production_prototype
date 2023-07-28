@@ -758,6 +758,8 @@ class MonitoringApp(Component):
         self.__model.map_status_from_mor_db()
 
 
+    def __onDataUploadButtonClick(self, value):
+        self.__model.upload_data_for_dashboard()
 
     def render(self):
         return  Window(title='Программа мониторинга', )(
@@ -808,7 +810,11 @@ class MonitoringApp(Component):
                     View(layout="row", style={"margin": 40, })(
 
                         Button("Мэппинг объектов с базой МЭР",
-                               on_click=self.__onMappingMorButtonClick, style={ "font-size": 20, 'background-color': '#448aff', 'color': 'white', 'height': 80}), ),
+                               on_click=self.__onMappingMorButtonClick, style={ "font-size": 20, 'background-color': '#448aff', 'color': 'white', 'height': 80}),
+                        Button("Выгрузка данных для дашборда",
+                               on_click=self.__onDataUploadButtonClick(),
+                               style={"font-size": 20, 'background-color': '#448aff', 'color': 'white', 'height': 80})
+                    ),
                 )
         )
 
