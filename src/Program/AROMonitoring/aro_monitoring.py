@@ -230,11 +230,21 @@ class AroMonitoring:
        predict_list_names = ['id_object', 'timeindex_dataframe', 'Добыча нефти, тыс.т.', 'Добыча газа', 'Нефть товарная', 'OPEX', 'Добыча жидкости, тыс.т.', 'FCF, тыс. руб.']
        predict_list  = predict_list.set_axis(predict_list_names, axis=1, )
 
+       activities = {'activity_id': [1, 2, 3, 4 , 5, 6, 7], 'activity': ['Остановлена с ГТМ',
+'Остановлена без ГТМ',
+'Отбор проб',
+'Мероприятия по ППД',
+'Инфраструктурные ограничения',
+'ВНР, неустановившийся режим',
+'Прочие ограничения'
+]}
+
        with pd.ExcelWriter(self.file_path+'\qlik_results.xlsx') as writer:
            black_list.to_excel(writer, sheet_name='BlackList', index=False)
            economics_and_crude.to_excel(writer, sheet_name='Экономика и добыча', index=False)
            activity_list.to_excel(writer, sheet_name='Мероприятия', index=False)
            predict_list.to_excel(writer, sheet_name='Прогноз', index=False)
+           pd.DataFrame(data=activities).to_excel(writer, sheet_name='Список мероприятий', index=False)
 
        print('Данные выгружены')
 
