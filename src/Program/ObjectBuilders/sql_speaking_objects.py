@@ -86,10 +86,9 @@ class GfemSQLSpeakingObject(SQLSpeakingObject):
 
 
 class ArchiveMonitoringSQLSpeakingObject(SQLSpeakingObject):
-    def __init__(self,
-                 path: str, ):
+    def __init__(self, path: Path):
         self.path = path
-        self.db_name = self.path + '\monitoring_archive.db'
+        self.db_name = self.path / 'monitoring_archive.db'
         super().__init__(db_name=self.db_name)
 
     def insert_to_archive(self, data: pd.DataFrame):

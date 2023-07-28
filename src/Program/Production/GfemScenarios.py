@@ -25,10 +25,10 @@ from Program.ObjectBuilders.Parser import *
 
 class GfemDataFrame:
     def __init__(self,
-                 file_path: str,
+                 file_path: Path,
                  ):
         self.file_path = file_path
-        self.path = file_path + '\СВОД_Скв_формат из ГФЭМ.xlsm'
+        self.path = file_path / 'СВОД_Скв_формат из ГФЭМ.xlsm'
         self.parser = GfemParser(data_path=self.path)
         self.company_names = None
 
@@ -70,9 +70,9 @@ class GfemDataFrame:
 
 class PortuDataFrame(GfemDataFrame):
     def __init__(self,
-                 file_path: str):
+                 file_path: Path):
         super().__init__(file_path=file_path)
-        self.path = file_path + '\Portu_results.xlsx'
+        self.path = file_path / 'Portu_results.xlsx'
         self.parser = PortuResultsParser(data_path=self.path)
         self.company_names = None
 

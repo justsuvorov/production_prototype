@@ -1,9 +1,9 @@
-import pandas as pd
 import sqlite3
+from pathlib import Path
+
+import pandas as pd
+
 from Program.Well.MerData import MerData
-from abc import ABC
-import os
-from Program.Production.config_db import CompanyDictionary
 
 
 # from MerData import MerData
@@ -143,7 +143,7 @@ class GfemDataBaseParser(Parser):
 
     def __add_query(self):
         try:
-            gfem_excel = self.file_path + '\СВОД_Скв_2мес.xlsm'
+            gfem_excel = self.file_path / 'СВОД_Скв_2мес.xlsm'
             add_data = GfemParser(data_path=gfem_excel).add_data()
             print('Файл Excel прочитан. Условно-рентабельных скважин: ', add_data.shape[0])
             add_data['Статус по рентабельности'] = 'Рентабельная до первого ремонта'
@@ -154,12 +154,12 @@ class GfemDataBaseParser(Parser):
 
         return add_data
 
-    def transfer_month_table(self, path: str):
+    def transfer_month_table(self, path: Path):
 
         data = sqlite3.connect(self.data_path)
         curs = data.cursor()
-        mdb_path = path + '\monitoring.db'
-        curs.execute('ATTACH "' + mdb_path + '" AS m')
+        mdb_path = path / 'monitoring.db'
+        curs.execute('ATTACH "' + str(mdb_path) + '" AS m')
         curs.execute(
             '''INSERT OR IGNORE INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent in (SELECT object_id FROM m.monitoring_ecm_prod_full)'''
             )
@@ -167,11 +167,11 @@ class GfemDataBaseParser(Parser):
         data.commit()
         data.close()
 
-    def merge_prep_objects(self, path: str):
+    def merge_prep_objects(self, path: Path):
         data = sqlite3.connect(self.data_path)
         curs = data.cursor()
-        mdb_path = path + '\monitoring.db'
-        curs.execute('ATTACH "' + mdb_path + '" AS m')
+        mdb_path = path / 'monitoring.db'
+        curs.execute('ATTACH "' + str(mdb_path) + '" AS m')
         #    curs.execute('''INSERT OR IGNORE INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent in (SELECT id FROM arf_prod_obj_information WHERE gap_period = 0)'''
         curs.execute(
             '''INSERT OR IGNORE INTO m.monitoring_ecm_prod_monthly SELECT * FROM arf_prod_ecm WHERE id_parent in (SELECT object_id FROM m.monitoring_ecm_prod_full)'''

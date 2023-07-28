@@ -510,7 +510,7 @@ class DataModelFull(DataModel):
     def __init__(self,
                  scenarios: RegressionScenarios,
                  portu_results: PortuDataFrame,
-                 path: str = None,
+                 path: Path = None,
                  ):
         self.str_path = path
         super().__init__(scenarios=scenarios, path=path)
@@ -526,7 +526,7 @@ class DataModelFull(DataModel):
         self.initializtion()
         self.portu_results = self.portu_results.result()
 
-        df = pd.read_excel(self.str_path + '\Данные_по_объектам_для_балансировки_5тилетка.xlsx')
+        df = pd.read_excel(self.str_path / 'Данные_по_объектам_для_балансировки_5тилетка.xlsx')
         i = 0
         crude_col = ['Crude 1',	'Crude 2',	'Crude 3',	'Crude 4',	'Crude 5',	'Crude 6',	'Crude 7',	'Crude 8',	'Crude 9',	'Crude 10']
      #   fcf_col = ['FCF 1',	'FCF 2',	'FCF 3',	'FCF 4',	'FCF 5',	'FCF 6',	'FCF 7',	'FCF 8',	'FCF 9',	'FCF 10']

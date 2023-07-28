@@ -204,7 +204,7 @@ class AroMonitoring:
     def upload_data_for_dashboard(self):
 
        self.__monitoring_base.check_connection()
-       archive = sqlite3.connect(self.file_path + '\monitoring_archive.db')
+       archive = sqlite3.connect(self.file_path / 'monitoring_archive.db')
 
        black_list = self.__monitoring_base.black_list_from_db()
        black_list_archive = pd.read_sql_query('SELECT * FROM monitoring_obj_archive', archive)

@@ -52,16 +52,14 @@ def main(file_path: str):
 
                 if isinstance(gui.companies_names, str):
                     gui.companies_names = [gui.companies_names]
-                folder = str(file_path) + '\\' + str(gui.companies_names[company_index]) + '\\'
+                folder = Path(file_path) / str(gui.companies_names[company_index])
                 a = folder
                 Path(folder).mkdir(parents=True, exist_ok=True)
-                #filepath = Path(folder)
+
                 if isinstance(gui.fields_names, str):
                     gui.fields_names = [gui.fields_names]
-                #if all_fields_option:
-                #    if not all_companies_option:
-                #        a = str(file_path) + '\\' + str(gui.companies_names[company_index]) + '\\'
-                folder = a + '\\' + str(gui.fields_names[field_index]) + '\\'
+
+                folder = a / str(gui.fields_names[field_index])
                 Path(folder).mkdir(parents=True, exist_ok=True)
                 filepath = Path(folder)
 
