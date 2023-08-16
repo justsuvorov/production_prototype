@@ -135,7 +135,7 @@ class AroMonitoring:
         prepared_data['Отвественный(название должности)'] = ''
         prepared_data['Статус. В работе/остановлена'] = ''
         prepared_data['Наличие отказа. Да/Нет'] = ''
-        prepared_data['Дата направления мероприятия'] = pd.to_datetime('today', format='%d/%m/%Y')
+        prepared_data['Дата направления мероприятия'] = self.date
         prepared_data = prepared_data.drop(columns=['Дата внесения', 'id_aro'])
         prepared_data.to_excel(self.file_path + '\Форма для ДО.xlsx')
         print('Company ford is exported')
@@ -202,9 +202,9 @@ class AroMonitoring:
        black_list = self.__monitoring_base.black_list_from_db()
        black_list_archive = pd.read_sql_query('SELECT * FROM monitoring_obj_archive', archive)
        series_names = ['id', 'id_aro', 'Тип объекта', 'Скважина', 'Куст', 'ДНС', 'Месторождение', 'ДО',
-                       'Дата внесения', 'Статус', 'Статус по МЭР', 'Дата попадания в архив']
+                       'Дата попадания', 'Статус', 'Статус по МЭР', 'Дата попадания в архив']
        series_names2 = ['id', 'id_aro', 'Тип объекта', 'Скважина', 'Куст', 'ДНС', 'Месторождение', 'ДО',
-                       'Дата внесения', 'Статус', 'Статус по МЭР']
+                       'Дата попадания', 'Статус', 'Статус по МЭР']
        black_list_archive = black_list_archive.set_axis(series_names, axis=1, )
        black_list = black_list.set_axis(series_names2, axis=1, )
        black_list = pd.concat([black_list,black_list_archive])
@@ -231,8 +231,8 @@ class AroMonitoring:
        activity_list_archive['Статус'] = 'Выполнено'
        activity_list = pd.concat([activity_list, activity_list_archive])
 
-       activity_list['date_creation'] = pd.to_datetime(activity_list['date_creation'], format='mixed', errors='ignore')
-       activity_list['date_planning'] = pd.to_datetime(activity_list['date_planning'], format='mixed',errors='ignore')
+       activity_list['date_creation'] = pd.to_datetime(activity_list['date_creation'], format='mixed', errors='coerce')
+       activity_list['date_planning'] = pd.to_datetime(activity_list['date_planning'], format='mixed',errors='coerce')
        activity_list['date_fact'] = pd.to_datetime(activity_list['date_fact'],  format='mixed', errors='coerce')
 
 
