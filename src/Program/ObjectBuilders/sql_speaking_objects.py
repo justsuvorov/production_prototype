@@ -321,7 +321,9 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
         query1 = '''
                    DELETE FROM monitoring_unprofit_obj WHERE id = (?) 
                  '''
-
+        query2 ='''
+                   DELETE FROM monitoring_ecm_prod_full WHERE object_id NOT IN (SELECT id FROM monitoring_unprofit_obj) 
+                 '''
         query_transfer_1 = '''
                     INSERT OR IGNORE INTO m.monitoring_obj_archive (id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name, company_name, date_creation, status_mer) SELECT id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name, company_name, date_creation, status_mer FROM monitoring_unprofit_obj WHERE id = (?);
                           '''
@@ -343,6 +345,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
             self.connection.execute(query_transfer_3, (id,))
             self.connection.execute(query_update_1, ('Остановлена', id,))
             self.connection.execute(query1, (id,))
+            self.connection.execute(query2)
             i += 1
         for id in id_to_run:
             self.connection.execute(query_transfer_1, (id,))
@@ -350,6 +353,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
             self.connection.execute(query_transfer_3, (id,))
             self.connection.execute(query_update_1, ('Выведена в рентабельную зону', id,))
             self.connection.execute(query1, (id,))
+            self.connection.execute(query2)
             i += 1
         print('ARO|Monitoring Отправлено в архив объектов: ', i)
      #   except:

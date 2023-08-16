@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 import pandas as pd
 import numpy as np
@@ -11,7 +11,7 @@ class AroMonitoring:
     def __init__(self,
                  file_path: str,
                  filter: dict = {'Company': 'All', 'Field': 'All'},
-                 date: datetime.datetime = datetime.datetime.today().replace(day=20)
+                 date: datetime = datetime.today().replace(day=1)
                  ):
         self.add_data_from_excel = True
         self.file_path = file_path
@@ -24,7 +24,8 @@ class AroMonitoring:
         self.__mor_db_base = SQLMorDBSpeakingObject(path=self.file_path)
 
     def _data(self) -> pd.DataFrame:
-        return self.__gfem_base.data()
+        gfem_data = self.__gfem_base.data()
+        return gfem_data
 
     def _recalculate_indicators(self):
         data = self._data()
@@ -55,6 +56,7 @@ class AroMonitoring:
        # df['Статус по МЭР'] = ''
 
         if new_data:
+
             df['Дата внесения'] = self.date
     #       df['Статус по рентабельности'] = 'Нерентабельная'
         return df
@@ -185,6 +187,7 @@ class AroMonitoring:
 
     def __check_base(self, db: SQLSpeakingObject) -> bool:
         if isinstance(db, GfemSQLSpeakingObject):
+            self.data = GfemDBConnection(db=db).check_last_date()
             return GfemDBConnection(db=db).check_status()
         elif isinstance(db, SQLMorDBSpeakingObject):
             return MorDBConnection(db=db).check_status()

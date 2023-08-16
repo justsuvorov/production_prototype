@@ -16,7 +16,7 @@ from Program.GUI.data_model import DataModel, DataModelFull, DataModelMonitoring
 
 #@click.command()
 #@click.option('--path')
-path = r'C:\Users\User\Documents\production_prototype\src\program\data'
+ath = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
 

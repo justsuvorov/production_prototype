@@ -1,5 +1,8 @@
 import abc
 from abc import ABC
+from datetime import datetime
+import pandas as pd
+from dateutil.relativedelta import relativedelta
 from Program.ObjectBuilders.sql_speaking_objects import *
 
 
@@ -10,7 +13,7 @@ class DBConnection():
 
     def check_status(self) -> bool:
         a = self.__check_data()
-        b = self.__check_last_date()
+        b = True #self.__check_last_date()
         if a and b:
             return True
         else:
@@ -21,8 +24,14 @@ class DBConnection():
         pass
 
 #    @abc.abstractmethod
-    def __check_last_date(self) -> bool:
-        pass
+    def check_last_date(self):
+        date = pd.read_sql('SELECT MIN (timeindex_dataframe) FROM arf_prod_ecm', self.db.connection)
+        s = str(date['MIN (timeindex_dataframe)'].iloc[0])
+        s1 = datetime.strptime(s, '%Y-%m-%d')
+        s2 = s1 - relativedelta(months=1)
+        s2 = s2.replace(day=20)
+        print('Дата АРО:', s2)
+        return s2
 
     def check_connection(self) -> bool:
         if self.db.connection is not None:
