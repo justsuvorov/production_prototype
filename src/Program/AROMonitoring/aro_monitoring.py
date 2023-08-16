@@ -187,7 +187,7 @@ class AroMonitoring:
 
     def __check_base(self, db: SQLSpeakingObject) -> bool:
         if isinstance(db, GfemSQLSpeakingObject):
-            self.data = GfemDBConnection(db=db).check_last_date()
+            self.date = GfemDBConnection(db=db).check_last_date()
             return GfemDBConnection(db=db).check_status()
         elif isinstance(db, SQLMorDBSpeakingObject):
             return MorDBConnection(db=db).check_status()
@@ -225,8 +225,10 @@ class AroMonitoring:
        economics_and_crude['Добыча жидкости за первый месяц, тыс.т.'] = economics_and_crude['Добыча жидкости за первый месяц, тыс.т.'].round(5)
 
        activity_list = self.__monitoring_base.activity_data_from_db()
+
        activity_list['Статус'] = np.where(activity_list['date_fact'], 'Выполнено', 'Не выполнено')
-       activity_list['Статус'] = np.where(activity_list['activity_id'] == 3, 'Выполнено', 'Не выполнено')
+       activity_list.loc[activity_list['activity_id'] > 2, 'Статус'] = 'Выполнено'
+
        activity_list_archive = pd.read_sql_query('SELECT * FROM activity_unprofit_archive', archive)
        activity_list_archive['Статус'] = 'Выполнено'
        activity_list = pd.concat([activity_list, activity_list_archive])
