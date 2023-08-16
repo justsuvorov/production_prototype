@@ -320,7 +320,7 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
         self.cursor.execute('ATTACH "' + archive_base + '" AS m')
         query1 = '''
                    DELETE FROM monitoring_unprofit_obj WHERE id = (?) 
-                '''
+                 '''
 
         query_transfer_1 = '''
                     INSERT OR IGNORE INTO m.monitoring_obj_archive (id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name, company_name, date_creation, status_mer) SELECT id, id_aro, obj_type, well_name, well_group_name, preparation_obj_name, field_name, company_name, date_creation, status_mer FROM monitoring_unprofit_obj WHERE id = (?);

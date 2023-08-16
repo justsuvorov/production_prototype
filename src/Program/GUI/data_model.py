@@ -601,7 +601,7 @@ class DataModelMonitoring:
 
       #  self.__field_list ={ 'ГПН-ННГ': ['Все месторождения', 'Еты-пуровское'] }
         self.field = 'Все месторождения'
-        self.field_list_for_view = ['Все месторождения', 'Еты-пуровское']
+        self.field_list_for_view = ['Все месторождения']
       #  self.company_dict = CompanyDict(path=self.__monitoring_module.file_path).load(scenario_program=True)
         self.company_dict = CompanyDictionary.names
         self.do_list = list(sorted(set(self.company_dict.values())))
