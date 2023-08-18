@@ -101,7 +101,7 @@ class AroMonitoring:
 
             self.__gfem_base.connection.close()
         else:
-            print('ARO Monitoring || База ГФЭМ содержит неактуальыне даынне. Мэппинг непроизведен')
+            print('ARO Monitoring || База ГФЭМ содержит неактуальыне даынне. Мэппинг не произведен')
 
     def __check_status_and_transfer_to_archive(self, data: pd.DataFrame):
         df_gfem = self.__prepare_df(df=self.__gfem_base.names())
