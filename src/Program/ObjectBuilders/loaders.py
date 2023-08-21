@@ -89,13 +89,55 @@ class ActivityLoaderDB(Loader):
                          source_path=source_path)
 
     def load_data(self):
+        self.data = self.data.fillna(value='')
+        self.data['date_planning'] = self.data['date_planning'].fillna(value='')
+        self.data['date_planning'] = pd.to_datetime(self.data['date_planning']).astype('str')
+        self.data['date_fact'] = self.data['date_fact'].fillna(value='')
+        self.data['date_fact'] = pd.to_datetime(self.data['date_fact']).astype('str')
+        self.data['date_creation'] = pd.to_datetime(self.data['date_creation']).astype('str')
+        self.data['date_creation'] = pd.to_datetime(self.data['date_creation'], format='%Y-%m-%d')
+
 
         engine = sqlite3.connect(self.source_path+'\monitoring.db')
+        archive = sqlite3.connect(self.source_path+'\monitoring_archive.db')
+        data_to_insert = self.data.values.tolist()
+        error = False
 
-        self.data.to_sql('activity_unprofit', con=engine, if_exists='append', index=False)
-        engine.cursor()
-        print('ActivityLoaderDB||Результаты записаны в Базу данных')
+        for string in data_to_insert:
+            id = string[0]
+            res = engine.execute('SELECT id FROM monitoring_unprofit_obj')
+            res2 = archive.execute('SELECT id FROM monitoring_obj_archive')
+            a = res.fetchall()
+            b = res2.fetchall()
+            a2 =  [item for item in a if item[0] == id]
+            b2 = [item for item in b if item[0] == id]
+       #     (object_id, activity_id, activity_comment,
+       #      date_planning, date_fact, responsible_person, obj_status, failure, date_creation)
+            query_insert = '''INSERT OR IGNORE INTO activity_unprofit  VALUES (?,?,?,?,?,?,?,?,?)'''
+            query_update = '''UPDATE activity_unprofit SET  activity_id = (?), activity_comment = (?),
+            date_planning = (?), date_fact = (?), responsible_person = (?), obj_status =  (?), failure = (?) WHERE object_id = (?) AND date_creation = (?)'''
+            query_insert_arch = '''INSERT OR IGNORE INTO activity_unprofit_archive  VALUES (?,?,?,?,?,?,?,?,?)'''
+            query_update_arch = '''UPDATE activity_unprofit_archive SET activity_id = (?), activity_comment = (?),
+                       date_planning = (?), date_fact = (?), responsible_person = (?), obj_status =  (?), failure = (?) WHERE object_id = (?) AND date_creation = (?)'''
+            string[8] = str(string[8])
+            if a2:
+                engine.execute(query_insert, string)
+                engine.execute(query_update, (string[1], string[2], string[3], string[4], string[5], string[6], string[7], string[0], string[8],))
+            elif b2:
+                archive.execute(query_insert_arch, string)
+                archive.execute(query_update_arch, (string[1], string[2], string[3], string[4], string[5], string[6], string[7], string[0], string[8],))
+            else:
+                print('Не совпадает id =', id)
+                error = True
 
+     #   self.data.to_sql('activity_unprofit', con=engine, if_exists='append', index=False)
+     #    engine.cursor()
+        if not error:
+            engine.commit()
+            archive.commit()
+            print('ActivityLoaderDB||Результаты записаны в Базу данных')
+        else:
+            print('ActivityLoaderDB||Ошибка формата формы мероприятий')
 
 class AROMonthTableLoaderDB(Loader):
 
