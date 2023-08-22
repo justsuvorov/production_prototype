@@ -14,9 +14,9 @@ from Program.ObjectBuilders.Parser import *
 from Program.GUI.my_app import MonitoringApp
 from Program.GUI.data_model import DataModel, DataModelFull, DataModelMonitoring
 
-#@click.command()
-#@click.option('--path')
-path = r'C:\Users\User\Documents\production_prototype\src\program\data'
+@click.command()
+@click.option('--path')
+#path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
 
@@ -48,4 +48,4 @@ def main(path: str):
     App(app).start()
 
 if __name__ == '__main__':
-    main(path)
+    main()

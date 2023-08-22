@@ -126,30 +126,9 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
         return self.__monitoring_activity_parser.data()
 
     def load_activity_data_to_db(self, data):
-      #  print(1)
-     #   self.check_connection()
-      #  print(2)
+
         ActivityLoaderDB(data=data, source_path=self.path).load_data()
-    #    data_to_insert = data.values.tolist()
-   #     print(3)
-        """
-            query = '''
-                       INSERT OR IGNORE INTO activity_unprofit (object_id, activity_id, 
-                       activity_comment, date_planning, date_fact, responsible_person, obj_status, 
-                       failure, date_creation) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    '''
-       #     try:
-            self.cursor.executemany(query, data.values.tolist())
-            print(1)
-            self.connection.commit()
-            print(1)
-            self.__log.log('Данные по мероприятиям загружены')
-    
-        #    except:
-        #        self.__log.log('Данные по мероприятиям не загружены загружены. Проверить excel')
-         #   finally:
-            self.connection.close()
-        """
+
     def __load_new_data_to_db(self, new_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
         if new_data.shape[0] > 0:
             pd.set_option("mode.chained_assignment", None)

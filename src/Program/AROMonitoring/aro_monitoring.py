@@ -227,7 +227,7 @@ class AroMonitoring:
        activity_list = self.__monitoring_base.activity_data_from_db()
 
        activity_list['Статус'] = np.where(activity_list['date_fact'], 'Выполнено', 'Не выполнено')
-       activity_list.loc[activity_list['activity_id'] > 2, 'Статус'] = 'Выполнено'
+       activity_list.loc[activity_list['activity_id'] == 5, 'Статус'] = 'Выполнено'
 
        activity_list_archive = pd.read_sql_query('SELECT * FROM activity_unprofit_archive', archive)
        activity_list_archive['Статус'] = 'Выполнено'
