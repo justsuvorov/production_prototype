@@ -142,11 +142,14 @@ class AroMonitoring:
 
     def load_company_form_to_db(self, data: pd.DataFrame):
 
-        db_activity_data = self.__monitoring_base.activity_data_from_db()
+   #     db_activity_data = self.__monitoring_base.activity_data_from_db()
+        month_end = data['Дата направления мероприятия'].max()
+        data.loc[data['Статус мероприятия'] == 'Выполнено' and data['Дата выполнения мероприятия (Факт)'] is None,
+                      'Дата выполнения мероприятия (Факт)'] = month_end
         filtered_data = data[['id', 'ID Мероприятия (автозаполнение)', 'Комментарии к мероприятию',
-                                'Дата выполнения мероприятия (План)', 'Дата выполнения мероприятия (Факт)',
-                                'Отвественный (название должности)', 'Статус. В работе/остановлена',
-                                'Наличие отказа. Да/Нет', 'Дата направления мероприятия']]
+                              'Дата выполнения мероприятия (План)', 'Дата выполнения мероприятия (Факт)',
+                              'Отвественный (название должности)', 'Статус. В работе/остановлена',
+                              'Наличие отказа. Да/Нет', 'Дата направления мероприятия']]
 
         filtered_data.columns = ['object_id', 'activity_id', 'activity_comment', 'date_planning', 'date_fact',
                                 'responsible_person', 'obj_status', 'failure', 'date_creation']
@@ -154,6 +157,7 @@ class AroMonitoring:
    #     filtered_data['date_creation'] = filtered_data['date_creation'].astype('str')
       # a = db_activity_data.loc[~db_activity_data['object_id'].isin(filtered_data['object_id'])]
       # export_data = pd.concat([a, filtered_data])
+      #  filtered_data['date_fact'] = np.where(filtered_data['date_fact'], 'Выполнено', 'Не выполнено')
         export_data = filtered_data
         self.__monitoring_base.load_activity_data_to_db(data=export_data)
         print('Company form is loaded')

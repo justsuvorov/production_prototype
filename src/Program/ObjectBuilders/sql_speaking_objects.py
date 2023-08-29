@@ -126,8 +126,11 @@ class MonitoringSQLSpeakingObject(SQLSpeakingObject):
         return self.__monitoring_activity_parser.data()
 
     def load_activity_data_to_db(self, data):
-
-        ActivityLoaderDB(data=data, source_path=self.path).load_data()
+        export = True
+        if export:
+            ActivityLoaderDB(data=data, source_path=self.path).load_data()
+        else:
+            self.__log.log('Activity Loader|| Exception')
 
     def __load_new_data_to_db(self, new_data: pd.DataFrame, gfem_base: GfemSQLSpeakingObject):
         if new_data.shape[0] > 0:
