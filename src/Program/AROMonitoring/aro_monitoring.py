@@ -142,9 +142,8 @@ class AroMonitoring:
         print('Company ford is exported')
 
     def load_company_form_to_db(self, data: pd.DataFrame):
-        if ObjectsIDMapper(activity_data=data,
-                           activity_objects_id=ActivityObjectId(data=data),
-                           db=self.__monitoring_base,
+        if ObjectsIDMapper(activity_data=ActivityFormWellData(data=data),
+                           db_data=DBWellData(db=self.__monitoring_base)
                            ).check_id():
 
        #     db_activity_data = self.__monitoring_base.activity_data_from_db()
