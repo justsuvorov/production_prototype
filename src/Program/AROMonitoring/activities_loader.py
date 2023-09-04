@@ -52,6 +52,7 @@ class DBWellData:
         self.__db = db
         self.__db_objects_id = DbObjectsId(db=self.__db)
         self.__archive = self.__db.path + '\monitoring_archive.db'
+        self.__data = self.__db.black_list_from_db()[['id', 'Скважина', 'Месторождение']]
 
 
     def well_name(self, id) -> str:
@@ -63,7 +64,7 @@ class DBWellData:
         return data.loc[data['id'] == id]['Месторождение'].iloc[0]
 
     def data(self) -> pd.DataFrame:
-        data = self.__db.black_list_from_db()[['id', 'Скважина', 'Месторождение']]
+        data = self.__data
         wells = data[['id', 'Скважина', 'Месторождение']]
         con = sqlite3.connect(self.__archive)
         arch_data = pd.read_sql('SELECT * FROM monitoring_obj_archive', con=con)
@@ -86,11 +87,11 @@ class ActivityFormWellData:
 
     def well_name(self, id) -> str:
         error = self.__check_duplication(id=id)
-        return self.__data.loc[self.__data['id'] == id]['Скважина'].iloc[0]
+        return str(self.__data.loc[self.__data['id'] == id]['Скважина'].iloc[0])
 
 
     def field_name(self, id) -> str:
-        return self.__data.loc[self.__data['id'] == id]['Месторождение'].iloc[0]
+        return str(self.__data.loc[self.__data['id'] == id]['Месторождение'].iloc[0])
 
     def full_name(self, id) -> pd.DataFrame:
         return self.__data.loc[self.__data['id'] == id][['id', 'Скважина', 'Месторождение']]
@@ -122,16 +123,29 @@ class WellMapper:
         self.__activity_well = activity_well
         self.__db_well = db_well
 
-
     def new_id(self, old_id):
+        if old_id == 'No data':
+            new_id = self.__search_for_id()
+        else:
+            db_data = self.__db_well.data()
+            obj = self.__activity_well.full_name(id=old_id)
+            new_id = db_data.loc[db_data['Месторождение'].isin(obj['Месторождение'])]
+            new_id = new_id.loc[new_id['Скважина'].isin(obj['Скважина'].astype(dtype='str'))]
+        try:
 
+            return new_id['id'].iloc[0]
+        except IndexError:
+            return 'Скважины нет в базе'
+
+
+    def __search_for_id(self):
+        df = self.__activity_well.activity_data()
+        empty_id_df = df.loc[df['id']=='No data']
         db_data = self.__db_well.data()
-        obj = self.__activity_well.full_name(id=old_id)
+        new_id = db_data.loc[db_data['Месторождение'].isin(empty_id_df['Месторождение'])]
+        new_id = new_id.loc[new_id['Скважина'].isin(empty_id_df['Скважина'].astype(dtype='str'))]
 
-        new_id = db_data.loc[db_data['Месторождение'].isin(obj['Месторождение'])]
-        new_id = new_id.loc[new_id['Скважина'].isin(obj['Скважина'].astype(dtype='str'))]
-        return new_id['id'].iloc[0]
-
+        return new_id
 
 class ObjectsIDMapper:
     def __init__(self,
@@ -162,7 +176,7 @@ class ObjectsIDMapper:
                 self.__logger.log('id = '+  str(id) + ' в форме мероприятий отсутсвует в базе')
                 new_id = WellMapper(activity_well=self.__activity_data, db_well=self.__db_data).new_id(old_id=id)
                 try:
-                    self.__logger.log('Заменить ' +  str(id) + ' на '+ str())
+                    self.__logger.log('Заменить ' +  str(id) + ' на '+ str(new_id))
                 except IndexError:
                     self.__logger.log('Скважины '+  self.__activity_data.well_name(id=id) +
                                       self.__activity_data.field_name(id=id) +
