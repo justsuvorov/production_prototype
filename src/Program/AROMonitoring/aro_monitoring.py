@@ -229,10 +229,11 @@ class AroMonitoring:
                        'НДН до ГЭП; тыс. т', 'НДЖ до ГЭП; тыс. т', 'FCF до ГЭП; тыс. руб.',
                        'Период расчета; мес.', 'НДН за скользящий год; тыс. т', 'НДЖ за скользящий год; тыс. т',
                        'FCF за скользящий год; тыс. руб.',
-                       'Добыча жидкости за первый месяц, тыс.т.']
+                       'Добыча жидкости за первый месяц, тыс.т.', 'OPEX']
        economics_and_crude = economics_and_crude.set_axis(series_names_2, axis=1)
-       economics_and_crude['Добыча нефти, тыс. т.'] = economics_and_crude['Добыча нефти, тыс. т.'].round(5)
-       economics_and_crude['Добыча жидкости за первый месяц, тыс.т.'] = economics_and_crude['Добыча жидкости за первый месяц, тыс.т.'].round(5)
+    #   economics_and_crude['Добыча нефти, тыс. т.'] = economics_and_crude['Добыча нефти, тыс. т.'].round(5)
+    #   economics_and_crude['Добыча жидкости за первый месяц, тыс.т.'] = economics_and_crude['Добыча жидкости за первый месяц, тыс.т.'].round(5)
+    #   economics_and_crude['OPEX'] = 0
 
        activity_list = self.__monitoring_base.activity_data_from_db()
 
@@ -249,13 +250,13 @@ class AroMonitoring:
 
 
        predict_list = pd.read_sql_query('SELECT * FROM monitoring_ecm_prod_monthly', sqlite3.connect(self.file_path+'\monitoring.db'))
-       predict_list = predict_list.loc[:, ['id_object', 'timeindex_dataframe', 'dobycha_nefti', 'dobycha_gaza', 'neft_tovarnaya', 'opex', 'dobycha_zhidkosti', 'fcf']]
+       predict_list = predict_list.loc[:, ['id_object', 'timeindex_dataframe', 'dobycha_nefti', 'dobycha_gaza', 'neft_tovarnaya', 'opex', 'dobycha_zhidkosti', 'fcf','npv']]
 
-       predict_list_names = ['id_object', 'timeindex_dataframe', 'Добыча нефти, тыс.т.', 'Добыча газа', 'Нефть товарная', 'OPEX', 'Добыча жидкости, тыс.т.', 'FCF, тыс. руб.']
+       predict_list_names = ['id_object', 'timeindex_dataframe', 'Добыча нефти, тыс.т.', 'Добыча газа', 'Нефть товарная', 'OPEX', 'Добыча жидкости, тыс.т.', 'FCF, тыс. руб.', 'NPV']
        predict_list  = predict_list.set_axis(predict_list_names, axis=1, )
 
-       activities = {'activity_id': [1, 2, 3, 4 , 5, 6, 7], 'activity': ['Остановлена с ГТМ',
-'Остановлена без ГТМ',
+       activities = {'activity_id': [1, 2, 3, 4 , 5, 6, 7], 'activity': ['Остановка с ГТМ',
+'Остановка без ГТМ',
 'Отбор проб',
 'Мероприятия по ППД',
 'Инфраструктурные ограничения',

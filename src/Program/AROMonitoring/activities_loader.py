@@ -54,7 +54,6 @@ class DBWellData:
         self.__archive = self.__db.path + '\monitoring_archive.db'
         self.__data = self.__db.black_list_from_db()[['id', 'Скважина', 'Месторождение']]
 
-
     def well_name(self, id) -> str:
         data = self.data()
         return data.loc[data['id'] == id]['Скважина'].iloc[0]
@@ -88,7 +87,6 @@ class ActivityFormWellData:
     def well_name(self, id) -> str:
         error = self.__check_duplication(id=id)
         return str(self.__data.loc[self.__data['id'] == id]['Скважина'].iloc[0])
-
 
     def field_name(self, id) -> str:
         return str(self.__data.loc[self.__data['id'] == id]['Месторождение'].iloc[0])
@@ -137,7 +135,6 @@ class WellMapper:
         except IndexError:
             return 'Скважины нет в базе'
 
-
     def __search_for_id(self):
         df = self.__activity_well.activity_data()
         empty_id_df = df.loc[df['id']=='No data']
@@ -146,6 +143,7 @@ class WellMapper:
         new_id = new_id.loc[new_id['Скважина'].isin(empty_id_df['Скважина'].astype(dtype='str'))]
 
         return new_id
+
 
 class ObjectsIDMapper:
     def __init__(self,
