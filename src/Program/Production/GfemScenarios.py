@@ -50,8 +50,7 @@ class GfemDataFrame:
         prepared_data['FCF первый месяц'] = data['FCF первый месяц:']/1000
         prepared_data['НДН за первый месяц; тыс. т'] = data['НДН за первый месяц; тыс. т']
         prepared_data['НДН за первый месяц; т./сут.'] = prepared_data['НДН за первый месяц; тыс. т']/(365/12)*1000
-        prepared_data['Уд.FCF на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц']/\
-                                                       prepared_data['НДН за первый месяц; т./сут.']
+        prepared_data['Уд.FCF на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц']/prepared_data['НДН за первый месяц; тыс. т']
         prepared_data['Доля СП по добыче'] = 1
         prepared_data['Доля СП по FCF'] = 1
         prepared_data['ДО'] = 'ГПН'
@@ -64,7 +63,7 @@ class GfemDataFrame:
         prepared_data['НДН за первый месяц; тыс. т. с долей СП'] = prepared_data['НДН за первый месяц; тыс. т'] * prepared_data['Доля СП по добыче']
         prepared_data['FCF первый месяц c долей СП'] = prepared_data['FCF первый месяц'] * prepared_data['Доля СП по FCF']
         prepared_data['НДН за первый месяц; т./сут. с долей СП'] = prepared_data['НДН за первый месяц; тыс. т. с долей СП'] / (365 / 12) * 1000
-        prepared_data['Уд.FCF с СП на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц c долей СП']/prepared_data['НДН за первый месяц; т./сут. с долей СП']
+        prepared_data['Уд.FCF с СП на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц c долей СП']/prepared_data['НДН за первый месяц; тыс. т. с долей СП']
         return prepared_data
 
 
@@ -171,24 +170,24 @@ class RegressionScenarios:
         x1 = np.cumsum(x_initial)
         x = x1[:, np.newaxis]
         y = np.cumsum(y_initial)
-        plot(x, y, label = 'Исходный профиль')
-        xlabel('НДН, тыс.т')
-        ylabel("FCF, тыс. руб")
+       #lot(x, y, label = 'Исходный профиль')
+       # xlabel('НДН, тыс.т')
+       # ylabel("FCF, тыс. руб")
 
         X_train, X_test, Y_train, Y_test = train_test_split(x, y,
                                                             test_size=1,
                                                             random_state=1)
 
         poly_model = PiecewiseRegressor(verbose=True,
-                                        binner=KBinsDiscretizer(n_bins=40))
-        poly = PolynomialFeatures(2)
-        poly_model2 = make_pipeline(poly, LinearRegression())
+                                        binner=KBinsDiscretizer(n_bins=120))
+    #    poly = PolynomialFeatures(2)
+     #   poly_model2 = make_pipeline(poly, LinearRegression())
         poly_model.fit(X_train, Y_train)
-        poly_model2.fit(X_train, Y_train)
-        plot(x, poly_model.predict(x),'g--', label='Кусочно-линейная аппрокимация',)
+      #  poly_model2.fit(X_train, Y_train)
+     #   plot(x, poly_model.predict(x),'g--', label='Кусочно-линейная аппрокимация',)
       #  plot(x, poly_model2.predict(x), label='Апроксимация полиномом 2й степени')
-        legend()
-        show()
+      #  legend()
+      #  show()
         return [poly_model, x.min(), x.max()]
 
     def data_for_regression(self):

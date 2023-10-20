@@ -36,6 +36,7 @@ def add_divider(comp, comp2, comp3, comp4):
 
 def default_label(i):
     label_width = 200
+    """
     if i == 1:  #
         return {"width": label_width}
     if i == 2:  # верхняя таблица
@@ -48,7 +49,22 @@ def default_label(i):
         return {"align": "center", 'height': 30, 'font-weight': 10}
     if i == 6:
         return {"width": label_width / 2, "margin": 5, "align": "center", "border": "0px"}
+        'background-color': '#31363b',
+        'background-color': '#232629',
+"""
 
+    if i == 1:  #
+        return {"width": label_width, 'background-color': '#31363b', 'color': 'white'}
+    if i == 2:  # верхняя таблица
+        return {"align": "center", 'height': 30, 'background-color': '#31363b', 'color': 'white'}
+    if i == 3:
+        return {"width": label_width / 2, "margin": 5, "align": "center", 'background-color': '#31363b', 'color': 'white'}
+    if i == 4:
+        return {"width": 200, "margin": 5, "align": "right", 'background-color': '#31363b', 'color': 'white'}
+    if i == 5:
+        return {"align": "center", 'height': 30, 'font-weight': 10, 'background-color': '#31363b', 'color': 'white'}
+    if i == 6:
+        return {"width": label_width / 2, "margin": 5, "align": "center", "border": "0px", 'background-color': '#31363b', 'color': 'white'}
 
 class DefaultDropdown(Component):
     def __init__(self,
@@ -74,6 +90,7 @@ class DefaultDropdown(Component):
             Dropdown(selection='Месяц',
                      options=self.__options,
                      on_select=self.__onSelect,
+                     style={'background-color': '#232629', 'color': 'white'}
                      ),
             Label('', style={"width": 30}, ),
             Label('Необходимо срезать добычи, т/сут.', style=default_label(i=1), ),
@@ -102,7 +119,7 @@ class DefaultSlider(Component):
 
 
     def render(self):
-        return View(layout="row", )(
+        return View(layout="row", style={'background-color': '#31363b', 'color': 'white' })(
             Label(self.__label, style=default_label(i=1), ),
             Slider(value=self.__value.toFloat,
                    min_value=self.__min_value.toFloat,
@@ -112,7 +129,7 @@ class DefaultSlider(Component):
                    # on_change=self.__onValueChanged,
                    on_change=self.__onValueChanged,
                    on_mouse_up=self.__onSliderComplete,
-                   ),
+                  ),
 
             TextInput(text=self.__value.toStr,
                       #        on_click=lambda value1 :self.control(copmany=name, value=value),

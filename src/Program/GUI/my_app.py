@@ -366,6 +366,7 @@ class MyApplication(Component):
             "File": pathlib.Path(""),
         })
         self.result_path = result_path +'\Results.xlsx'
+        self.names = []
 
     def __on_dropdown_select(self, value):
         self.__model.choose_month(value)
@@ -497,26 +498,78 @@ class MyApplication(Component):
         self.set_state()
         self.__enableOnChangeCalback = True
 
+    def __plot(self, ax):
+        x, y, x2, y2 = self.__model.plot_coordinates()
+        names = []
+
+        for key in x:
+            ax.scatter(x[key], y[key],3)
+            names.append(key)
+        self.names = names
+        ax.legend(names)
+        for key in x:
+            ax.plot(x2[key][-1], y2[key], color = 'black',marker="o", markersize=10)
+        ax.grid(True)
+        ax.set(xlabel='q, тыс. т.', ylabel = 'FCF/Q, тыс.руб/т.',
+             #  xlim=(10, 1.1 * self.__model.company_value.toFloat),
+               xlim = (0, 200),
+               ylim = (0, 10, ),
+               title = 'Удельный FCF на тонну'
+
+               )
+
+
+
+    def __pie_plot(self, ax,):
+        x2, values = self.__model.pie_plot_coordinates()
+        x = x2.copy()
+        values2 = values.copy()
+        labels = ['Восток', 'Мегион', 'Мессояха', 'ННГ', 'Оренбург', 'Хантос', 'Ямал']
+        labels2 = ['Восток', 'Мегион', 'Мессояха', 'ННГ', 'Оренбург', 'Хантос', 'Ямал']
+
+        for i in range(len(x)):
+            if (x[i]-0.001) < 0:
+                x2.remove(x[i])
+                labels2.remove(labels[i])
+                values2.remove(values[i])
+        i = 0
+        labels_for_view = []
+
+        for name in labels2:
+            a = []
+            a.append(name)
+            a.append('('+str(round(values2[i], 1))+')')
+            labels_for_view.append(' '.join(a))
+            i += 1
+        ax.set(title='Распределение квоты по ДО, тыс. т.',)
+
+      #  ax.set_facecolor('#31363b')
+        ax.pie(x2, labels=labels_for_view, wedgeprops=dict(width=0.5), textprops={'fontsize': 8})
+
+     #   self.set_state()
+
+
+
     def render(self):
 
         return Window(title='Просмотрщик сценариев', )(
-                View(layout="column", style={'background-color': 'white', "margin": 10,
-                                             "font-weight": 1},)  # """ style={"margin": 10, "font-weight": 1},"""
+                View(layout="column", style={'background-color': '#31363b', "margin": 10,
+                                             "font-weight": 2, "font-size": 15},)  # """ style={"margin": 10, "font-weight": 1},"""
                     (
                     DefaultDropdown(value=self.__model.target,
                                      options=self.__model.months,
                                      onSelect=self.__on_dropdown_select if self.__enableOnChangeCalback else None),
 
 
-                    ScrollView(layout="column")
-                        (View(layout="row")(
+                    ScrollView(layout="column",style = {'height': 120})
+                        (View(layout="row", style={'background-color': '#31363b', 'color': 'white' })(
                         add_divider(Label('ДО', style=default_label(i=2)),
                                     Label('Прогноз добычи, т/сут.', style=default_label(i=2)),
                                     Label('Сокращение добычи, т/сут.', style=default_label(i=2)),
                                     Label('Итоговая добыча, т/сут.', style=default_label(i=2)), ),
                                             ),
 
-                   *[add_divider(Label(name),
+                   *[add_divider(Label(name, style={'background-color': '#31363b', 'color': 'white' } ),
                                   Label(constraint, style=default_label(i=2)),
                                   Label(value, style=default_label(i=2)),
                                   Label(result.round(), style=default_label(i=2)),
@@ -526,27 +579,29 @@ class MyApplication(Component):
                                                                                self.__model.result_crude_list)],
 
                     ),
+
                     View(layout='column', style={"margin": 5, "font-weight": 1})(
-                        View(layout="row")(Label('Итог'),
+                        View(layout="row")(Label('Итог', style=default_label(i=2)),
                                            Label(self.__model.forecast_sum.toStr,
                                                  style=default_label(i=5)),
                                            Label(self.__model.crude_sum.toStr, style=default_label(i=5)),
                                            Label(self.__model.result_crude_sum.toStr, style=default_label(i=5)),
                                          ),
 
-                        View(layout="row", style={})(add_divider(Label('Квота МЭ'),
+                        View(layout="row", style={})(add_divider(Label('Квота МЭ', style=default_label(i=2)),
                                                                       Label(self.__model.quota.toStr,
                                                                             style=default_label(i=5)),
-                                                                      Label('', ),
-                                                                      Label('', ),
+                                                                      Label('',style=default_label(i=2) ),
+                                                                      Label('', style=default_label(i=2)),
                                                                       )
                                                      ),
 
 
                         View(layout="row", )(
                             Label('ДО', style=default_label(i=1), ),
-                            Label('Сокращение добычи', style={"width": 1.5 * 200, }, ),
-                            Button('Сбросить настройки', on_click=self.__on_Reset_click_button),
+                            Label('Сокращение добычи', style={"width": 1.5 * 200, 'background-color': '#31363b', 'color': 'white' }, ),
+                            Button('Сбросить настройки', on_click=self.__on_Reset_click_button, style={'background-color': '#448aff', 'color': 'white'} ),
+
                             Label('т/сут.', style=default_label(i=3)),
                             Label('Потери FCF, млн.руб.', style=default_label(i=3)),
 
@@ -564,8 +619,7 @@ class MyApplication(Component):
 
                         Label("", style={"width": 200, "align": 'center'}, ),
 
-
-
+                        ScrollView(layout="column", style={'background-color': '#31363b', 'color': 'white' , 'height': 240})(
                         DefaultSlider(value=self.__model.vostok_value,
                                       fcf_value=self.__model.vostok_fcf,
                                       label=self.__model.company_names[0],
@@ -683,32 +737,38 @@ class MyApplication(Component):
                                       max_value=self.__model.max_value['Ангара'],
                                       onChanged=self.__on_angara_changed if self.__enableOnChangeCalback else None,
                                       ),
+                        ),
 
 
                         View(layout="row")(
                     Label('', ),
-                    Label('Сумма', style={"width": 450, "align": "right"}, ),
+                    Label('Сумма', style={"width": 450, "align": "right", 'background-color': '#31363b', 'color': 'white' }, ),
                     Label(round(self.__model.crude_sum.toFloat), style=default_label(i=3)),
                     Label(self.__model.fcf_sum.toStr, style=default_label(i=3), )
                 ),
+                        View(layout="row", style={'background-color': 'white',})(View(layout='column',style={'width': 450})(
+                            plotting.Figure(lambda ax: self.__pie_plot(ax), ),),View(layout='column')(
+                            plotting.Figure(lambda ax: self.__plot(ax))),
+
+                        ),
 
 
 
                         View(layout="row", )(
                             CheckBox(text='Учет доли СП', checked=self.__model.joint_venture,
                                      on_change=self.__on_checkbox_changed,
-                                     style={"width": 200 / 1.5, "align": "left", "height": 50, }),
-                          #  plotting.Figure(lambda ax: self.plot(ax)),  # ),
+                                     style={"width": 200 / 1.5, "align": "left", "height": 30,'background-color': '#31363b', 'color': 'white'  }),
+                     #     #  plotting.Figure(lambda ax: self.plot(ax)),  # ),
                         ),
 
                         View(layout="row")(
                             Form(self.state, ),
-                            Button("Загрузить объекты в Excel", style={"width": 200 * 2},
+                            Button("Загрузить объекты в Excel", style={"width": 200 * 2, 'background-color': '#448aff','color': 'white' },
                                    on_click=self.__onSaveButtonClick),),
 
                         View(layout="row")(
                             Form(self.state, ),
-                            Button("Выгрузить сводную таблицу в Excel", style={"width": 200 * 2},
+                            Button("Выгрузить сводную таблицу в Excel", style={"width": 200 * 2, 'background-color': '#448aff', 'color': 'white' },
                                    on_click=self.__onSaveWholeTableButtonClick), )
                 ),
             )

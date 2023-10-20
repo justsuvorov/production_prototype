@@ -168,6 +168,7 @@ class Application(Component):
             j = 1
         else:
             j = 0
+        j = 0
         if self.last_company[-1] =='All':
             x = np.linspace(0, self.company_max, 100)
             y = self.data[j]['ГПН'][0].predict(x[:, np.newaxis])

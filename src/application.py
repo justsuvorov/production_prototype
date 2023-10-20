@@ -21,7 +21,7 @@ path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 def main(path: str):
 
     #domain_model_full = domain_model(file_path=Path(path))
-    """
+
     scenarios = RegressionScenarios(sorted_data=SortedGfemData(
                                                 prepared_data=GfemDataFrame(
                                                         file_path=path)
@@ -37,7 +37,7 @@ def main(path: str):
  #   app.initialization()
     App(app).start()
     """
-
+    
 
     filtered = {'Company': 'All', 'Field': 'All'}
     monitoring_module = AroMonitoring(file_path=path, filter=filtered ) #,date=date)
@@ -45,6 +45,6 @@ def main(path: str):
                         result_path=path)
 
     App(app).start()
-
+    """
 if __name__ == '__main__':
     main(path)

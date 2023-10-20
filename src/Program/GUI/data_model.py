@@ -95,7 +95,90 @@ class DataModel:
         self.__last_company_value = [0]
         self.__last_company = ['All']
 
+
         self.__last_target = 0.0
+
+    def pie_plot_coordinates(self):
+        values = self.__do_values_for_plot()
+        x = []
+        for value in values:
+            x.append((value+0.0001)/(self.company_value.toFloat+0.0001))
+        new_values = [i*30.43/1000 for i in values]
+        return x, new_values
+
+    def plot_coordinates(self):
+        if self.joint_venture:
+            j = 1
+            key = 'НДН за первый месяц; т./сут. с долей СП'
+            key2 ='Уд.FCF с СП на 1 тн. (за 1 мес.)'
+        else:
+            j = 0
+            key = 'НДН за первый месяц; т./сут.'
+            key2 = 'Уд.FCF на 1 тн. (за 1 мес.)'
+        temp_dataframe = self.__dataframe_list[j]
+
+        x = {}
+        y = {}
+        x2 = {}
+        y2 = {}
+
+        values = self.__do_values_for_plot()
+        value = 0
+        for name in self.company_names:
+
+            x2[name] = (np.linspace(1, values[value]+1.1, 300))
+            y2[name] = self.__data[j][name][0].predict(x2[name][:, np.newaxis])
+            x2[name] = x2[name]*30.43/1000
+        #    y2[name] = y2[name]/x2[name]
+
+            company_dataframe = temp_dataframe.loc[temp_dataframe['ДО'] == name]
+            company_result = company_dataframe[[key]].to_numpy()
+            company_data = np.copy(company_result)
+            x_initial = company_data.T[0]
+            x_j = np.cumsum(x_initial)
+            array_index = np.searchsorted(x_j, values[value], side="right")
+            if array_index == 0:
+                result = 0
+            else:
+                result = company_dataframe[key2].iloc[array_index]
+            print(result, name)
+            value += 1
+            y2[name] = result
+            x[name] = x_j
+            y[name] = company_dataframe[key2]
+
+        for name in self.company_names:
+        #    x[name] = (np.linspace(1, self.max_value[name].toFloat ,300))
+          #  y[name] = self.__data[j][name][0].predict(x[name][:, np.newaxis])
+            x[name] = x[name]*30.43/1000
+         #   y[name] = y[name]/x[name]
+        #    y2[name] = np.cumsum(y[name])/(np.cumsum(x[name])+0.001)
+
+        #    y[name] = y[name]/(x[name]+0.01)
+        """
+        self.vostok_value = DataValue('0.0')
+        self.megion_value = DataValue('0.0')
+        self.messoyaha_value = DataValue('0.0')
+        self.nng_value = DataValue('0.0')
+        self.orenburg_value = DataValue('0.0')
+        self.hantos_value = DataValue('0.0')
+        self.yamal_value = DataValue('0.0')
+        
+        if self.__last_company[-1] =='All':
+            x = np.linspace(0, self.max_value[name].toFloat, 100)
+            y = self.__data[j][name][0].predict(x[:, np.newaxis])
+
+            x2 = np.linspace(0, self.company_value.toFloat, 100)
+            y2 = self.__data[j][name][0].predict(x2[:, np.newaxis])
+
+        else:
+            x = np.linspace(0, self.max_value[self.__last_company[-1]].toFloat, 100)
+            y = self.__data[j][self.__last_company[-1]][0].predict(x[:, np.newaxis])
+
+            x2 = np.linspace(0, self.__last_company_value[-1], 100)
+            y2 = self.__data[j][self.__last_company[-1]][0].predict(x2[:, np.newaxis])
+        """
+        return x, y, x2, y2
 
     def initializtion(self):
         self.__data = self.scenarios.scenarios()
@@ -172,9 +255,20 @@ class DataModel:
             self.min_value = self.__min_value_full
             self.max_value = self.__max_value_full
 
+        self.plot_coordinates()
+
     def __company_result_list(self):
         company_result_list = self.__constraints.dataframe['ДО'].iloc[:23].to_list()
         return company_result_list
+
+    def __do_values_for_plot(self):
+        return [self.vostok_value.toFloat,
+                self.megion_value.toFloat,
+                self.messoyaha_value.toFloat,
+                self.nng_value.toFloat,
+                self.orenburg_value.toFloat,
+                self.hantos_value.toFloat,
+                self.yamal_value.toFloat]
 
     def __do_result_list(self):
         result = [self.vostok_value.toFloat,
@@ -458,7 +552,7 @@ class DataModel:
         return fcf
 
     def _find_solution(self, company_name: list = ['All'], company_value: list = [0.0], target: float = 0):
-
+        print(self.joint_venture)
         if self.joint_venture:
             j = 1
         else:
