@@ -503,12 +503,15 @@ class MyApplication(Component):
         names = []
 
         for key in x:
-            ax.scatter(x[key], y[key],3)
+            if key == 'Мегионнефтегаз':
+                ax.scatter(x[key], y[key], 3, color='red')
+            else:
+                ax.scatter(x[key], y[key], 3,)
             names.append(key)
         self.names = names
         ax.legend(names)
         for key in x:
-            ax.plot(x2[key][-1], y2[key], color = 'black',marker="o", markersize=10)
+            ax.plot(x2[key][-1], y2[key], color = '#31363b',marker="o", markersize=8)
         ax.grid(True)
         ax.set(xlabel='q, тыс. т.', ylabel = 'FCF/Q, тыс.руб/т.',
              #  xlim=(10, 1.1 * self.__model.company_value.toFloat),
