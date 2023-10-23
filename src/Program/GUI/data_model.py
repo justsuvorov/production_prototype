@@ -103,7 +103,7 @@ class DataModel:
         x = []
         for value in values:
             x.append((value+0.0001)/(self.company_value.toFloat+0.0001))
-        new_values = [i*30.43/1000 for i in values]
+        new_values = [i for i in values]
         return x, new_values
 
     def plot_coordinates(self):
@@ -128,7 +128,7 @@ class DataModel:
 
             x2[name] = (np.linspace(1, values[value]+1.1, 300))
             y2[name] = self.__data[j][name][0].predict(x2[name][:, np.newaxis])
-            x2[name] = x2[name]*30.43/1000
+            x2[name] = x2[name]#*30.43/1000
         #    y2[name] = y2[name]/x2[name]
 
             company_dataframe = temp_dataframe.loc[temp_dataframe['ДО'] == name]
@@ -140,8 +140,11 @@ class DataModel:
             if array_index == 0:
                 result = 0
             else:
-                result = company_dataframe[key2].iloc[array_index]
-            print(result, name)
+                try:
+                    result = company_dataframe[key2].iloc[array_index]
+                except IndexError:
+                    result = company_dataframe[key2].iloc[-1]
+
             value += 1
             y2[name] = result
             x[name] = x_j
@@ -150,7 +153,7 @@ class DataModel:
         for name in self.company_names:
         #    x[name] = (np.linspace(1, self.max_value[name].toFloat ,300))
           #  y[name] = self.__data[j][name][0].predict(x[name][:, np.newaxis])
-            x[name] = x[name]*30.43/1000
+            x[name] = x[name]#*30.43/1000
          #   y[name] = y[name]/x[name]
         #    y2[name] = np.cumsum(y[name])/(np.cumsum(x[name])+0.001)
 

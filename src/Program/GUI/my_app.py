@@ -498,8 +498,12 @@ class MyApplication(Component):
         self.set_state()
         self.__enableOnChangeCalback = True
 
+
+
     def __plot(self, ax):
+
         x, y, x2, y2 = self.__model.plot_coordinates()
+
         names = []
 
         for key in x:
@@ -513,9 +517,9 @@ class MyApplication(Component):
         for key in x:
             ax.plot(x2[key][-1], y2[key], color = '#31363b',marker="o", markersize=8)
         ax.grid(True)
-        ax.set(xlabel='q, тыс. т.', ylabel = 'FCF/Q, тыс.руб/т.',
+        ax.set(xlabel='q, т/сут.', ylabel = 'FCF/Q, тыс.руб/т.',
              #  xlim=(10, 1.1 * self.__model.company_value.toFloat),
-               xlim = (0, 200),
+               xlim = (0, 7000),
                ylim = (0, 10, ),
                title = 'Удельный FCF на тонну'
 
@@ -524,6 +528,7 @@ class MyApplication(Component):
 
 
     def __pie_plot(self, ax,):
+
         x2, values = self.__model.pie_plot_coordinates()
         x = x2.copy()
         values2 = values.copy()
@@ -544,7 +549,7 @@ class MyApplication(Component):
             a.append('('+str(round(values2[i], 1))+')')
             labels_for_view.append(' '.join(a))
             i += 1
-        ax.set(title='Распределение квоты по ДО, тыс. т.',)
+        ax.set(title='Распределение квоты по ДО, т/сут.',)
 
       #  ax.set_facecolor('#31363b')
         ax.pie(x2, labels=labels_for_view, wedgeprops=dict(width=0.5), textprops={'fontsize': 8})
@@ -622,7 +627,7 @@ class MyApplication(Component):
 
                         Label("", style={"width": 200, "align": 'center'}, ),
 
-                        ScrollView(layout="column", style={'background-color': '#31363b', 'color': 'white' , 'height': 240})(
+                        ScrollView(layout="column", style={'background-color': '#31363b', 'color': 'white' , 'height': 170})(
                         DefaultSlider(value=self.__model.vostok_value,
                                       fcf_value=self.__model.vostok_fcf,
                                       label=self.__model.company_names[0],
@@ -745,34 +750,42 @@ class MyApplication(Component):
 
                         View(layout="row")(
                     Label('', ),
-                    Label('Сумма', style={"width": 450, "align": "right", 'background-color': '#31363b', 'color': 'white' }, ),
+                    Label('Сумма', style={"width": 450, "align": "right", 'background-color': '#31363b', 'color': 'white' , "margin": 5 }, ),
                     Label(round(self.__model.crude_sum.toFloat), style=default_label(i=3)),
                     Label(self.__model.fcf_sum.toStr, style=default_label(i=3), )
                 ),
-                        View(layout="row", style={'background-color': 'white',})(View(layout='column',style={'width': 450})(
-                            plotting.Figure(lambda ax: self.__pie_plot(ax), ),),View(layout='column')(
-                            plotting.Figure(lambda ax: self.__plot(ax))),
+                        View(layout="row", style={'background-color': 'white','border': '3px solid #448aff'})(View(layout='column',style={'width': 450})(
+                            plotting.Figure(lambda ax: self.__pie_plot(ax) if self.__enableOnChangeCalback else None, ),),View(layout='column')(
+                            plotting.Figure(lambda ax: self.__plot(ax) if self.__enableOnChangeCalback else None)),
 
                         ),
 
 
 
-                        View(layout="row", )(
-                            CheckBox(text='Учет доли СП', checked=self.__model.joint_venture,
-                                     on_change=self.__on_checkbox_changed,
-                                     style={"width": 200 / 1.5, "align": "left", "height": 30,'background-color': '#31363b', 'color': 'white'  }),
+                  #      View(layout="row", )(
+                #            CheckBox(text='Учет доли СП', checked=self.__model.joint_venture,
+                  #                   on_change=self.__on_checkbox_changed,
+                  #                   style={"width": 200 / 1.5, "align": "left", "height": 30,'background-color': '#31363b', 'color': 'white'  }),
                      #     #  plotting.Figure(lambda ax: self.plot(ax)),  # ),
-                        ),
+                   #     ),
 
                         View(layout="row")(
-                            Form(self.state, ),
+                       #     Form(self.state, ),
+                            Button("Выгрузить сводную таблицу в Excel",
+                                   style={"width": 200 * 2, 'background-color': '#448aff', 'color': 'white'},
+                                   on_click=self.__onSaveWholeTableButtonClick),
+                            CheckBox(text='Учет доли СП', checked=self.__model.joint_venture,
+                                     on_change=self.__on_checkbox_changed,
+                                     style={"width": 200 / 1.5, "align": "left", "height": 30,
+                                            'background-color': '#31363b', 'color': 'white'}),
+
                             Button("Загрузить объекты в Excel", style={"width": 200 * 2, 'background-color': '#448aff','color': 'white' },
                                    on_click=self.__onSaveButtonClick),),
 
-                        View(layout="row")(
-                            Form(self.state, ),
-                            Button("Выгрузить сводную таблицу в Excel", style={"width": 200 * 2, 'background-color': '#448aff', 'color': 'white' },
-                                   on_click=self.__onSaveWholeTableButtonClick), )
+                     #   View(layout="row")(
+                         #   Form(self.state, ),
+                       #     Button("Выгрузить сводную таблицу в Excel", style={"width": 200 * 2, 'background-color': '#448aff', 'color': 'white' },
+                       #            on_click=self.__onSaveWholeTableButtonClick), )
                 ),
             )
         )
