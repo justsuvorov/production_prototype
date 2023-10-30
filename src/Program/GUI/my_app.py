@@ -508,21 +508,24 @@ class MyApplication(Component):
 
         for key in x:
             if key == 'Мегионнефтегаз':
-                ax.scatter(x[key], y[key], 3, color='red')
+                ax.plot(x[key], y[key], 5, color='tomato')
+#
             else:
-                ax.scatter(x[key], y[key], 3,)
+                if key == 'Восток':
+                    ax.plot(x[key], y[key], 5, color = 'cornflowerblue')
+                else:
+                    ax.plot(x[key], y[key], 5,)
             names.append(key)
-        self.names = names
-        ax.legend(names)
+       # self.names = names
+      #  ax.legend(names)
         for key in x:
             ax.plot(x2[key][-1], y2[key], color = '#31363b',marker="o", markersize=8)
         ax.grid(True)
-        ax.set(xlabel='q, т/сут.', ylabel = 'FCF/Q, тыс.руб/т.',
+        ax.set(xlabel='Среднесуточная добыча, т/сут.', ylabel = 'FCF/Q, тыс.руб/т.',
              #  xlim=(10, 1.1 * self.__model.company_value.toFloat),
                xlim = (0, 7000),
                ylim = (0, 10, ),
-               title = 'Удельный FCF на тонну'
-
+               title = 'Удельный FCF на тонну',
                )
 
 
@@ -549,10 +552,18 @@ class MyApplication(Component):
             a.append('('+str(round(values2[i], 1))+')')
             labels_for_view.append(' '.join(a))
             i += 1
-        ax.set(title='Распределение квоты по ДО, т/сут.',)
+        ax.set(title='Распределение квоты по ДО, т/сут.',
+
+               )
 
       #  ax.set_facecolor('#31363b')
-        ax.pie(x2, labels=labels_for_view, wedgeprops=dict(width=0.5), textprops={'fontsize': 8})
+        ax.pie(x2, labels=labels_for_view, wedgeprops=dict(width=0.5), textprops={'fontsize': 8},
+               colors=[
+                   # matplotlib named colors
+                    'cornflowerblue', 'tomato', 'gold', 'orchid', 'green',
+                   # any color using the color codes
+                   "#77BFE2", 'blue']
+               )
 
      #   self.set_state()
 
@@ -754,7 +765,7 @@ class MyApplication(Component):
                     Label(round(self.__model.crude_sum.toFloat), style=default_label(i=3)),
                     Label(self.__model.fcf_sum.toStr, style=default_label(i=3), )
                 ),
-                        View(layout="row", style={'background-color': 'white','border': '3px solid #448aff'})(View(layout='column',style={'width': 450})(
+                        View(layout="row", style={'background-color': 'white', 'border': '3px solid #448aff'})(View(layout='column',style={'width': 450})(
                             plotting.Figure(lambda ax: self.__pie_plot(ax) if self.__enableOnChangeCalback else None, ),),View(layout='column')(
                             plotting.Figure(lambda ax: self.__plot(ax) if self.__enableOnChangeCalback else None)),
 
@@ -776,10 +787,10 @@ class MyApplication(Component):
                                    on_click=self.__onSaveWholeTableButtonClick),
                             CheckBox(text='Учет доли СП', checked=self.__model.joint_venture,
                                      on_change=self.__on_checkbox_changed,
-                                     style={"width": 200 / 1.5, "align": "left", "height": 30,
+                                     style={"width": 200 / 1.5, "align": "center", "height": 30,
                                             'background-color': '#31363b', 'color': 'white'}),
 
-                            Button("Загрузить объекты в Excel", style={"width": 200 * 2, 'background-color': '#448aff','color': 'white' },
+                            Button("Выгрузить объекты в Excel", style={"width": 200 * 2, 'background-color': '#448aff','color': 'white' },
                                    on_click=self.__onSaveButtonClick),),
 
                      #   View(layout="row")(
