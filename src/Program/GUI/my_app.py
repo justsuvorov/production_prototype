@@ -504,30 +504,29 @@ class MyApplication(Component):
 
         x, y, x2, y2 = self.__model.plot_coordinates()
 
-        names = []
+        colors = [
+            # matplotlib named colors
+            'cornflowerblue', 'tomato', 'orchid', 'gold',
+            # any color using the color codes
+            "#77BFE2", 'green', 'blue']
+        i = 0
+        labels = []
+        for key in x:
+
+            ax.plot(x[key], y[key], 5, color=colors[i], label=key)
+            labels.append(key)
+            i += 1
+         #   ax.legend()
 
         for key in x:
-            if key == 'Мегионнефтегаз':
-                ax.plot(x[key], y[key], 5, color='tomato')
-#
-            else:
-                if key == 'Восток':
-                    ax.plot(x[key], y[key], 5, color = 'cornflowerblue')
-                else:
-                    ax.plot(x[key], y[key], 5,)
-            names.append(key)
-       # self.names = names
-      #  ax.legend(names)
-        for key in x:
-            ax.plot(x2[key][-1], y2[key], color = '#31363b',marker="o", markersize=8)
+            ax.plot(x2[key][-1], y2[key], color='#31363b', marker="o", markersize=8)
         ax.grid(True)
         ax.set(xlabel='Среднесуточная добыча, т/сут.', ylabel = 'FCF/Q, тыс.руб/т.',
              #  xlim=(10, 1.1 * self.__model.company_value.toFloat),
-               xlim = (0, 7000),
-               ylim = (0, 10, ),
-               title = 'Удельный FCF на тонну',
+               xlim=(0, 7000),
+               ylim=(0, 10, ),
+               title='Удельный FCF на тонну',
                )
-
 
 
     def __pie_plot(self, ax,):
