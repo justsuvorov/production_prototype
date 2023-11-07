@@ -94,8 +94,6 @@ class DataModel:
 
         self.__last_company_value = [0]
         self.__last_company = ['All']
-
-
         self.__last_target = 0.0
 
     def pie_plot_coordinates(self):
@@ -156,7 +154,10 @@ class DataModel:
             x[name] = x[name]#*30.43/1000
          #   y[name] = y[name]/x[name]
         #    y2[name] = np.cumsum(y[name])/(np.cumsum(x[name])+0.001)
-
+        new_values = self._find_solution(target=self.__last_target,
+                                         company_name=self.__last_company,
+                                         company_value=self.__last_company_value)
+        self.__update_values_for_view(new_values)
         #    y[name] = y[name]/(x[name]+0.01)
         """
         self.vostok_value = DataValue('0.0')

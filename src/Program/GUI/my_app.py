@@ -499,11 +499,9 @@ class MyApplication(Component):
         self.__enableOnChangeCalback = True
 
 
-
-    def __plot(self, ax):
-
+    def __plot_draw(self, ax):
+        self.set_state()
         x, y, x2, y2 = self.__model.plot_coordinates()
-
         colors = [
             # matplotlib named colors
             'cornflowerblue', 'tomato', 'orchid', 'gold',
@@ -511,23 +509,25 @@ class MyApplication(Component):
             "#77BFE2", 'green', 'blue']
         i = 0
         labels = []
-        for key in x:
 
+        for key in x:
             ax.plot(x[key], y[key], 5, color=colors[i], label=key)
             labels.append(key)
             i += 1
-         #   ax.legend()
+        #   ax.legend()
 
         for key in x:
             ax.plot(x2[key][-1], y2[key], color='#31363b', marker="o", markersize=8)
         ax.grid(True)
-        ax.set(xlabel='Среднесуточная добыча, т/сут.', ylabel = 'FCF/Q, тыс.руб/т.',
-             #  xlim=(10, 1.1 * self.__model.company_value.toFloat),
+        ax.set(xlabel='Среднесуточная добыча, т/сут.', ylabel='FCF/Q, тыс.руб/т.',
+               #  xlim=(10, 1.1 * self.__model.company_value.toFloat),
                xlim=(0, 7000),
-               ylim=(0, 10, ),
+               ylim=(0, 10,),
                title='Удельный FCF на тонну',
                )
+    def __plot(self, ax):
 
+        self.__plot_draw(ax)
 
     def __pie_plot(self, ax,):
 
@@ -571,7 +571,7 @@ class MyApplication(Component):
     def render(self):
 
         return Window(title='Просмотрщик сценариев', )(
-                View(layout="column", style={'background-color': '#31363b', "margin": 10,
+                View(layout="column", style={'background-color': '#002033', "margin": 10,
                                              "font-weight": 2, "font-size": 15},)  # """ style={"margin": 10, "font-weight": 1},"""
                     (
                     DefaultDropdown(value=self.__model.target,
@@ -580,14 +580,14 @@ class MyApplication(Component):
 
 
                     ScrollView(layout="column",style = {'height': 120})
-                        (View(layout="row", style={'background-color': '#31363b', 'color': 'white' })(
+                        (View(layout="row", style={'background-color': '#002033', 'color': 'white' })(
                         add_divider(Label('ДО', style=default_label(i=2)),
                                     Label('Прогноз добычи, т/сут.', style=default_label(i=2)),
                                     Label('Сокращение добычи, т/сут.', style=default_label(i=2)),
                                     Label('Итоговая добыча, т/сут.', style=default_label(i=2)), ),
                                             ),
 
-                   *[add_divider(Label(name, style={'background-color': '#31363b', 'color': 'white' } ),
+                   *[add_divider(Label(name, style={'background-color': '#002033', 'color': 'white' } ),
                                   Label(constraint, style=default_label(i=2)),
                                   Label(value, style=default_label(i=2)),
                                   Label(result.round(), style=default_label(i=2)),
@@ -598,27 +598,27 @@ class MyApplication(Component):
 
                     ),
 
-                    View(layout='column', style={"margin": 5, "font-weight": 1})(
-                        View(layout="row")(Label('Итог', style=default_label(i=2)),
+                    View(layout='column', style={"margin": 1, "font-weight": 1})(
+                        View(layout="row",  style={'height': 30})(Label('Итог', style=default_label(i=2)),
                                            Label(self.__model.forecast_sum.toStr,
                                                  style=default_label(i=5)),
                                            Label(self.__model.crude_sum.toStr, style=default_label(i=5)),
                                            Label(self.__model.result_crude_sum.toStr, style=default_label(i=5)),
                                          ),
 
-                        View(layout="row", style={})(add_divider(Label('Квота МЭ', style=default_label(i=2)),
+                        View(layout="row",  style={'height': 30})(Label('Квота МЭ', style=default_label(i=2)),
                                                                       Label(self.__model.quota.toStr,
                                                                             style=default_label(i=5)),
                                                                       Label('',style=default_label(i=2) ),
                                                                       Label('', style=default_label(i=2)),
-                                                                      )
+
                                                      ),
 
 
-                        View(layout="row", )(
+                        View(layout="row",  style={'height': 30} )(
                             Label('ДО', style=default_label(i=1), ),
-                            Label('Сокращение добычи', style={"width": 1.5 * 200, 'background-color': '#31363b', 'color': 'white' }, ),
-                            Button('Сбросить настройки', on_click=self.__on_Reset_click_button, style={'background-color': '#448aff', 'color': 'white'} ),
+                            Label('Сокращение добычи', style={"width": 1.5 * 200, 'background-color': '#002033', 'color': 'white' }, ),
+                            Button('Сбросить настройки', on_click=self.__on_Reset_click_button, style={'background-color': '#0091ff', 'color': 'white', 'height': 20} ),
 
                             Label('т/сут.', style=default_label(i=3)),
                             Label('Потери FCF, млн.руб.', style=default_label(i=3)),
@@ -635,9 +635,9 @@ class MyApplication(Component):
                                       ),
 
 
-                        Label("", style={"width": 200, "align": 'center'}, ),
+                #        Label("", style={"width": 200, "align": 'center'}, ),
 
-                        ScrollView(layout="column", style={'background-color': '#31363b', 'color': 'white' , 'height': 170})(
+                        ScrollView(layout="column", style={'background-color': '#002033', 'color': 'white' , 'height': 170})(
                         DefaultSlider(value=self.__model.vostok_value,
                                       fcf_value=self.__model.vostok_fcf,
                                       label=self.__model.company_names[0],
@@ -758,16 +758,16 @@ class MyApplication(Component):
                         ),
 
 
-                        View(layout="row")(
-                    Label('', ),
-                    Label('Сумма', style={"width": 450, "align": "right", 'background-color': '#31363b', 'color': 'white' , "margin": 5 }, ),
-                    Label(round(self.__model.crude_sum.toFloat), style=default_label(i=3)),
-                    Label(self.__model.fcf_sum.toStr, style=default_label(i=3), )
-                ),
-                        View(layout="row", style={'background-color': 'white', 'border': '3px solid #448aff'})(View(layout='column',style={'width': 450})(
-                            plotting.Figure(lambda ax: self.__pie_plot(ax) if self.__enableOnChangeCalback else None, ),),View(layout='column')(
-                            plotting.Figure(lambda ax: self.__plot(ax) if self.__enableOnChangeCalback else None)),
-
+                        View(layout="row",  style={'height': 30})(
+                            Label('', ),
+                            Label('Сумма', style={"width": 450, "align": "right", 'background-color': '#002033', 'color': 'white' , }, ),
+                            Label(round(self.__model.crude_sum.toFloat), style=default_label(i=3)),
+                            Label(self.__model.fcf_sum.toStr, style=default_label(i=3), )
+                        ),
+                        View(layout="row", style={'background-color': 'white', 'border': '5px solid #448aff'})(View(layout='column',style={'width': 450})(
+                            plotting.Figure(lambda ax: self.__pie_plot(ax) if self.__enableOnChangeCalback else None ),),
+                        View(layout='column')(
+                            plotting.Figure(lambda ax: self.__plot(ax) if self.__enableOnChangeCalback else None )),
                         ),
 
 
@@ -779,17 +779,17 @@ class MyApplication(Component):
                      #     #  plotting.Figure(lambda ax: self.plot(ax)),  # ),
                    #     ),
 
-                        View(layout="row")(
+                        View(layout="row", style={'height': 30})(
                        #     Form(self.state, ),
                             Button("Выгрузить сводную таблицу в Excel",
-                                   style={"width": 200 * 2, 'background-color': '#448aff', 'color': 'white'},
+                                   style={"width": 200 * 2, 'background-color': '#0091ff', 'color': 'white', "height": 20},
                                    on_click=self.__onSaveWholeTableButtonClick),
                             CheckBox(text='Учет доли СП', checked=self.__model.joint_venture,
                                      on_change=self.__on_checkbox_changed,
-                                     style={"width": 200 / 1.5, "align": "center", "height": 30,
-                                            'background-color': '#31363b', 'color': 'white'}),
+                                     style={"width": 200 / 1.5, "align": "center", "height": 20,
+                                            'background-color': '#002033', 'color': 'white'}),
 
-                            Button("Выгрузить объекты в Excel", style={"width": 200 * 2, 'background-color': '#448aff','color': 'white' },
+                            Button("Выгрузить объекты в Excel", style={"width": 200 * 2, 'background-color': '#0091ff','color': 'white',"height": 20 },
                                    on_click=self.__onSaveButtonClick),),
 
                      #   View(layout="row")(

@@ -54,17 +54,18 @@ def default_label(i):
 """
 
     if i == 1:  #
-        return {"width": label_width, 'background-color': '#31363b', 'color': 'white'}
+        return {"width": label_width, 'background-color': '#002033', 'color': 'white'}
     if i == 2:  # верхняя таблица
-        return {"align": "center", 'height': 30, 'background-color': '#31363b', 'color': 'white'}
+        return {"align": "center", 'height': 30, 'background-color': '#002033', 'color': 'white'}
     if i == 3:
-        return {"width": label_width / 2, "margin": 5, "align": "center", 'background-color': '#31363b', 'color': 'white'}
+        return {"width": label_width / 2, "margin": 5, "align": "center", 'background-color': '#002033', 'color': 'white'}
     if i == 4:
-        return {"width": 200, "margin": 5, "align": "right", 'background-color': '#31363b', 'color': 'white'}
+        return {"width": 200, "margin": 5, "align": "right", 'background-color': '#002033', 'color': 'white'}
     if i == 5:
-        return {"align": "center", 'height': 30, 'font-weight': 10, 'background-color': '#31363b', 'color': 'white'}
+        return {"align": "center", 'height': 30, 'font-weight': 10, 'background-color': '#002033', 'color': 'white'}
     if i == 6:
-        return {"width": label_width / 2, "margin": 5, "align": "center", "border": "0px", 'background-color': '#31363b', 'color': 'white'}
+        return {"width": label_width / 2, "margin": 5, "align": "center", "border": "0px", 'background-color': '#002033', 'color': 'white'}
+
 
 class DefaultDropdown(Component):
     def __init__(self,
@@ -106,8 +107,8 @@ class DefaultSlider(Component):
                  onChanged: Callable[[str or float], None],
                  min_value: DataValue,
                  max_value: DataValue,
-
                  ):
+
         self.__label = label
         self.__value = value
         self.__fcf_value = fcf_value
@@ -117,9 +118,8 @@ class DefaultSlider(Component):
         super().__init__()
         self.__onChanged = onChanged
 
-
     def render(self):
-        return View(layout="row", style={'background-color': '#31363b', 'color': 'white' })(
+        return View(layout="row", style={'background-color': '#002033', 'color': 'white', 'height': 30 })(
             Label(self.__label, style=default_label(i=1), ),
             Slider(value=self.__value.toFloat,
                    min_value=self.__min_value.toFloat,
@@ -133,8 +133,8 @@ class DefaultSlider(Component):
 
             TextInput(text=self.__value.toStr,
                       #        on_click=lambda value1 :self.control(copmany=name, value=value),
-                 on_change=self.__onValueChanged,
-                 on_edit_finish=self.__onInputComplete,
+                      on_change=self.__onValueChanged,
+                      on_edit_finish=self.__onInputComplete,
                       style=default_label(i=6)),
             #  TextInput(round(float(value), 1), on_change=lambda value: self.set_do_value(value=float(value), copmany=name)),
             Label(self.__fcf_value.toStr,

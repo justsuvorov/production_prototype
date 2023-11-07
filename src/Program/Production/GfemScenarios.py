@@ -377,5 +377,5 @@ class Constraints:
         return self.dataframe[self.months_index[index]].iloc[22]*1000
 
     def extract_list(self, index: int):
-        return self.dataframe[self.months_index[index]]*1000
+        return self.dataframe[self.months_index[index]].round(3)*1000
 
