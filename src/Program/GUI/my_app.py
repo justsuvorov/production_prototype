@@ -361,6 +361,7 @@ class MyApplication(Component):
                  ):
         super().__init__()
         self.__enableOnChangeCalback = True
+        self.__refresh_plots = True
         self.__model = data_model
         self.state = StateManager({
             "File": pathlib.Path(""),
@@ -500,7 +501,10 @@ class MyApplication(Component):
 
 
     def __plot_draw(self, ax):
-        self.set_state()
+        self.__refresh_plots = not self.__refresh_plots
+        if self.__refresh_plots:
+            self.set_state()
+
         x, y, x2, y2 = self.__model.plot_coordinates()
         colors = [
             # matplotlib named colors
@@ -511,13 +515,14 @@ class MyApplication(Component):
         labels = []
 
         for key in x:
-            ax.plot(x[key], y[key], 5, color=colors[i], label=key)
-            labels.append(key)
+            line = ax.plot(x[key], y[key], 5, color=colors[i])
+            line[-1].set_label(key)
             i += 1
-        #   ax.legend()
+
+        ax.legend()
 
         for key in x:
-            ax.plot(x2[key][-1], y2[key], color='#31363b', marker="o", markersize=8)
+            ax.plot(x2[key][-1], y2[key], color='#31363b', marker="o", markersize=8, label=None)
         ax.grid(True)
         ax.set(xlabel='Среднесуточная добыча, т/сут.', ylabel='FCF/Q, тыс.руб/т.',
                #  xlim=(10, 1.1 * self.__model.company_value.toFloat),
