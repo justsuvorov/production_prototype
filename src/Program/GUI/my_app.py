@@ -508,18 +508,18 @@ class MyApplication(Component):
         x, y, x2, y2 = self.__model.plot_coordinates()
         colors = [
             # matplotlib named colors
-            'cornflowerblue', 'tomato', 'orchid', 'gold',
+            'cornflowerblue', 'tomato', 'grey', 'gold',
             # any color using the color codes
-            "#77BFE2", 'green', 'blue']
+            "orchid", 'green', 'blue']
         i = 0
         labels = []
 
         for key in x:
-            line = ax.plot(x[key], y[key], 5, color=colors[i])
+            line = ax.plot(x[key], y[key], 5, color=colors[i], linewidth=2)
             line[-1].set_label(key)
             i += 1
 
-        ax.legend()
+        ax.legend(markerscale=1.1)
 
         for key in x:
             ax.plot(x2[key][-1], y2[key], color='#31363b', marker="o", markersize=8, label=None)
