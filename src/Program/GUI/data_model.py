@@ -139,7 +139,7 @@ class DataModel:
                 result = 0
             else:
                 try:
-                    result = company_dataframe[key2].iloc[array_index]
+                    result = company_dataframe[key2].iloc[array_index-1]
                 except IndexError:
                     result = company_dataframe[key2].iloc[-1]
 

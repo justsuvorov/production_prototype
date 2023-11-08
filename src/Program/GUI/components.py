@@ -54,17 +54,17 @@ def default_label(i):
 """
 
     if i == 1:  #
-        return {"width": label_width, 'background-color': '#002033', 'color': 'white'}
+        return {"width": label_width, 'background-color': '#002033', 'color': 'white', "font-size": 13}
     if i == 2:  # верхняя таблица
-        return {"align": "center", 'height': 30, 'background-color': '#002033', 'color': 'white'}
+        return {"align": "center", 'height': 30, 'background-color': '#002033', 'color': 'white', "font-size": 13}
     if i == 3:
-        return {"width": label_width / 2, "margin": 5, "align": "center", 'background-color': '#002033', 'color': 'white'}
+        return {"width": label_width / 2, "margin": 5, "align": "center", 'background-color': '#002033', 'color': 'white', "font-size": 13}
     if i == 4:
-        return {"width": 200, "margin": 5, "align": "right", 'background-color': '#002033', 'color': 'white'}
+        return {"width": 200, "margin": 5, "align": "right", 'background-color': '#002033', 'color': 'white', "font-size": 13}
     if i == 5:
-        return {"align": "center", 'height': 30, 'font-weight': 10, 'background-color': '#002033', 'color': 'white'}
+        return {"align": "center", 'height': 30, 'font-weight': 10, 'background-color': '#002033', 'color': 'white', "font-size": 13}
     if i == 6:
-        return {"width": label_width / 2, "margin": 5, "align": "center", "border": "0px", 'background-color': '#002033', 'color': 'white'}
+        return {"width": label_width / 2, "margin": 5, "align": "center", "border": "0px", 'background-color': '#002033', 'color': 'white', "font-size": 13}
 
 
 class DefaultDropdown(Component):
@@ -91,10 +91,10 @@ class DefaultDropdown(Component):
             Dropdown(selection='Месяц',
                      options=self.__options,
                      on_select=self.__onSelect,
-                     style={'background-color': '#232629', 'color': 'white'}
+                     style={'background-color': '#232629', 'color': 'white', "font-size": 13}
                      ),
             Label('', style={"width": 30}, ),
-            Label('Необходимо срезать добычи, т/сут.', style=default_label(i=1), ),
+            Label('Необходимо срезать добычи,  т/сут.', style=default_label(i=1), ),
             Label(self.__label_value.toStr, style=default_label(i=1), )
         )
 

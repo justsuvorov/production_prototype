@@ -584,7 +584,7 @@ class MyApplication(Component):
                                      onSelect=self.__on_dropdown_select if self.__enableOnChangeCalback else None),
 
 
-                    ScrollView(layout="column",style = {'height': 120})
+                    ScrollView(layout="column",style = {'height': 170})
                         (View(layout="row", style={'background-color': '#002033', 'color': 'white' })(
                         add_divider(Label('ДО', style=default_label(i=2)),
                                     Label('Прогноз добычи, т/сут.', style=default_label(i=2)),
@@ -592,7 +592,7 @@ class MyApplication(Component):
                                     Label('Итоговая добыча, т/сут.', style=default_label(i=2)), ),
                                             ),
 
-                   *[add_divider(Label(name, style={'background-color': '#002033', 'color': 'white' } ),
+                   *[add_divider(Label(name, style={'background-color': '#002033', 'color': 'white', "font-size": 13 } ),
                                   Label(constraint, style=default_label(i=2)),
                                   Label(value, style=default_label(i=2)),
                                   Label(result.round(), style=default_label(i=2)),
@@ -620,10 +620,10 @@ class MyApplication(Component):
                                                      ),
 
 
-                        View(layout="row",  style={'height': 30} )(
+                        View(layout="row",  style={'height': 40} )(
                             Label('ДО', style=default_label(i=1), ),
-                            Label('Сокращение добычи', style={"width": 1.5 * 200, 'background-color': '#002033', 'color': 'white' }, ),
-                            Button('Сбросить настройки', on_click=self.__on_Reset_click_button, style={'background-color': '#0091ff', 'color': 'white', 'height': 20} ),
+                            Label('Сокращение добычи', style={"width": 1.5 * 200, 'background-color': '#002033', 'color': 'white', "font-size": 13 }, ),
+                            Button('Сбросить настройки', on_click=self.__on_Reset_click_button, style={'background-color': '#0091ff', 'color': 'white', 'height': 20, "font-size": 13} ),
 
                             Label('т/сут.', style=default_label(i=3)),
                             Label('Потери FCF, млн.руб.', style=default_label(i=3)),
@@ -762,39 +762,30 @@ class MyApplication(Component):
                                       ),
                         ),
 
-
                         View(layout="row",  style={'height': 30})(
                             Label('', ),
-                            Label('Сумма', style={"width": 450, "align": "right", 'background-color': '#002033', 'color': 'white' , }, ),
+                            Label('Сумма', style={"width": 450, "align": "right", 'background-color': '#002033', 'color': 'white' , "font-size": 13, 'height': 30 }, ),
                             Label(round(self.__model.crude_sum.toFloat), style=default_label(i=3)),
                             Label(self.__model.fcf_sum.toStr, style=default_label(i=3), )
                         ),
-                        View(layout="row", style={'background-color': 'white', 'border': '5px solid #448aff'})(View(layout='column',style={'width': 450})(
+                        View(layout="row", style={'background-color': 'white', 'border': '5px solid #448aff', })(View(layout='column',style={'width': 650})(
                             plotting.Figure(lambda ax: self.__pie_plot(ax) if self.__enableOnChangeCalback else None ),),
                         View(layout='column')(
                             plotting.Figure(lambda ax: self.__plot(ax) if self.__enableOnChangeCalback else None )),
                         ),
 
 
-
-                  #      View(layout="row", )(
-                #            CheckBox(text='Учет доли СП', checked=self.__model.joint_venture,
-                  #                   on_change=self.__on_checkbox_changed,
-                  #                   style={"width": 200 / 1.5, "align": "left", "height": 30,'background-color': '#31363b', 'color': 'white'  }),
-                     #     #  plotting.Figure(lambda ax: self.plot(ax)),  # ),
-                   #     ),
-
                         View(layout="row", style={'height': 30})(
                        #     Form(self.state, ),
                             Button("Выгрузить сводную таблицу в Excel",
-                                   style={"width": 200 * 2, 'background-color': '#0091ff', 'color': 'white', "height": 20},
+                                   style={"width": 200 * 2, 'background-color': '#0091ff', 'color': 'white', "height": 20 , "font-size": 13},
                                    on_click=self.__onSaveWholeTableButtonClick),
                             CheckBox(text='Учет доли СП', checked=self.__model.joint_venture,
                                      on_change=self.__on_checkbox_changed,
                                      style={"width": 200 / 1.5, "align": "center", "height": 20,
-                                            'background-color': '#002033', 'color': 'white'}),
+                                            'background-color': '#002033', 'color': 'white',  "font-size": 13}),
 
-                            Button("Выгрузить объекты в Excel", style={"width": 200 * 2, 'background-color': '#0091ff','color': 'white',"height": 20 },
+                            Button("Выгрузить объекты в Excel", style={"width": 200 * 2, 'background-color': '#0091ff','color': 'white',"height": 20,  "font-size": 13 },
                                    on_click=self.__onSaveButtonClick),),
 
                      #   View(layout="row")(
