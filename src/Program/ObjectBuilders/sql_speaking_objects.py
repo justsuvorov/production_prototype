@@ -457,3 +457,32 @@ class SQLMorDBSpeakingObject(SQLSpeakingObject):
         # AND end_month_status = РАБ.
 
         return df
+
+class BalancerResultsSpeakingObject(SQLSpeakingObject):
+    def __init__(self,
+                 path: str,
+                 ):
+        self.path = path
+        self.db_name = self.path + '\Balancer_results.db'
+        super().__init__(db_name=self.db_name)
+        self.__log = Logger(info='BalancerResultsSQLSpeakingObject')
+
+    def overall_crude_production(self, month: str, company_list: list):
+
+        crude_results = []
+        query = '''SELECT SELECT SUM(oil_production_t_ton) FROM (?) WHERE suborganization = (?) AND calc_type = 'opt_opec' '''
+        for company in company_list:
+            crude_results.append(self.cursor.execute(query, (month, company, )))
+        return crude_results
+
+    def overall_fcf(self, month: str, company_list: list):
+
+        fcf = []
+        query = '''SELECT SELECT SUM(dcf_t_rub) FROM (?) WHERE suborganization = (?) AND calc_type = 'opt_opec' '''
+        for company in company_list:
+            fcf.append(self.cursor.execute(query, (month, company, )))
+        return fcf
+
+    def quota(self, month: str, add_crude: str):
+        query = '''SELECT SUM(dcf_t_rub) FROM (?) WHERE suborganization = (?) AND calc_type = 'opt_opec'''
+        return self.cursor.execute(query, (month, add_crude, ))

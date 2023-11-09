@@ -14,6 +14,13 @@ from edifice.components.forms import FormDialog, Form
 from edifice.components import plotting
 from edifice import Timer
 
+
+class DataModelPortu:
+    def __init__(self, path):
+        self.path = path
+        self.__db_name = self.path + '/balancer_results.db'
+
+
 class DataModel:
     def __init__(self,
                  scenarios: RegressionScenarios,
@@ -154,10 +161,7 @@ class DataModel:
             x[name] = x[name]#*30.43/1000
          #   y[name] = y[name]/x[name]
         #    y2[name] = np.cumsum(y[name])/(np.cumsum(x[name])+0.001)
-        new_values = self._find_solution(target=self.__last_target,
-                                         company_name=self.__last_company,
-                                         company_value=self.__last_company_value)
-        self.__update_values_for_view(new_values)
+
         #    y[name] = y[name]/(x[name]+0.01)
         """
         self.vostok_value = DataValue('0.0')
@@ -241,9 +245,9 @@ class DataModel:
         forecast_names = [3,0,4,7,12,14,19]
         for i in range(len(forecast_names)):
             if forecast_list[forecast_names[i]] == 0:
-                value = forecast_list[forecast_names[i]] + 1
+                value = round(forecast_list[forecast_names[i]],1) + 1
             else:
-                value = forecast_list[forecast_names[i]]
+                value = round(forecast_list[forecast_names[i]],1)
             self.__max_value_full[names[i]].update(value)
             self.__max_value_jv[names[i]].update(value)
 

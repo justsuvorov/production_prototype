@@ -11,7 +11,7 @@ from pathlib import Path
 from Program.AROMonitoring.aro_monitoring import AroMonitoring
 from Program.Production.GfemScenarios import *
 from Program.ObjectBuilders.Parser import *
-from Program.GUI.my_app import MonitoringApp
+from Program.GUI.my_app import MonitoringApp, BalancerViewerApplication
 from Program.GUI.data_model import DataModel, DataModelFull, DataModelMonitoring
 
 #@click.command()
@@ -33,9 +33,16 @@ def main(path: str):
 
  #   data_model.full_initializtion()
    # app = Application(scenarios=scenarios, path=path)
-    app = MyApplication(data_model=data_model, result_path=path)
+  #  app = MyApplication(data_model=data_model, result_path=path)
+    app = BalancerViewerApplication(data_model=data_model, result_path=path)
+
  #   app.initialization()
     App(app).start()
+
+
+    #Просмотрщик для балансировки
+
+
     """
     
 

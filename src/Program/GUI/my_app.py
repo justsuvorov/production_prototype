@@ -354,6 +354,357 @@ class MyApplicationSixMonths(Component):
         )
 
 
+class BalancerViewerApplication(Component):
+    def __init__(self,
+                 data_model: DataModel,
+                 result_path = None
+                 ):
+        super().__init__()
+        self.__enableOnChangeCalback = True
+        self.__refresh_plots = True
+        self.__model = data_model
+        self.state = StateManager({
+            "File": pathlib.Path(""),
+        })
+        self.result_path = result_path +'\Results.xlsx'
+        self.names = []
+
+    def __on_dropdown_select(self, value):
+        self.__model.choose_month(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_gpn_changed(self, value):
+  #      self.__model.on_gpn_change(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_vostok_changed(self, value):
+   #     self.__model.set_vostok_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_megion_changed(self, value):
+    #    self.__model.set_megion_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_messoyaha_changed(self, value):
+    #    self.__model.set_messoyaha_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_nng_changed(self, value):
+   #     self.__model.set_nng_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_orenburg_changed(self, value):
+ #       self.__model.set_orenburg_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_hantos_changed(self, value):
+   #     self.__model.set_hantos_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_yamal_changed(self, value):
+   #     self.__model.set_yamal_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_polar_changed(self, value):
+  #      self.__model.set_polar_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_shelf_changed(self, value):
+   #     self.__model.set_shelf_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_meretoyaha_changed(self, value):
+    #    self.__model.set_meretoyaha_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_spd_changed(self, value):
+   #     self.__model.set_spd_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_palyan_changed(self, value):
+   #     self.__model.set_palyan_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_angara_changed(self, value):
+   #     self.__model.set_angara_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+    def __on_arctic_changed(self, value):
+  #      self.__model.set_arctic_value(value)
+        self.__enableOnChangeCalback = False
+        self.set_state()
+        self.__enableOnChangeCalback = True
+
+
+    def __plot_draw(self, ax):
+        self.__refresh_plots = not self.__refresh_plots
+        if self.__refresh_plots:
+            self.set_state()
+
+        x, y, x2, y2 = self.__model.plot_coordinates()
+        colors = [
+            # matplotlib named colors
+            'cornflowerblue', 'tomato', 'grey', 'gold',
+            # any color using the color codes
+            "orchid", 'green', 'blue']
+        i = 0
+        labels = []
+
+        for key in x:
+            line = ax.plot(x[key], y[key], 5, color=colors[i], linewidth=2)
+            line[-1].set_label(key)
+            i += 1
+
+        ax.legend(markerscale=1.1)
+
+        for key in x:
+            ax.plot(x2[key][-1], y2[key], color='#31363b', marker="o", markersize=8, label=None)
+        ax.grid(True)
+        ax.set(xlabel='Среднесуточная добыча, т/сут.', ylabel='FCF/Q, тыс.руб/т.',
+               #  xlim=(10, 1.1 * self.__model.company_value.toFloat),
+               xlim=(0, 7000),
+               ylim=(0, 10,),
+               title='Удельный FCF на тонну',
+               )
+    def __plot(self, ax):
+
+        self.__plot_draw(ax)
+
+    def __pie_plot(self, ax,):
+
+        x2, values = self.__model.pie_plot_coordinates()
+        x = x2.copy()
+        values2 = values.copy()
+        labels = ['Восток', 'Мегион', 'Мессояха', 'ННГ', 'Оренбург', 'Хантос', 'Ямал']
+        labels2 = ['Восток', 'Мегион', 'Мессояха', 'ННГ', 'Оренбург', 'Хантос', 'Ямал']
+
+        for i in range(len(x)):
+            if (x[i]-0.001) < 0:
+                x2.remove(x[i])
+                labels2.remove(labels[i])
+                values2.remove(values[i])
+        i = 0
+        labels_for_view = []
+
+        for name in labels2:
+            a = []
+            a.append(name)
+            a.append('('+str(round(values2[i], 1))+')')
+            labels_for_view.append(' '.join(a))
+            i += 1
+        ax.set(title='Распределение квоты по ДО, т/сут.',
+
+               )
+
+      #  ax.set_facecolor('#31363b')
+        ax.pie(x2, labels=labels_for_view, wedgeprops=dict(width=0.5), textprops={'fontsize': 8},
+               colors=[
+                   # matplotlib named colors
+                    'cornflowerblue', 'tomato', 'gold', 'orchid', 'green',
+                   # any color using the color codes
+                   "#77BFE2", 'blue']
+               )
+
+     #   self.set_state()
+
+
+
+    def render(self):
+
+        return Window(title='Просмотрщик сценариев', )(
+                View(layout="column", style={'background-color': '#002033', "margin": 10,
+                                             "font-weight": 2, "font-size": 15},)  # """ style={"margin": 10, "font-weight": 1},"""
+           #         (View(layout="column")(
+           #         DefaultDropdown(value=self.__model.target,
+            #                         options=self.__model.months,
+            #                         onSelect=self.__on_dropdown_select if self.__enableOnChangeCalback else None),
+
+
+           #         ScrollView(layout="column",style = {'height': 250})
+           #             (View(layout="row", style={'background-color': '#002033', 'color': 'white' })(
+            #            add_divider(Label('ДО', style=default_label(i=2)),
+            #                        Label('Прогноз добычи, т/сут.', style=default_label(i=2)),
+            #                        Label('Сокращение добычи, т/сут.', style=default_label(i=2)),
+            #                        Label('Итоговая добыча, т/сут.', style=default_label(i=2)), ),
+            #                                ),
+
+            #       *[add_divider(Label(name, style={'background-color': '#002033', 'color': 'white', "font-size": 13 } ),
+           #                       Label(constraint, style=default_label(i=2)),
+           #                       Label(value, style=default_label(i=2)),
+           #                       Label(result.round(), style=default_label(i=2)),
+           #                       ) for name, constraint, value, result in zip(self.__model.full_company_list,
+           #                                                                    self.__model.forecast_list,
+            #                                                                   self.__model.crude_list,
+           #                                                                    self.__model.result_crude_list)],
+
+          #          ),
+
+              #      View(layout='column', style={"margin": 1, "font-weight": 1})(
+               #         View(layout="row",  style={'height': 30})(Label('Итог', style=default_label(i=2)),
+              #                             Label(self.__model.forecast_sum.toStr,
+              #                                   style=default_label(i=5)),
+              #                             Label(self.__model.crude_sum.toStr, style=default_label(i=5)),
+              #                             Label(self.__model.result_crude_sum.toStr, style=default_label(i=5)),
+              #                           ),
+
+              #          View(layout="row",  style={'height': 30})(Label('Квота МЭ', style=default_label(i=2)),
+              #                                                        Label(self.__model.quota.toStr,
+              #                                                              style=default_label(i=5)),
+              #                                                        Label('',style=default_label(i=2) ),
+               #                                                       Label('', style=default_label(i=2)),
+
+             #                                        ),
+              #      ),
+
+
+                    (View(layout="row",  style={'height': 40} )(
+                            Label('ДО', style=default_label(i=1), ),
+                            Label('Сокращение добычи', style={"width": 1.5 * 200, 'background-color': '#002033', 'color': 'white', "font-size": 13 }, ),
+                       #     Button('Сбросить настройки', on_click=self.__on_Reset_click_button, style={'background-color': '#0091ff', 'color': 'white', 'height': 20, "font-size": 13} ),
+
+                            Label('т/сут.', style=default_label(i=3)),
+                            Label('Потери FCF, млн.руб.', style=default_label(i=3)),
+
+                                            ),
+                    Label('', style={'height':20}),
+
+                        DefaultSlider(value=DataValue('176600'),
+                                      fcf_value=DataValue('0'),
+                                      label='ГПН',
+                                      min_value=DataValue('0'),
+                                      max_value=DataValue('200000'),
+                                      onChanged=self.__on_gpn_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                    Label('', style={'height': 20}),
+
+
+                #        Label("", style={"width": 200, "align": 'center'}, ),
+
+                        View(layout="column", style={'background-color': '#002033', 'color': 'white' , })(
+                        DefaultSlider(value=self.__model.vostok_value,
+                                      fcf_value=self.__model.vostok_fcf,
+                                      label=self.__model.company_names[0],
+                                      min_value=self.__model.min_value['Восток'],
+                                      max_value=self.__model.max_value['Восток'],
+                                      onChanged=lambda value: self.set_state(),
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.megion_value,
+                                      fcf_value=self.__model.megion_fcf,
+                                      label=self.__model.company_names[1],
+                                      min_value=self.__model.min_value['Мегионнефтегаз'],
+                                      max_value=self.__model.max_value['Мегионнефтегаз'],
+                                      onChanged=self.__on_megion_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.messoyaha_value,
+                                      fcf_value=self.__model.messoyaha_fcf,
+                                      label=self.__model.company_names[2],
+                                      min_value=self.__model.min_value['Мессояханефтегаз'],
+                                      max_value=self.__model.max_value['Мессояханефтегаз'],
+                                      onChanged=self.__on_messoyaha_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.nng_value,
+                                      fcf_value=self.__model.nng_fcf,
+                                      label=self.__model.company_names[3],
+                                      min_value=self.__model.min_value['ННГ'],
+                                      max_value=self.__model.max_value['ННГ'],
+                                      onChanged=self.__on_nng_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.orenburg_value,
+                                      fcf_value=self.__model.orenburg_fcf,
+                                      label=self.__model.company_names[4],
+                                      min_value=self.__model.min_value['Оренбург'],
+                                      max_value=self.__model.max_value['Оренбург'],
+                                      onChanged=self.__on_orenburg_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.hantos_value,
+                                      fcf_value=self.__model.hantos_fcf,
+                                      label=self.__model.company_names[5],
+                                      min_value=self.__model.min_value['Хантос'],
+                                      max_value=self.__model.max_value['Хантос'],
+                                      onChanged=self.__on_hantos_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.yamal_value,
+                                      fcf_value=self.__model.yamal_fcf,
+                                      label=self.__model.company_names[6],
+                                      min_value=self.__model.min_value['Ямал'],
+                                      max_value=self.__model.max_value['Ямал'],
+                                      onChanged=self.__on_yamal_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+
+                        ),
+
+                        View(layout="row",  style={'height': 30})(
+                            Label('', ),
+                            Label('Сумма', style={"width": 450, "align": "right", 'background-color': '#002033', 'color': 'white' , "font-size": 13, 'height': 30 }, ),
+                            Label(round(self.__model.crude_sum.toFloat), style=default_label(i=3)),
+                            Label(self.__model.fcf_sum.toStr, style=default_label(i=3), )
+                        ),
+                        View(layout="row", style={'background-color': 'white', 'border': '5px solid #448aff', })(View(layout='column', style={'height': 500},)(
+                            plotting.Figure(lambda ax: self.__pie_plot(ax) if self.__enableOnChangeCalback else None ),),
+                        View(layout='column')(
+                            plotting.Figure(lambda ax: self.__plot(ax) if self.__enableOnChangeCalback else None )),
+                        ),
+
+
+
+
+                     #   View(layout="row")(
+                         #   Form(self.state, ),
+                       #     Button("Выгрузить сводную таблицу в Excel", style={"width": 200 * 2, 'background-color': '#448aff', 'color': 'white' },
+                       #            on_click=self.__onSaveWholeTableButtonClick), )
+                ),
+            )
+
+
+
+
+
 class MyApplication(Component):
     def __init__(self,
                  data_model: DataModel,
@@ -501,9 +852,6 @@ class MyApplication(Component):
 
 
     def __plot_draw(self, ax):
-        self.__refresh_plots = not self.__refresh_plots
-        if self.__refresh_plots:
-            self.set_state()
 
         x, y, x2, y2 = self.__model.plot_coordinates()
         colors = [
@@ -530,9 +878,17 @@ class MyApplication(Component):
                ylim=(0, 10,),
                title='Удельный FCF на тонну',
                )
-    def __plot(self, ax):
 
+    def __plot(self, ax):
+        self.__refresh_plots= not self.__refresh_plots
+        if self.__refresh_plots:
+            self.__on_angara_changed(0)
         self.__plot_draw(ax)
+
+
+
+
+
 
     def __pie_plot(self, ax,):
 
@@ -584,7 +940,7 @@ class MyApplication(Component):
                                      onSelect=self.__on_dropdown_select if self.__enableOnChangeCalback else None),
 
 
-                    ScrollView(layout="column",style = {'height': 170})
+                    ScrollView(layout="column",style = {'height': 200})
                         (View(layout="row", style={'background-color': '#002033', 'color': 'white' })(
                         add_divider(Label('ДО', style=default_label(i=2)),
                                     Label('Прогноз добычи, т/сут.', style=default_label(i=2)),
@@ -642,7 +998,7 @@ class MyApplication(Component):
 
                 #        Label("", style={"width": 200, "align": 'center'}, ),
 
-                        ScrollView(layout="column", style={'background-color': '#002033', 'color': 'white' , 'height': 170})(
+                        ScrollView(layout="column", style={'background-color': '#002033', 'color': 'white' , 'height': 200})(
                         DefaultSlider(value=self.__model.vostok_value,
                                       fcf_value=self.__model.vostok_fcf,
                                       label=self.__model.company_names[0],
@@ -768,7 +1124,7 @@ class MyApplication(Component):
                             Label(round(self.__model.crude_sum.toFloat), style=default_label(i=3)),
                             Label(self.__model.fcf_sum.toStr, style=default_label(i=3), )
                         ),
-                        View(layout="row", style={'background-color': 'white', 'border': '5px solid #448aff', })(View(layout='column',style={'width': 650})(
+                        View(layout="row", style={'background-color': 'white', 'border': '5px solid #448aff',})(View(layout='column',style={'width': 650,})(
                             plotting.Figure(lambda ax: self.__pie_plot(ax) if self.__enableOnChangeCalback else None ),),
                         View(layout='column')(
                             plotting.Figure(lambda ax: self.__plot(ax) if self.__enableOnChangeCalback else None )),
@@ -844,6 +1200,7 @@ class MonitoringApp(Component):
         self.__model.upload_data_for_dashboard()
         self.set_state()
     def render(self):
+
         return  Window(title='Программа мониторинга', )(
                 View(layout="column", style={'background-color': '#31363b', "margin": 10,
                                              "font-weight": 1, "font-size": 10},)
