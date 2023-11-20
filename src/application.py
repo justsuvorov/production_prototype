@@ -33,8 +33,8 @@ def main(path: str):
 
  #   data_model.full_initializtion()
    # app = Application(scenarios=scenarios, path=path)
-  #  app = MyApplication(data_model=data_model, result_path=path)
-    app = BalancerViewerApplication(data_model=data_model, result_path=path)
+    app = MyApplication(data_model=data_model, result_path=path)
+ #   app = BalancerViewerApplication(data_model=data_model, result_path=path)
 
  #   app.initialization()
     App(app).start()

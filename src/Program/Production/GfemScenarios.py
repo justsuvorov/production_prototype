@@ -328,6 +328,7 @@ class SolutionBalancer:
 
         return overal_data
 
+
 class CompanyDict:
     def __init__(self,
                  path

@@ -1,5 +1,5 @@
 from Program.GUI.data_value import DataValue
-
+from Program.ObjectBuilders.sql_speaking_objects import BalancerResultsSpeakingObject
 import numpy as np
 import pandas as pd
 from copy import deepcopy, copy
@@ -18,7 +18,42 @@ from edifice import Timer
 class DataModelPortu:
     def __init__(self, path):
         self.path = path
-        self.__db_name = self.path + '/balancer_results.db'
+        self.__results_base = BalancerResultsSpeakingObject(path=self.path)
+        self.company_value = DataValue('0')
+        self.company_fcf = DataValue('0')
+
+        self.vostok_value = DataValue('0.0')
+        self.megion_value = DataValue('0.0')
+        self.messoyaha_value = DataValue('0.0')
+        self.nng_value = DataValue('0.0')
+        self.orenburg_value = DataValue('0.0')
+        self.hantos_value = DataValue('0.0')
+        self.yamal_value = DataValue('0.0')
+        self.crude_sum = DataValue('0')
+
+        self.forecast_sum = DataValue('0')
+        self.result_crude_sum = DataValue('0')
+        self.quota = DataValue('0.0')
+
+        self.vostok_fcf = DataValue('0.0')
+        self.megion_fcf = DataValue('0.0')
+        self.messoyaha_fcf = DataValue('0.0')
+        self.nng_fcf = DataValue('0.0')
+        self.orenburg_fcf = DataValue('0.0')
+        self.hantos_fcf = DataValue('0.0')
+        self.yamal_fcf = DataValue('0.0')
+        self.fcf_sum = DataValue('0.0')
+
+        self.__full_company_list = ['ГПН-Восток',
+                                    'Славнефть-Мегионнефтегаз'
+                                    'ГПН-ННГ'
+                                    'ГПН-Хантос'
+                                    'ГПН-Оренбург'
+                                    'Мессояханефтегаз'
+                                    'ГПН-Ямал'
+                                    ]
+
+
 
 
 class DataModel:
@@ -133,9 +168,7 @@ class DataModel:
 
             x2[name] = (np.linspace(1, values[value]+1.1, 300))
             y2[name] = self.__data[j][name][0].predict(x2[name][:, np.newaxis])
-            x2[name] = x2[name]#*30.43/1000
-        #    y2[name] = y2[name]/x2[name]
-
+            x2[name] = x2[name]
             company_dataframe = temp_dataframe.loc[temp_dataframe['ДО'] == name]
             company_result = company_dataframe[[key]].to_numpy()
             company_data = np.copy(company_result)
@@ -156,36 +189,8 @@ class DataModel:
             y[name] = company_dataframe[key2]
 
         for name in self.company_names:
-        #    x[name] = (np.linspace(1, self.max_value[name].toFloat ,300))
-          #  y[name] = self.__data[j][name][0].predict(x[name][:, np.newaxis])
-            x[name] = x[name]#*30.43/1000
-         #   y[name] = y[name]/x[name]
-        #    y2[name] = np.cumsum(y[name])/(np.cumsum(x[name])+0.001)
 
-        #    y[name] = y[name]/(x[name]+0.01)
-        """
-        self.vostok_value = DataValue('0.0')
-        self.megion_value = DataValue('0.0')
-        self.messoyaha_value = DataValue('0.0')
-        self.nng_value = DataValue('0.0')
-        self.orenburg_value = DataValue('0.0')
-        self.hantos_value = DataValue('0.0')
-        self.yamal_value = DataValue('0.0')
-        
-        if self.__last_company[-1] =='All':
-            x = np.linspace(0, self.max_value[name].toFloat, 100)
-            y = self.__data[j][name][0].predict(x[:, np.newaxis])
-
-            x2 = np.linspace(0, self.company_value.toFloat, 100)
-            y2 = self.__data[j][name][0].predict(x2[:, np.newaxis])
-
-        else:
-            x = np.linspace(0, self.max_value[self.__last_company[-1]].toFloat, 100)
-            y = self.__data[j][self.__last_company[-1]][0].predict(x[:, np.newaxis])
-
-            x2 = np.linspace(0, self.__last_company_value[-1], 100)
-            y2 = self.__data[j][self.__last_company[-1]][0].predict(x2[:, np.newaxis])
-        """
+            x[name] = x[name]
         return x, y, x2, y2
 
     def initializtion(self):
@@ -235,6 +240,9 @@ class DataModel:
         self.result_crude_list = self.__result_crude_list()
 
         self.choose_scenario()
+
+    def __init_month_from_gfem(self, month: int):
+        pass
 
     def __load_min_max_for_other_companies(self, forecast_list):
         names = ['Заполярье', 'Шельф', 'Меретояханефтегаз',  'Пальян', 'СПД', 'Арктикгаз', 'Ангара']

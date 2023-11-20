@@ -458,6 +458,7 @@ class SQLMorDBSpeakingObject(SQLSpeakingObject):
 
         return df
 
+
 class BalancerResultsSpeakingObject(SQLSpeakingObject):
     def __init__(self,
                  path: str,
