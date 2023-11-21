@@ -8,6 +8,7 @@ from typing import Callable
 from Program.AROMonitoring.aro_monitoring import AroMonitoring
 from Program.Production.GfemScenarios import *
 from Program.Production.config_db import CompanyDictionary
+from Program.ObjectBuilders.Parser import SetOfWellsParserMonth
 
 from edifice import Label,  Slider, Dropdown, View, CheckBox,TextInput,  Component, StateManager, Window, Button, ScrollView
 from edifice.components.forms import FormDialog, Form
@@ -64,6 +65,7 @@ class DataModel:
 
         self.scenarios = scenarios
         self.path = Path(path)
+        self.__path_str = path
 
         self.company_value = DataValue('0')
         self.company_fcf = DataValue('0')
@@ -138,6 +140,9 @@ class DataModel:
         self.__last_company = ['All']
         self.__last_target = 0.0
 
+        self.__init_data = None
+        self.__init_dataframe_list = []
+
     def pie_plot_coordinates(self):
         values = self.__do_values_for_plot()
         x = []
@@ -195,6 +200,7 @@ class DataModel:
 
     def initializtion(self):
         self.__data = self.scenarios.scenarios()
+        self.__init_data = self.__data.copy()
         self.__constraints = Constraints(path=self.path)
         self.__constraints.load_constraints()
 
@@ -215,6 +221,7 @@ class DataModel:
         self.__min_value_jv['ГПН'] = DataValue(str(0))
         self.__max_value_jv['ГПН'] = DataValue(str(self.__data[1]['ГПН'][2]))
 
+
         for name in self.company_names:
             self.__min_value_full[name] = DataValue(str(0))
             self.__max_value_full[name] = DataValue(str(self.__data[0][name][2]))
@@ -226,6 +233,8 @@ class DataModel:
             self.__max_value_full[name] = DataValue(str(1))
             self.__max_value_jv[name] = DataValue(str(1))
         self.__dataframe_list = self.scenarios.dataframe
+        self.__init_dataframe_list = self.__dataframe_list.copy()
+
         self.__solution = SolutionBalancer(dataframe_list=self.__dataframe_list,
                                            company_names=self.company_names_full)
         self.target = DataValue(str(self.__constraints.extract_value(index=self.index)))
@@ -241,8 +250,27 @@ class DataModel:
 
         self.choose_scenario()
 
-    def __init_month_from_gfem(self, month: int):
-        pass
+        try:
+            self.__five_year_parser = SetOfWellsParserMonth(data_path=self.__path_str)
+            self.__five_year_parser.read_excel()
+
+            print('Формат пятилетки прочитан')
+        except:
+            print('Нет файла свода в формате пятилетки')
+
+    def __init_month_from_gfem(self, month: str):
+      #  parser = GfemDatabaseEcmParser(data_path=self.__path_str, month=month)
+        self.__five_year_parser.set_month(month=month)
+        scenarios = RegressionScenarios(sorted_data=SortedGfemData(
+          prepared_data=GfemDataFrame(
+              parser=self.__five_year_parser,
+              file_path=self.__path_str)))
+
+        self.__data = scenarios.scenarios()
+        self.__dataframe_list = scenarios.dataframe
+        self.__solution = SolutionBalancer(dataframe_list=self.__dataframe_list,
+                                           company_names=self.company_names_full)
+        print('Прогноз показателей загружен')
 
     def __load_min_max_for_other_companies(self, forecast_list):
         names = ['Заполярье', 'Шельф', 'Меретояханефтегаз',  'Пальян', 'СПД', 'Арктикгаз', 'Ангара']
@@ -312,6 +340,13 @@ class DataModel:
 
     def choose_month(self, value):
     #    self.control_option = False
+        try:
+          self.__init_month_from_gfem(month=value)
+        except:
+           print('Ошибка чтения данных для выбранного месяца, используются данные свода')
+           self.__dataframe_list = self.__init_dataframe_list
+           self.__data = self.__init_data
+
         self.index = int(np.where(self.__constraints.months == value)[0])
         val = self.__constraints.extract_value(index=int(np.where(self.__constraints.months == value)[0]))
         self.forecast_list = self.__constraints.extract_list(index=self.index)

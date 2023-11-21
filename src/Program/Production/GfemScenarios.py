@@ -26,10 +26,14 @@ from Program.ObjectBuilders.Parser import *
 class GfemDataFrame:
     def __init__(self,
                  file_path: str,
+                 parser: Parser = None,
                  ):
         self.file_path = file_path
         self.path = file_path + '\СВОД_Скв_формат из ГФЭМ.xlsm'
-        self.parser = GfemParser(data_path=self.path)
+        if parser is None:
+            self.parser = GfemParser(data_path=self.path)
+        else:
+            self.parser = parser
         self.company_names = None
 
     def result(self):
@@ -50,7 +54,13 @@ class GfemDataFrame:
         prepared_data['FCF первый месяц'] = data['FCF первый месяц:']/1000
         prepared_data['НДН за первый месяц; тыс. т'] = data['НДН за первый месяц; тыс. т']
         prepared_data['НДН за первый месяц; т./сут.'] = prepared_data['НДН за первый месяц; тыс. т']/(365/12)*1000
-        prepared_data['Уд.FCF на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц']/prepared_data['НДН за первый месяц; тыс. т']
+        try:
+            prepared_data['Уд.FCF на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц']/prepared_data['НДН за первый месяц; тыс. т']
+        except ZeroDivisionError:
+            prepared_data['НДН за первый месяц; тыс. т'].loc[prepared_data['НДН за первый месяц; тыс. т']==0] = 0.0001
+            prepared_data['Уд.FCF на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц'] / prepared_data[
+                'НДН за первый месяц; тыс. т']
+
         prepared_data['Доля СП по добыче'] = 1
         prepared_data['Доля СП по FCF'] = 1
         prepared_data['ДО'] = 'ГПН'
@@ -179,7 +189,7 @@ class RegressionScenarios:
                                                             random_state=1)
 
         poly_model = PiecewiseRegressor(verbose=True,
-                                        binner=KBinsDiscretizer(n_bins=120))
+                                        binner=KBinsDiscretizer(n_bins=40))
     #    poly = PolynomialFeatures(2)
      #   poly_model2 = make_pipeline(poly, LinearRegression())
         poly_model.fit(X_train, Y_train)

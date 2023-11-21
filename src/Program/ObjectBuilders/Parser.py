@@ -4,6 +4,8 @@ from Program.Well.MerData import MerData
 from abc import ABC
 import os
 from Program.Production.config_db import CompanyDictionary
+from Program.ObjectBuilders.sql_speaking_objects import GfemSQLSpeakingObject
+import datetime
 
 
 # from MerData import MerData
@@ -45,6 +47,56 @@ class SetOfWellsParser(Parser):
         return pd.read_excel(self.data_path).loc[1:]
 
 
+class SetOfWellsParserMonth(Parser):
+    def __init__(self,
+                 data_path: str,
+                 month: str = None,
+                 ):
+        self.__data_path = data_path + '/СВОД_NEW_Скв_5лет_испр.xlsm'
+        self.__month = pd.to_datetime(month, format='%Y-%m')
+        self.__indicator_numbers = [4, 64, 124]
+        self.__df = None
+
+    def data(self) -> pd.DataFrame:
+        return self.__choose_month()
+
+    def read_excel(self):
+        df = pd.read_excel(self.__data_path)
+        df.iloc[0,self.__indicator_numbers[0]:self.__indicator_numbers[1]] =  'Oil_' + df.iloc[0, self.__indicator_numbers[0]:self.__indicator_numbers[1]].astype(str)
+        df.iloc[0, self.__indicator_numbers[2]:] = 'FCF_'+ df.iloc[0, self.__indicator_numbers[2]:].astype(str)
+
+        df.iloc[0, 0] = 'Месторождение'
+        df.iloc[0, 1] = 'Навзание ДНС'
+        df.iloc[0, 2] = 'Скважина'
+        df.iloc[0, 3] = 'Куст'
+        df.columns = df.iloc[0]
+        self.__df = df[1:]
+       # return df[1:]
+
+    def __choose_month(self):
+        if self.__df is None:
+            df = self.read_excel()
+            print('SetOfWellParser|| Чтение excel')
+        else:
+            df = self.__df
+        new_df = pd.DataFrame()
+        new_df['Месторождение'] = df.loc[:,'Месторождение']
+        new_df['Скважина'] = df.loc[:,'Скважина']
+        new_df['Куст'] = df.loc[:,'Куст']
+        new_df['GAP'] = 'No gap'
+
+        new_df['FCF первый месяц:'] = df.loc[:,'FCF_' + str(self.__month)]
+        new_df['НДН за первый месяц; тыс. т'] = df.loc[:, 'Oil_' + str(self.__month)]
+
+        return new_df
+
+    def set_month(self, month: str):
+        try:
+            self.__month = pd.to_datetime(month, format='%Y-%m')
+        except:
+            print('SetOfWellsParserMonth || Неправильный формат месяца')
+
+
 class GfemParser(Parser):
     def __init__(self,
                  data_path: str,
@@ -78,6 +130,15 @@ class PortuResultsParser(Parser):
 
     def data(self):
         return pd.read_excel(self.data_path, None)
+
+
+class GfemDatabaseEcmParser(Parser):
+    def __init__(self,
+                 data_path: str,
+                 month: str):
+        self.__db_path =  data_path
+        self.__month = month
+        self.__db = GfemSQLSpeakingObject(path=data_path)
 
 
 class GfemDataBaseParser(Parser):

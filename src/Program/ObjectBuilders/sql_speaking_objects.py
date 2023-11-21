@@ -83,6 +83,8 @@ class GfemSQLSpeakingObject(SQLSpeakingObject):
             con=self.connection)
         return data
 
+    def month_table_for_balancer(self, month: str)-> pd.DataFrame:
+        pass
 
 class ArchiveMonitoringSQLSpeakingObject(SQLSpeakingObject):
     def __init__(self,
