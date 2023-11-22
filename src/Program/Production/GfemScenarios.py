@@ -189,7 +189,7 @@ class RegressionScenarios:
                                                             random_state=1)
 
         poly_model = PiecewiseRegressor(verbose=True,
-                                        binner=KBinsDiscretizer(n_bins=40))
+                                        binner=KBinsDiscretizer(n_bins=120))
     #    poly = PolynomialFeatures(2)
      #   poly_model2 = make_pipeline(poly, LinearRegression())
         poly_model.fit(X_train, Y_train)
@@ -322,15 +322,15 @@ class SolutionBalancer:
 
             temp_df['ДО']= [name]
             temp_df['Отключено скважин'] = [result_filtered.shape[0]]
-            temp_df['Исходная добыча, т/сут.'] = [init_filtered['НДН за первый месяц; т./сут. с долей СП'].sum().round(1)]
+            temp_df['Исходная добыча, т/сут.'] = [init_filtered['НДН за первый месяц; т./сут. с долей СП'].sum()]
 
-            temp_df['Итоговая добыча, т/сут.'] =[ init_filtered['НДН за первый месяц; т./сут. с долей СП'].sum().round(1) - \
-                                                 result_filtered['НДН за первый месяц; т./сут. с долей СП'].sum().round(1)]
-            temp_df['Сокращение добычи, т/сут.'] = [result_filtered['НДН за первый месяц; т./сут. с долей СП'].sum().round(1)]
-            temp_df['Исходный FCF, млн руб.'] = [init_filtered['FCF первый месяц c долей СП'].sum().round(2)]
-            temp_df['Итоговый FCF, млн руб.'] = [init_filtered['FCF первый месяц c долей СП'].sum().round(2) - \
-                                                result_filtered['FCF первый месяц c долей СП'].sum().round(2)]
-            temp_df['Потери FCF, млн руб.'] = [result_filtered['FCF первый месяц c долей СП'].sum().round(2)]
+            temp_df['Итоговая добыча, т/сут.'] =[ init_filtered['НДН за первый месяц; т./сут. с долей СП'].sum() - \
+                                                 result_filtered['НДН за первый месяц; т./сут. с долей СП'].sum()]
+            temp_df['Сокращение добычи, т/сут.'] = [result_filtered['НДН за первый месяц; т./сут. с долей СП'].sum()]
+            temp_df['Исходный FCF, млн руб.'] = [init_filtered['FCF первый месяц c долей СП'].sum()]
+            temp_df['Итоговый FCF, млн руб.'] = [init_filtered['FCF первый месяц c долей СП'].sum() - \
+                                                result_filtered['FCF первый месяц c долей СП'].sum()]
+            temp_df['Потери FCF, млн руб.'] = [result_filtered['FCF первый месяц c долей СП'].sum()]
             temp_df['Месяц расчета'] = [month]
 
 
