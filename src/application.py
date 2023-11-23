@@ -14,9 +14,9 @@ from Program.ObjectBuilders.Parser import *
 from Program.GUI.my_app import MonitoringApp, BalancerViewerApplication
 from Program.GUI.data_model import DataModel, DataModelFull, DataModelMonitoring
 
-#@click.command()
-#@click.option('--path')
-path = r'C:\Users\User\Documents\production_prototype\src\program\data'
+@click.command()
+@click.option('--path')
+#path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
 
@@ -27,7 +27,7 @@ def main(path: str):
                                                         file_path=path)
                                                                 )
                                     )
-    data_model = DataModel(scenarios=scenarios, path=path)
+    data_model = DataModel(scenarios=scenarios, path=path, five_year_format=True)
   #  data_model = DataModelFull(scenarios=scenarios, path=path, portu_results=PortuDataFrame(file_path=path))
     data_model.initializtion()
 
@@ -54,4 +54,4 @@ def main(path: str):
     App(app).start()
     """
 if __name__ == '__main__':
-    main(path)
+    main()

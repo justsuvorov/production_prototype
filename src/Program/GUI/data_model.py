@@ -61,11 +61,13 @@ class DataModel:
     def __init__(self,
                  scenarios: RegressionScenarios,
                  path: str = None,
+                 five_year_format: bool = False
             ):
 
         self.scenarios = scenarios
         self.path = Path(path)
         self.__path_str = path
+        self.__five_year_format = five_year_format
 
         self.company_value = DataValue('0')
         self.company_fcf = DataValue('0')
@@ -114,6 +116,7 @@ class DataModel:
         self.result_crude_list = []
 
         self.joint_venture = False
+        self.__five_year_scenarios = {}
 
         self.__constraints = None
         self.__data = None
@@ -142,7 +145,7 @@ class DataModel:
 
         self.__init_data = None
         self.__init_dataframe_list = []
-
+        self.__five_year_parser = None
     def pie_plot_coordinates(self):
         values = self.__do_values_for_plot()
         x = []
@@ -249,25 +252,34 @@ class DataModel:
         self.result_crude_list = self.__result_crude_list()
 
         self.choose_scenario()
+        if self.__five_year_format:
+            try:
+                self.__five_year_parser = SetOfWellsParserMonth(data_path=self.__path_str)
+                self.__five_year_parser.read_excel()
+                print('Формат пятилетки прочитан')
+                self.__five_year_scenarios = {}
+                for month in self.months:
 
-        try:
-            self.__five_year_parser = SetOfWellsParserMonth(data_path=self.__path_str)
-            self.__five_year_parser.read_excel()
+                    self.__five_year_parser.set_month(month=month)
+                    self.__five_year_scenarios[month] = {}
+                    self.__five_year_scenarios[month]['RegressionScenario'] = RegressionScenarios(sorted_data=SortedGfemData(
+                        prepared_data=GfemDataFrame(
+                            parser=self.__five_year_parser,
+                            file_path=self.__path_str)))
 
-            print('Формат пятилетки прочитан')
-        except:
-            print('Нет файла свода в формате пятилетки')
+                    self.__five_year_scenarios[month]['Data'] = self.__five_year_scenarios[month]['RegressionScenario'].scenarios()
+                    self.__five_year_scenarios[month]['DataframeList'] = self.__five_year_scenarios[month]['RegressionScenario'].dataframe
+
+                self.__solution = SolutionBalancer(dataframe_list=self.__dataframe_list,
+                                                   company_names=self.company_names_full)
+            except:
+                print('Нет файла свода в формате пятилетки')
 
     def __init_month_from_gfem(self, month: str):
       #  parser = GfemDatabaseEcmParser(data_path=self.__path_str, month=month)
-        self.__five_year_parser.set_month(month=month)
-        scenarios = RegressionScenarios(sorted_data=SortedGfemData(
-          prepared_data=GfemDataFrame(
-              parser=self.__five_year_parser,
-              file_path=self.__path_str)))
 
-        self.__data = scenarios.scenarios()
-        self.__dataframe_list = scenarios.dataframe
+        self.__data = self.__five_year_scenarios[month]['Data']
+        self.__dataframe_list = self.__five_year_scenarios[month]['DataframeList']
         self.__solution = SolutionBalancer(dataframe_list=self.__dataframe_list,
                                            company_names=self.company_names_full)
         print('Прогноз показателей загружен')
@@ -340,12 +352,13 @@ class DataModel:
 
     def choose_month(self, value):
     #    self.control_option = False
-        try:
-          self.__init_month_from_gfem(month=value)
-        except:
-           print('Ошибка чтения данных для выбранного месяца, используются данные свода')
-           self.__dataframe_list = self.__init_dataframe_list
-           self.__data = self.__init_data
+        if self.__five_year_format:
+            try:
+              self.__init_month_from_gfem(month=value)
+            except:
+               print('Ошибка чтения данных для выбранного месяца, используются данные свода')
+               self.__dataframe_list = self.__init_dataframe_list
+               self.__data = self.__init_data
 
         self.index = int(np.where(self.__constraints.months == value)[0])
         val = self.__constraints.extract_value(index=int(np.where(self.__constraints.months == value)[0]))

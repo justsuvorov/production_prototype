@@ -150,10 +150,12 @@ class SortedGfemData:
 class RegressionScenarios:
 
     def __init__(self,
-                 sorted_data: SortedGfemData):
+                 sorted_data: SortedGfemData,
+                 ):
         self.sorted_data = sorted_data
         self.company_names = None
         self.dataframe = []
+
     def _data(self):
         data = self.sorted_data.result()
         self.company_names = self.sorted_data.company_names.copy()
