@@ -7,6 +7,7 @@ from Program.GUI.data_model import DataModel, DataModelMonitoring
 from Program.GUI.data_value import DataValue
 from Program.GUI.components import default_label, DefaultSlider, add_divider, DefaultDropdown
 import pathlib
+from copy import deepcopy
 
 
 class MyApplicationSixMonths(Component):
@@ -708,7 +709,8 @@ class BalancerViewerApplication(Component):
 class MyApplication(Component):
     def __init__(self,
                  data_model: DataModel,
-                 result_path = None
+                 result_path = None,
+
                  ):
         super().__init__()
         self.__enableOnChangeCalback = True
@@ -719,6 +721,7 @@ class MyApplication(Component):
         })
         self.result_path = result_path +'\Results.xlsx'
         self.names = []
+
 
     def __on_dropdown_select(self, value):
         self.__model.choose_month(value)
@@ -1136,6 +1139,260 @@ class MyApplication(Component):
             )
         )
 
+
+
+class OperBalancerApplication(MyApplication):
+    def __init__(self,
+                 data_model: DataModel,
+                 result_path = None,
+                 vbd_data_model: DataModel = None,
+                 ):
+        super().__init__(data_model=data_model,
+                         result_path=result_path,
+                         )
+        self.__vbd_data_model = vbd_data_model
+        self.__model_type = True
+        self.__data_model = deepcopy(self.__model)
+
+
+    def __choose_model(self, value):
+        if self.__model_type:
+            self.__model = self.__vbd_data_model
+        else:
+            self.__model = self.__data_model
+        self.__model.reset_values()
+        self.set_state()
+
+    def render(self):
+        return Window(title='Просмотрщик сценариев', )(
+            View(layout="column", style={'background-color': '#002033', "margin": 10,
+                                         "font-weight": 2,
+                                         "font-size": 15}, )  # """ style={"margin": 10, "font-weight": 1},"""
+                (
+                DefaultDropdown(value=self.__model.target,
+                                options=self.__model.months,
+                                onSelect=self.__on_dropdown_select if self.__enableOnChangeCalback else None),
+
+                ScrollView(layout="column", style={'height': 200})
+                    (View(layout="row", style={'background-color': '#002033', 'color': 'white'})(
+                    add_divider(Label('ДО', style=default_label(i=2)),
+                                Label('Прогноз добычи, т/сут.', style=default_label(i=2)),
+                                Label('Сокращение добычи, т/сут.', style=default_label(i=2)),
+                                Label('Итоговая добыча, т/сут.', style=default_label(i=2)), ),
+                ),
+
+                    *[add_divider(Label(name, style={'background-color': '#002033', 'color': 'white', "font-size": 13}),
+                                  Label(constraint, style=default_label(i=2)),
+                                  Label(value, style=default_label(i=2)),
+                                  Label(result.round(), style=default_label(i=2)),
+                                  ) for name, constraint, value, result in zip(self.__model.full_company_list,
+                                                                               self.__model.forecast_list,
+                                                                               self.__model.crude_list,
+                                                                               self.__model.result_crude_list)],
+
+                ),
+
+                View(layout='column', style={"margin": 1, "font-weight": 1})(
+                    View(layout="row", style={'height': 30})(Label('Итог', style=default_label(i=2)),
+                                                             Label(self.__model.forecast_sum.toStr,
+                                                                   style=default_label(i=5)),
+                                                             Label(self.__model.crude_sum.toStr,
+                                                                   style=default_label(i=5)),
+                                                             Label(self.__model.result_crude_sum.toStr,
+                                                                   style=default_label(i=5)),
+                                                             ),
+
+                    View(layout="row", style={'height': 30})(Label('Квота МЭ', style=default_label(i=2)),
+                                                             Label(self.__model.quota.toStr,
+                                                                   style=default_label(i=5)),
+                                                             Label('', style=default_label(i=2)),
+                                                             Label('', style=default_label(i=2)),
+
+                                                             ),
+
+                    View(layout="row", style={'height': 40})(
+                        Label('ДО', style=default_label(i=1), ),
+                        Label('Сокращение добычи',
+                              style={"width": 1.5 * 200, 'background-color': '#002033', 'color': 'white',
+                                     "font-size": 13}, ),
+                        Button('Сбросить настройки', on_click=self.__on_Reset_click_button,
+                               style={'background-color': '#0091ff', 'color': 'white', 'height': 20, "font-size": 13}),
+
+                        Label('т/сут.', style=default_label(i=3)),
+                        Label('Потери FCF, млн.руб.', style=default_label(i=3)),
+
+                    ),
+
+                    DefaultSlider(value=self.__model.company_value,
+                                  fcf_value=self.__model.fcf_sum,
+                                  label='ГПН',
+                                  min_value=self.__model.min_value['ГПН'],
+                                  max_value=self.__model.max_value['ГПН'],
+                                  onChanged=self.__on_gpn_changed if self.__enableOnChangeCalback else None,
+
+                                  ),
+
+                    #        Label("", style={"width": 200, "align": 'center'}, ),
+
+                    ScrollView(layout="column", style={'background-color': '#002033', 'color': 'white', 'height': 200})(
+                        DefaultSlider(value=self.__model.vostok_value,
+                                      fcf_value=self.__model.vostok_fcf,
+                                      label=self.__model.company_names[0],
+                                      min_value=self.__model.min_value['Восток'],
+                                      max_value=self.__model.max_value['Восток'],
+                                      onChanged=self.__on_vostok_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.megion_value,
+                                      fcf_value=self.__model.megion_fcf,
+                                      label=self.__model.company_names[1],
+                                      min_value=self.__model.min_value['Мегионнефтегаз'],
+                                      max_value=self.__model.max_value['Мегионнефтегаз'],
+                                      onChanged=self.__on_megion_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.messoyaha_value,
+                                      fcf_value=self.__model.messoyaha_fcf,
+                                      label=self.__model.company_names[2],
+                                      min_value=self.__model.min_value['Мессояханефтегаз'],
+                                      max_value=self.__model.max_value['Мессояханефтегаз'],
+                                      onChanged=self.__on_messoyaha_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.nng_value,
+                                      fcf_value=self.__model.nng_fcf,
+                                      label=self.__model.company_names[3],
+                                      min_value=self.__model.min_value['ННГ'],
+                                      max_value=self.__model.max_value['ННГ'],
+                                      onChanged=self.__on_nng_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.orenburg_value,
+                                      fcf_value=self.__model.orenburg_fcf,
+                                      label=self.__model.company_names[4],
+                                      min_value=self.__model.min_value['Оренбург'],
+                                      max_value=self.__model.max_value['Оренбург'],
+                                      onChanged=self.__on_orenburg_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.hantos_value,
+                                      fcf_value=self.__model.hantos_fcf,
+                                      label=self.__model.company_names[5],
+                                      min_value=self.__model.min_value['Хантос'],
+                                      max_value=self.__model.max_value['Хантос'],
+                                      onChanged=self.__on_hantos_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.yamal_value,
+                                      fcf_value=self.__model.yamal_fcf,
+                                      label=self.__model.company_names[6],
+                                      min_value=self.__model.min_value['Ямал'],
+                                      max_value=self.__model.max_value['Ямал'],
+                                      onChanged=self.__on_yamal_changed if self.__enableOnChangeCalback else None,
+
+                                      ),
+
+                        DefaultSlider(value=self.__model.polar_value,
+                                      fcf_value=self.__model.polar_fcf,
+                                      label='Заполярье',
+                                      min_value=self.__model.min_value['Заполярье'],
+                                      max_value=self.__model.max_value['Заполярье'],
+                                      onChanged=self.__on_polar_changed if self.__enableOnChangeCalback else None,
+                                      ),
+
+                        DefaultSlider(value=self.__model.shelf_value,
+                                      fcf_value=self.__model.shelf_fcf,
+                                      label='Шельф',
+                                      min_value=self.__model.min_value['Шельф'],
+                                      max_value=self.__model.max_value['Шельф'],
+                                      onChanged=self.__on_shelf_changed if self.__enableOnChangeCalback else None,
+                                      ),
+
+                        DefaultSlider(value=self.__model.meretoyaha_value,
+                                      fcf_value=self.__model.meretoyaha_fcf,
+                                      label='Меретояханефтегаз',
+                                      min_value=self.__model.min_value['Меретояханефтегаз'],
+                                      max_value=self.__model.max_value['Меретояханефтегаз'],
+                                      onChanged=self.__on_meretoyaha_changed if self.__enableOnChangeCalback else None,
+                                      ),
+
+                        DefaultSlider(value=self.__model.palyan_value,
+                                      fcf_value=self.__model.palyan_fcf,
+                                      label='Пальян',
+                                      min_value=self.__model.min_value['Пальян'],
+                                      max_value=self.__model.max_value['Пальян'],
+                                      onChanged=self.__on_palyan_changed if self.__enableOnChangeCalback else None,
+                                      ),
+
+                        DefaultSlider(value=self.__model.spd_value,
+                                      fcf_value=self.__model.spd_fcf,
+                                      label='СПД',
+                                      min_value=self.__model.min_value['СПД'],
+                                      max_value=self.__model.max_value['СПД'],
+                                      onChanged=self.__on_spd_changed if self.__enableOnChangeCalback else None,
+                                      ),
+
+                        DefaultSlider(value=self.__model.arctic_value,
+                                      fcf_value=self.__model.arctic_fcf,
+                                      label='Арктикгаз',
+                                      min_value=self.__model.min_value['Арктикгаз'],
+                                      max_value=self.__model.max_value['Арктикгаз'],
+                                      onChanged=self.__on_arctic_changed if self.__enableOnChangeCalback else None,
+                                      ),
+                        DefaultSlider(value=self.__model.angara_value,
+                                      fcf_value=self.__model.angara_fcf,
+                                      label='Ангара',
+                                      min_value=self.__model.min_value['Ангара'],
+                                      max_value=self.__model.max_value['Ангара'],
+                                      onChanged=self.__on_angara_changed if self.__enableOnChangeCalback else None,
+                                      ),
+                    ),
+
+                    View(layout="row", style={'height': 30})(
+                        Label('', ),
+                        Label('Сумма',
+                              style={"width": 450, "align": "right", 'background-color': '#002033', 'color': 'white',
+                                     "font-size": 13, 'height': 30}, ),
+                        Label(round(self.__model.crude_sum.toFloat), style=default_label(i=3)),
+                        Label(self.__model.fcf_sum.toStr, style=default_label(i=3), )
+                    ),
+                    View(layout="row", style={'background-color': 'white', 'border': '5px solid #448aff', })(
+                        View(layout='column', style={'width': 650, })(
+                            plotting.Figure(
+                                lambda ax: self.__pie_plot(ax) if self.__enableOnChangeCalback else None), ),
+                        View(layout='column')(
+                            plotting.Figure(lambda ax: self.__plot(ax) if self.__enableOnChangeCalback else None)),
+                    ),
+
+                    View(layout="row", style={'height': 30})(
+                        #     Form(self.state, ),
+                        Button("Выгрузить сводную таблицу в Excel",
+                               style={"width": 200 * 2, 'background-color': '#0091ff', 'color': 'white', "height": 20,
+                                      "font-size": 13},
+                               on_click=self.__onSaveWholeTableButtonClick),
+                        CheckBox(text='Учет доли СП', checked=self.__model.joint_venture,
+                                 on_change=self.__on_checkbox_changed,
+                                 style={"width": 200 / 1.5, "align": "center", "height": 20,
+                                        'background-color': '#002033', 'color': 'white', "font-size": 13}),
+
+                        Button("Выгрузить объекты в Excel",
+                               style={"width": 200 * 2, 'background-color': '#0091ff', 'color': 'white', "height": 20,
+                                      "font-size": 13},
+                               on_click=self.__onSaveButtonClick), ),
+
+                    #   View(layout="row")(
+                    #   Form(self.state, ),
+                    #     Button("Выгрузить сводную таблицу в Excel", style={"width": 200 * 2, 'background-color': '#448aff', 'color': 'white' },
+                    #            on_click=self.__onSaveWholeTableButtonClick), )
+                ),
+            )
+        )
 
 class MonitoringApp(Component):
     def __init__(self,

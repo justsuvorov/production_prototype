@@ -3,7 +3,7 @@ import datetime
 from Program.DOTests.HierarchyFromRatingsTest import *
 from Program.Production.GfemScenarios import RegressionScenarios, SortedGfemData, GfemDataFrame, PortuDataFrame
 from Program.Production.AppGui import Application
-from Program.GUI.my_app import MyApplication
+from Program.GUI.my_app import MyApplication, OperBalancerApplication
 from Program.GUI.data_model import DataModel, DataModelFull
 from edifice import App
 import click
@@ -19,7 +19,7 @@ from Program.GUI.data_model import DataModel, DataModelFull, DataModelMonitoring
 path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
-    """
+
     #domain_model_full = domain_model(file_path=Path(path))
 
     scenarios = RegressionScenarios(sorted_data=SortedGfemData(
@@ -33,7 +33,8 @@ def main(path: str):
 
  #   data_model.full_initializtion()
    # app = Application(scenarios=scenarios, path=path)
-    app = MyApplication(data_model=data_model, result_path=path)
+    #app = MyApplication(data_model=data_model, result_path=path)
+    app = OperBalancerApplication(data_model=data_model, vbd_data_model=data_model, result_path=path)
  #   app = BalancerViewerApplication(data_model=data_model, result_path=path)
 
  #   app.initialization()
@@ -52,6 +53,6 @@ def main(path: str):
                         result_path=path)
 
     App(app).start()
-
+    """
 if __name__ == '__main__':
     main(path)
