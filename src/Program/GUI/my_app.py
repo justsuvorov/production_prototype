@@ -488,7 +488,7 @@ class BalancerViewerApplication(Component):
         ax.legend(markerscale=1.1)
 
         for key in x:
-            ax.plot(x2[key][-1], y2[key], color='#31363b', marker="o", markersize=8, label=None)
+            ax.plot(x2[key], y2[key], color='#31363b', marker="o", markersize=8, label=None)
         ax.grid(True)
         ax.set(xlabel='Среднесуточная добыча, т/сут.', ylabel='FCF/Q, тыс.руб/т.',
                #  xlim=(10, 1.1 * self.__model.company_value.toFloat),
@@ -850,17 +850,14 @@ class MyApplication(Component):
         self.set_state()
         self.__enableOnChangeCalback = True
 
-
     def __plot_draw(self, ax):
 
         x, y, x2, y2 = self.__model.plot_coordinates()
         colors = [
             # matplotlib named colors
             'cornflowerblue', 'tomato', 'grey', 'gold',
-            # any color using the color codes
             "orchid", 'green', 'blue']
         i = 0
-        labels = []
 
         for key in x:
             line = ax.plot(x[key], y[key], 5, color=colors[i], linewidth=2)
@@ -870,10 +867,9 @@ class MyApplication(Component):
         ax.legend(markerscale=1.1)
 
         for key in x:
-            ax.plot(x2[key][-1], y2[key], color='#31363b', marker="o", markersize=8, label=None)
+            ax.plot(x2[key], y2[key], color='#31363b', marker="o", markersize=8, label=None)
         ax.grid(True)
         ax.set(xlabel='Среднесуточная добыча, т/сут.', ylabel='FCF/Q, тыс.руб/т.',
-               #  xlim=(10, 1.1 * self.__model.company_value.toFloat),
                xlim=(0, 7000),
                ylim=(0, 10,),
                title='Удельный FCF на тонну',
@@ -884,11 +880,6 @@ class MyApplication(Component):
         if self.__refresh_plots:
             self.__on_angara_changed(0)
         self.__plot_draw(ax)
-
-
-
-
-
 
     def __pie_plot(self, ax,):
 
@@ -913,21 +904,14 @@ class MyApplication(Component):
             labels_for_view.append(' '.join(a))
             i += 1
         ax.set(title='Распределение квоты по ДО, т/сут.',
-
                )
 
-      #  ax.set_facecolor('#31363b')
         ax.pie(x2, labels=labels_for_view, wedgeprops=dict(width=0.5), textprops={'fontsize': 8},
                colors=[
                    # matplotlib named colors
                     'cornflowerblue', 'tomato', 'gold', 'orchid', 'green',
-                   # any color using the color codes
                    "#77BFE2", 'blue']
                )
-
-     #   self.set_state()
-
-
 
     def render(self):
 

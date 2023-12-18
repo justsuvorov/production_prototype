@@ -4,7 +4,7 @@ from Program.Well.MerData import MerData
 from abc import ABC
 import os
 from Program.Production.config_db import CompanyDictionary
-from Program.ObjectBuilders.sql_speaking_objects import GfemSQLSpeakingObject
+#from Program.ObjectBuilders.sql_speaking_objects import GfemSQLSpeakingObject
 import datetime
 
 
@@ -192,8 +192,11 @@ class GfemDataBaseParser(Parser):
                 df1 = df1.drop(columns=['temp_name'])
             except:
                 print('Отсутсвуют скважины с ремонтом')
-                df1 = df.loc[df['GAP'] == 0]
-                df1.loc[:, 'Статус по рентабельности'] = 'Нерентабельная'
+                df1 = df.loc[df['GAP'] == 1]
+                df1.loc[:, 'Статус по рентабельности'] = 'ГЭП 1'
+                df2 = df.loc[df['GAP'] == 2]
+                df2.loc[:, 'Статус по рентабельности']= 'ГЭП 2'
+                df1 = pd.concat([df1, df2])
 
         else:
             df1 = df.loc[df['GAP'] == 0]

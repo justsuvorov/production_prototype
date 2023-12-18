@@ -146,6 +146,7 @@ class DataModel:
         self.__init_data = None
         self.__init_dataframe_list = []
         self.__five_year_parser = None
+
     def pie_plot_coordinates(self):
         values = self.__do_values_for_plot()
         x = []
@@ -174,9 +175,7 @@ class DataModel:
         value = 0
         for name in self.company_names:
 
-            x2[name] = (np.linspace(1, values[value]+1.1, 300))
-            y2[name] = self.__data[j][name][0].predict(x2[name][:, np.newaxis])
-            x2[name] = x2[name]
+            x2[name] = np.array(values[value])
             company_dataframe = temp_dataframe.loc[temp_dataframe['ДО'] == name]
             company_result = company_dataframe[[key]].to_numpy()
             company_data = np.copy(company_result)
@@ -196,9 +195,6 @@ class DataModel:
             x[name] = x_j
             y[name] = company_dataframe[key2]
 
-        for name in self.company_names:
-
-            x[name] = x[name]
         return x, y, x2, y2
 
     def initializtion(self):
@@ -273,7 +269,7 @@ class DataModel:
                 self.__solution = SolutionBalancer(dataframe_list=self.__dataframe_list,
                                                    company_names=self.company_names_full)
             except:
-                print('Нет файла свода в формате пятилетки')
+                print('ошибка свода в формате пятилетки')
 
     def __init_month_from_gfem(self, month: str):
       #  parser = GfemDatabaseEcmParser(data_path=self.__path_str, month=month)

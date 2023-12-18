@@ -14,12 +14,12 @@ from Program.ObjectBuilders.Parser import *
 from Program.GUI.my_app import MonitoringApp, BalancerViewerApplication
 from Program.GUI.data_model import DataModel, DataModelFull, DataModelMonitoring
 
-@click.command()
-@click.option('--path')
-#path = r'C:\Users\User\Documents\production_prototype\src\program\data'
+#@click.command()
+#@click.option('--path')
+path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
-
+    """
     #domain_model_full = domain_model(file_path=Path(path))
 
     scenarios = RegressionScenarios(sorted_data=SortedGfemData(
@@ -52,6 +52,6 @@ def main(path: str):
                         result_path=path)
 
     App(app).start()
-    """
+
 if __name__ == '__main__':
-    main()
+    main(path)

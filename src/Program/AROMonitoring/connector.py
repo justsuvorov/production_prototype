@@ -27,7 +27,7 @@ class DBConnection():
     def check_last_date(self):
         date = pd.read_sql('SELECT MIN (timeindex_dataframe) FROM arf_prod_ecm', self.db.connection)
         s = str(date['MIN (timeindex_dataframe)'].iloc[0])
-        s1 = datetime.strptime(s, '%Y-%m-%d')
+        s1 = datetime.datetime.strptime(s, '%Y-%m-%d')
         s2 = s1 - relativedelta(months=1)
         s2 = s2.replace(day=20)
         print('Дата АРО:', s2)

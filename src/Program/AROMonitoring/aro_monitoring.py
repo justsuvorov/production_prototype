@@ -7,12 +7,13 @@ from Program.ObjectBuilders.sql_speaking_objects import *
 from Program.AROMonitoring.connector import *
 from Program.AROMonitoring.activities_loader import *
 
+
 class AroMonitoring:
 
     def __init__(self,
                  file_path: str,
                  filter: dict = {'Company': 'All', 'Field': 'All'},
-                 date: datetime = datetime.today().replace(day=1)
+                 date: datetime = datetime.datetime.today().replace(day=1)
                  ):
         self.add_data_from_excel = True
         self.file_path = file_path

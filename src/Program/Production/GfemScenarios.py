@@ -65,6 +65,7 @@ class GfemDataFrame:
         prepared_data['Доля СП по FCF'] = 1
         prepared_data['ДО'] = 'ГПН'
         for index, row in prepared_data.iterrows():
+
             row['ДО'] = company_dict[row['Месторождение']]
             prepared_data.at[index,'ДО'] = company_dict[row['Месторождение']]
             prepared_data.at[index,'Доля СП по добыче'] = companydict.joint_venture_crude_part[row['ДО']]
