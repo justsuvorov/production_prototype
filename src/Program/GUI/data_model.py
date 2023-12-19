@@ -61,9 +61,11 @@ class DataModel:
     def __init__(self,
                  scenarios: RegressionScenarios,
                  path: str = None,
-                 five_year_format: bool = False
+                 five_year_format: bool = False,
+                 vbd: bool = False,
             ):
 
+        self.__vbd = vbd
         self.scenarios = scenarios
         self.path = Path(path)
         self.__path_str = path
@@ -256,7 +258,6 @@ class DataModel:
         self.company_names_full.append('Арктикгаз')
         self.company_names_full.append('Ангара')
 
-
         self.__min_value_full['ГПН'] = DataValue(str(0))
         self.__max_value_full['ГПН'] = DataValue(str(self.__data[0]['ГПН'][2]))
         self.__min_value_jv['ГПН'] = DataValue(str(0))
@@ -266,9 +267,9 @@ class DataModel:
         for name in self.company_names:
             self.__min_value_full[name] = DataValue(str(0))
             self.__max_value_full[name] = DataValue(str(self.__data[0][name][2]))
-
             self.__min_value_jv[name] = DataValue(str(0))
             self.__max_value_jv[name] = DataValue(str(self.__data[1][name][2]))
+
         names = ['Заполярье', 'Шельф', 'Меретояханефтегаз', 'Пальян', 'СПД', 'Арктикгаз', 'Ангара']
         for name in names:
             self.__max_value_full[name] = DataValue(str(1))
@@ -291,26 +292,32 @@ class DataModel:
 
         self.choose_scenario()
         if self.__five_year_format:
-            try:
-                self.__five_year_parser = SetOfWellsParserMonth(data_path=self.__path_str)
-                self.__five_year_parser.read_excel()
-                print('Формат пятилетки прочитан')
-                self.__five_year_scenarios = {}
-                for month in self.months:
+         try:
 
-                    self.__five_year_parser.set_month(month=month)
-                    self.__five_year_scenarios[month] = {}
-                    self.__five_year_scenarios[month]['RegressionScenario'] = RegressionScenarios(sorted_data=SortedGfemData(
-                        prepared_data=GfemDataFrame(
-                            parser=self.__five_year_parser,
-                            file_path=self.__path_str)))
+            self.__five_year_parser = SetOfWellsParserMonth(data_path=self.__path_str, vbd=self.__vbd)
+            self.__five_year_parser.read_excel()
+            print('Формат пятилетки прочитан')
+            self.__five_year_scenarios = {}
+            for month in self.months:
 
-                    self.__five_year_scenarios[month]['Data'] = self.__five_year_scenarios[month]['RegressionScenario'].scenarios()
-                    self.__five_year_scenarios[month]['DataframeList'] = self.__five_year_scenarios[month]['RegressionScenario'].dataframe
+                self.__five_year_parser.set_month(month=month)
+                self.__five_year_scenarios[month] = {}
+                self.__five_year_scenarios[month]['RegressionScenario'] = RegressionScenarios(sorted_data=SortedGfemData(
+                    vbd=self.__vbd,
+                    prepared_data=GfemDataFrame(
+                        parser=self.__five_year_parser,
+                        file_path=self.__path_str)))
 
-                self.__solution = SolutionBalancer(dataframe_list=self.__dataframe_list,
-                                                   company_names=self.company_names_full)
-            except:
+                self.__five_year_scenarios[month]['Data'] = self.__five_year_scenarios[month]['RegressionScenario'].scenarios()
+                self.__five_year_scenarios[month]['DataframeList'] = self.__five_year_scenarios[month]['RegressionScenario'].dataframe
+
+            self.__solution = SolutionBalancer(dataframe_list=self.__dataframe_list,
+                                               company_names=self.company_names_full)
+
+         except KeyError as e:
+                print(e)
+                print('ошибка свода в формате пятилетки')
+         except:
                 print('ошибка свода в формате пятилетки')
 
     def __init_month_from_gfem(self, month: str):
@@ -384,8 +391,12 @@ class DataModel:
                 self.spd_value.toFloat, 0, self.arctic_value.toFloat,0,0,0,0,self.angara_value.toFloat,]
 
     def __result_crude_list(self):
-        result_crude = np.array(self.forecast_list)[
-                        0:len(self.__do_result_list())] - np.array(self.__do_result_list())
+        if self.__vbd:
+            result_crude = np.array(self.forecast_list)[
+                            0:len(self.__do_result_list())] + np.array(self.__do_result_list())
+        else:
+            result_crude = np.array(self.forecast_list)[
+                       0:len(self.__do_result_list())] - np.array(self.__do_result_list())
         return result_crude
 
     def choose_month(self, value):
@@ -700,6 +711,34 @@ class DataModel:
         else:
             j = 0
         self.__solution.export_overal_results(path=path, solution_index=j, month=self.__constraints.months[self.index])
+
+
+class FullOperModel:
+    def __init__(self,
+                 data_model: DataModel,
+                 vbd_data_model: DataModel,
+                 ):
+        self.__data_model = data_model
+        self._vbd_data_model = vbd_data_model
+        self.__model_for_view = None
+        self.vbd_model_type = True
+
+    def initialization(self):
+        self.__data_model.initializtion()
+        self._vbd_data_model.initializtion()
+        self.change_model()
+
+    def change_model(self):
+        self.vbd_model_type = not self.vbd_model_type
+        if self.vbd_model_type:
+            self.__model_for_view = self._vbd_data_model
+        else:
+            self.__model_for_view = self.__data_model
+
+    def get_model(self):
+        return self.__model_for_view
+
+
 
 
 class DataModelFull(DataModel):

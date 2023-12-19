@@ -94,7 +94,7 @@ class DefaultDropdown(Component):
                      style={'background-color': '#232629', 'color': 'white', "font-size": 13}
                      ),
             Label('', style={"width": 30}, ),
-            Label('Необходимо срезать добычи,  т/сут.', style=default_label(i=1), ),
+            Label('Необходимо срезать/нарастить добычи,  т/сут.', style=default_label(i=1), ),
             Label(self.__label_value.toStr, style=default_label(i=1), )
         )
 
@@ -104,21 +104,23 @@ class DefaultSlider(Component):
                  label: str,
                  value: DataValue,
                  fcf_value: DataValue,
-                 onChanged: Callable[[str or float], None],
+
                  min_value: DataValue,
                  max_value: DataValue,
+                 onChanged: Callable[[str or float], None] = None,
                  ):
+        super().__init__()
 
         self.__label = label
         self.__value = value
         self.__fcf_value = fcf_value
         self.__min_value = min_value
         self.__max_value = max_value
-
-        super().__init__()
         self.__onChanged = onChanged
 
+
     def render(self):
+
         return View(layout="row", style={'background-color': '#002033', 'color': 'white', 'height': 30 })(
             Label(self.__label, style=default_label(i=1), ),
             Slider(value=self.__value.toFloat,
@@ -143,12 +145,12 @@ class DefaultSlider(Component):
 
     def __onSliderComplete(self, value):
         if self.__onChanged:
-            self.__onChanged(self.__value.toFloat)
+          self.__onChanged(self.__value.toFloat)
 
     def __onInputComplete(self):
         if self.__onChanged:
             self.__onChanged(self.__value.toFloat)
 
     def __onValueChanged(self, value):
-      #  print(f'new value: {value}')
+   #     print(f'new value: {value}')
         self.__value.update(value)

@@ -27,9 +27,14 @@ class GfemDataFrame:
     def __init__(self,
                  file_path: str,
                  parser: Parser = None,
+                 vbd: bool = False,
                  ):
         self.file_path = file_path
-        self.path = file_path + '\СВОД_Скв_формат из ГФЭМ.xlsm'
+        self.__vbd = vbd
+        if self.__vbd:
+            self.path = file_path + '\VBD.xlsm'
+        else:
+            self.path = file_path + '\СВОД_Скв_формат из ГФЭМ.xlsm'
         if parser is None:
             self.parser = GfemParser(data_path=self.path)
         else:
@@ -125,9 +130,11 @@ class SortedGfemData:
 
     def __init__(self,
                  prepared_data: GfemDataFrame,
+                 vbd: bool = False
                  ):
         self.prepared_data = prepared_data
         self.company_names = None
+        self.__vbd = vbd
 
     def _data(self):
         return self.prepared_data.result()
@@ -138,12 +145,14 @@ class SortedGfemData:
         self.company_names = company_names
         result_data = []
         result_jv = []
-        result_data.append(dataframe.sort_values(by='Уд.FCF на 1 тн. (за 1 мес.)'))
-        result_jv.append(dataframe.sort_values(by='Уд.FCF с СП на 1 тн. (за 1 мес.)'))
+        ascending = True
+        if self.__vbd == True: ascending = False
+        result_data.append(dataframe.sort_values(by='Уд.FCF на 1 тн. (за 1 мес.)', ascending=ascending))
+        result_jv.append(dataframe.sort_values(by='Уд.FCF с СП на 1 тн. (за 1 мес.)', ascending=ascending))
         for name in company_names:
             result = dataframe.loc[dataframe['ДО'] == name]
-            result_data.append(result.sort_values(by='Уд.FCF на 1 тн. (за 1 мес.)'))
-            result_jv.append(result.sort_values(by='Уд.FCF с СП на 1 тн. (за 1 мес.)'))
+            result_data.append(result.sort_values(by='Уд.FCF на 1 тн. (за 1 мес.)', ascending=ascending))
+            result_jv.append(result.sort_values(by='Уд.FCF с СП на 1 тн. (за 1 мес.)', ascending=ascending))
 
         return {'Без учета СП': result_data, 'C учетом СП': result_jv}
 
@@ -187,15 +196,23 @@ class RegressionScenarios:
        # xlabel('НДН, тыс.т')
        # ylabel("FCF, тыс. руб")
 
-        X_train, X_test, Y_train, Y_test = train_test_split(x, y,
-                                                            test_size=1,
-                                                            random_state=1)
+        try:
+            X_train, X_test, Y_train, Y_test = train_test_split(x, y,
+                                                                test_size=1,
+                                                                random_state=1)
 
-        poly_model = PiecewiseRegressor(verbose=True,
-                                        binner=KBinsDiscretizer(n_bins=120))
-    #    poly = PolynomialFeatures(2)
-     #   poly_model2 = make_pipeline(poly, LinearRegression())
-        poly_model.fit(X_train, Y_train)
+            poly_model = PiecewiseRegressor(verbose=True,
+                                            binner=KBinsDiscretizer(n_bins=120))
+        #    poly = PolynomialFeatures(2)
+         #   poly_model2 = make_pipeline(poly, LinearRegression())
+            poly_model.fit(X_train, Y_train)
+        except :
+            x1 = np.zeros(2)
+            x = x1[:, np.newaxis]
+            poly_model = PiecewiseRegressor(verbose=True,
+                                            binner=KBinsDiscretizer(n_bins=120))
+            poly_model.fit(x, np.zeros(2))
+
       #  poly_model2.fit(X_train, Y_train)
      #   plot(x, poly_model.predict(x),'g--', label='Кусочно-линейная аппрокимация',)
       #  plot(x, poly_model2.predict(x), label='Апроксимация полиномом 2й степени')

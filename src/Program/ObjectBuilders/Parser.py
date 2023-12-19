@@ -6,6 +6,7 @@ import os
 from Program.Production.config_db import CompanyDictionary
 #from Program.ObjectBuilders.sql_speaking_objects import GfemSQLSpeakingObject
 import datetime
+from copy import deepcopy
 
 
 # from MerData import MerData
@@ -51,8 +52,13 @@ class SetOfWellsParserMonth(Parser):
     def __init__(self,
                  data_path: str,
                  month: str = None,
+                 vbd: bool = False
                  ):
-        self.__data_path = data_path + '/СВОД_NEW_Скв_5лет_испр.xlsm'
+        self.__vbd = vbd
+        if self.__vbd:
+            self.__data_path = data_path + '/VBD.xlsm'
+        else:
+            self.__data_path = data_path + '/СВОД_NEW_Скв_5лет_испр.xlsm'
         self.__month = pd.to_datetime(month, format='%Y-%m')
         self.__indicator_numbers = [4, 64, 124]
         self.__df = None
@@ -80,6 +86,7 @@ class SetOfWellsParserMonth(Parser):
         else:
             df = self.__df
         new_df = pd.DataFrame()
+
         new_df['Месторождение'] = df.loc[:,'Месторождение']
         new_df['Скважина'] = df.loc[:,'Скважина']
         new_df['Куст'] = df.loc[:,'Куст']
