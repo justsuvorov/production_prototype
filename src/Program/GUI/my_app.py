@@ -1,9 +1,10 @@
 import os
 from typing import Callable
-from edifice import Label,  Slider, Dropdown, View, CheckBox,TextInput,  Component, StateManager, Window, Button, ScrollView
+from edifice import Label,  Slider, Dropdown, View, CheckBox,TextInput,  Component, StateManager, Window, Button, ScrollView, RadioButton
 from edifice.components.forms import FormDialog, Form
 from edifice.components import plotting
-from Program.GUI.data_model import DataModel, DataModelMonitoring, FullOperModel
+from Program.GUI.data_model import DataModel, FullOperModel
+from Program.GUI.data_model_monitoring import *
 from Program.GUI.data_value import DataValue
 from Program.GUI.components import default_label, DefaultSlider, add_divider, DefaultDropdown
 import pathlib
@@ -1144,15 +1145,14 @@ class MyApplication(Component):
 
 class OperBalancerApplication(Component):
     def __init__(self,
-                 data_model: FullOperModel,
+                 data_model: DataModel,
                  result_path = None,
             #     vbd_data_model: DataModel = None,
                  ):
         super().__init__()
         self.__result_path = result_path
         self._model_type = False
-        self.__data_model = data_model
-        self._model = self.__data_model.get_model()
+        self._model = data_model
         self._enableOnChangeCalback = True
         self._refresh_plots = True
         self.state = StateManager({
@@ -1182,8 +1182,8 @@ class OperBalancerApplication(Component):
         self._enableOnChangeCalback = True
 
     def _on_megion_changed(self, value):
-        model = self.__data_model.get_model()
-        model.set_megion_value(value)
+
+        self._model.set_megion_value(value)
         self._enableOnChangeCalback = False
         self.set_state()
         self._enableOnChangeCalback = True
@@ -1302,11 +1302,9 @@ class OperBalancerApplication(Component):
             'cornflowerblue', 'tomato', 'grey', 'gold',
             "orchid", 'green', 'blue']
         i = 0
-        xlim = 7000
+        xlim = 6000
         ylim = 10
-        if self._model_type:
-            xlim = 4000
-            ylim = 15
+
 
         for key in x:
             line = ax.plot(x[key], y[key], 5, color=colors[i], linewidth=2)
@@ -1366,14 +1364,12 @@ class OperBalancerApplication(Component):
 
     def _choose_model(self, value):
         self._model_type = not self._model_type
-        self.__data_model.change_model()
-        self._model = self.__data_model.get_model()
+        self._model.change_model()
         self.set_state()
 
 
     def reload_app(self):
-        print(self._model.company_value)
-        return Window(title='Просмотрщик сценариев', )(
+        return Window(title='Оперативная балансировка добычи', )(
             View(layout="column", style={'background-color': '#002033', "margin": 10,
                                          "font-weight": 2,
                                          "font-size": 15}, )  # """ style={"margin": 10, "font-weight": 1},"""
@@ -1386,7 +1382,7 @@ class OperBalancerApplication(Component):
                     (View(layout="row", style={'background-color': '#002033', 'color': 'white'})(
                     add_divider(Label('ДО', style=default_label(i=2)),
                                 Label('Прогноз добычи, т/сут.', style=default_label(i=2)),
-                                Label('Сокращение добычи, т/сут.', style=default_label(i=2)),
+                                Label('Откл. по добыче, т/сут.', style=default_label(i=2)),
                                 Label('Итоговая добыча, т/сут.', style=default_label(i=2)), ),
                 ),
 
@@ -1418,10 +1414,11 @@ class OperBalancerApplication(Component):
                                                              Label('', style=default_label(i=2)),
 
                                                              ),
-                    View(layout="row", style={'align': 'left'})(CheckBox(text='Наращивание добычи',
+                    View(layout="row", style={'align': 'left', 'height': 30})(RadioButton(text='Наращивание добычи',
                                                                          checked=self._model_type,
                                                                          on_change=self._choose_model,
                                                                          style={'width': 500,
+
                                                                                 'background-color': '#002033',
                                                                                 'color': 'white', "font-size": 13}),
 
@@ -1612,7 +1609,7 @@ class OperBalancerApplication(Component):
         )
     def vbd(self):
 
-        return Window(title='Просмотрщик сценариев', )(
+        return Window(title='Оперативная балансировка добычи', )(
             View(layout="column", style={'background-color': '#002033', "margin": 10,
                                          "font-weight": 2,
                                          "font-size": 15}, )  # """ style={"margin": 10, "font-weight": 1},"""
@@ -1625,7 +1622,7 @@ class OperBalancerApplication(Component):
                     (View(layout="row", style={'background-color': '#002033', 'color': 'white'})(
                     add_divider(Label('ДО', style=default_label(i=2)),
                                 Label('Прогноз добычи, т/сут.', style=default_label(i=2)),
-                                Label('Наращивание добычи, т/сут.', style=default_label(i=2)),
+                                Label('Откл. по добыче, т/сут.', style=default_label(i=2)),
                                 Label('Итоговая добыча, т/сут.', style=default_label(i=2)), ),
                 ),
 
@@ -1657,11 +1654,12 @@ class OperBalancerApplication(Component):
                                                              Label('', style=default_label(i=2)),
 
                                                              ),
-                    View(layout="row", style={'align': 'left'})(CheckBox(text='Наращивание добычи',
+                    View(layout="row", style={'align': 'left', 'height': 30})(RadioButton(text='Наращивание добычи',
                                                                          checked=self._model_type,
                                                                          on_change=self._choose_model,
                                                                          style={'width': 500,
                                                                                 'background-color': '#002033',
+                                                                                'height': 30,
                                                                                 'color': 'white', "font-size": 13}),
 
                                                                 ),
@@ -1680,12 +1678,13 @@ class OperBalancerApplication(Component):
                     ),
 
 
-                    DefaultSlider(value=self.__data_model._vbd_data_model.company_value,
-                                  fcf_value=self.__data_model._vbd_data_model.fcf_sum,
+                    DefaultSlider(value=self._model.company_value,
+                                  fcf_value=self._model.fcf_sum,
                                   label='ГПН',
-                                  min_value=self.__data_model._vbd_data_model.min_value['ГПН'],
-                                  max_value=self.__data_model._vbd_data_model.max_value['ГПН'],
-              #                    onChanged=self._on_gpn_changed if self._enableOnChangeCalback else None,
+                                  min_value=self._model.min_value['ГПН'],
+                                  max_value=self._model.max_value['ГПН'],
+                              #    max_value=DataValue('6217'),
+                                  onChanged=self._on_gpn_changed if self._enableOnChangeCalback else None,
 
                                   ),
 
@@ -1693,12 +1692,12 @@ class OperBalancerApplication(Component):
                     #        Label("", style={"width": 200, "align": 'center'}, ),
 
                     ScrollView(layout="column", style={'background-color': '#002033', 'color': 'white', 'height': 200})(
-                        DefaultSlider(value=self.__data_model.get_model().vostok_value,
-                                      fcf_value=self.__data_model.get_model().vostok_fcf,
-                                      label=self.__data_model.get_model().company_names[0],
-                                      min_value=self.__data_model.get_model().min_value['Восток'],
-                                      max_value=self.__data_model.get_model().max_value['Восток'],
-                   #                   onChanged=self._on_vostok_changed,
+                        DefaultSlider(value=self._model.vostok_value,
+                                      fcf_value=self._model.vostok_fcf,
+                                      label=self._model.company_names[0],
+                                      min_value=self._model.min_value['Восток'],
+                                      max_value=self._model.max_value['Восток'],
+                                      onChanged=self._on_vostok_changed,
 
                                       ),
 
@@ -1707,7 +1706,7 @@ class OperBalancerApplication(Component):
                                       label=self._model.company_names[1],
                                       min_value=self._model.min_value['Мегионнефтегаз'],
                                       max_value=self._model.max_value['Мегионнефтегаз'],
-                     #                 onChanged=self._on_megion_changed,
+                                      onChanged=self._on_megion_changed,
 
                                       ),
 

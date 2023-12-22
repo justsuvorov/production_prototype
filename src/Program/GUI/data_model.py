@@ -16,60 +16,22 @@ from edifice.components import plotting
 from edifice import Timer
 
 
-class DataModelPortu:
-    def __init__(self, path):
-        self.path = path
-        self.__results_base = BalancerResultsSpeakingObject(path=self.path)
-        self.company_value = DataValue('0')
-        self.company_fcf = DataValue('0')
-
-        self.vostok_value = DataValue('0.0')
-        self.megion_value = DataValue('0.0')
-        self.messoyaha_value = DataValue('0.0')
-        self.nng_value = DataValue('0.0')
-        self.orenburg_value = DataValue('0.0')
-        self.hantos_value = DataValue('0.0')
-        self.yamal_value = DataValue('0.0')
-        self.crude_sum = DataValue('0')
-
-        self.forecast_sum = DataValue('0')
-        self.result_crude_sum = DataValue('0')
-        self.quota = DataValue('0.0')
-
-        self.vostok_fcf = DataValue('0.0')
-        self.megion_fcf = DataValue('0.0')
-        self.messoyaha_fcf = DataValue('0.0')
-        self.nng_fcf = DataValue('0.0')
-        self.orenburg_fcf = DataValue('0.0')
-        self.hantos_fcf = DataValue('0.0')
-        self.yamal_fcf = DataValue('0.0')
-        self.fcf_sum = DataValue('0.0')
-
-        self.__full_company_list = ['ГПН-Восток',
-                                    'Славнефть-Мегионнефтегаз'
-                                    'ГПН-ННГ'
-                                    'ГПН-Хантос'
-                                    'ГПН-Оренбург'
-                                    'Мессояханефтегаз'
-                                    'ГПН-Ямал'
-                                    ]
-
-
-
 
 class DataModel:
     def __init__(self,
                  scenarios: RegressionScenarios,
                  path: str = None,
-                 five_year_format: bool = False,
+                 five_year_format: bool = True,
                  vbd: bool = False,
             ):
 
         self.__vbd = vbd
         self.scenarios = scenarios
+        self.vbd_scenarios = scenarios
         self.path = Path(path)
         self.__path_str = path
         self.__five_year_format = five_year_format
+
 
         self.company_value = DataValue('0')
         self.company_fcf = DataValue('0')
@@ -148,6 +110,9 @@ class DataModel:
         self.__init_data = None
         self.__init_dataframe_list = []
         self.__five_year_parser = None
+
+        self.__model = {'vbd': {}, 'origin':{}}
+        self.model_type = False
 
     def reset_values(self):
         self.company_value = DataValue('0')
@@ -261,8 +226,9 @@ class DataModel:
         self.__min_value_full['ГПН'] = DataValue(str(0))
         self.__max_value_full['ГПН'] = DataValue(str(self.__data[0]['ГПН'][2]))
         self.__min_value_jv['ГПН'] = DataValue(str(0))
+        self.__max_value_full['ГПН'] = DataValue('6219')
         self.__max_value_jv['ГПН'] = DataValue(str(self.__data[1]['ГПН'][2]))
-
+        self.__max_value_jv['ГПН'] = DataValue('6219')
 
         for name in self.company_names:
             self.__min_value_full[name] = DataValue(str(0))
@@ -293,26 +259,25 @@ class DataModel:
         self.choose_scenario()
         if self.__five_year_format:
          try:
-
-            self.__five_year_parser = SetOfWellsParserMonth(data_path=self.__path_str, vbd=self.__vbd)
-            self.__five_year_parser.read_excel()
+            self.__five_year_parser_orig = SetOfWellsParserMonth(data_path=self.__path_str, vbd=False)
+            self.__five_year_parser_orig.read_excel()
             print('Формат пятилетки прочитан')
-            self.__five_year_scenarios = {}
+            self.__five_year_scenarios_orig = {}
             for month in self.months:
 
-                self.__five_year_parser.set_month(month=month)
-                self.__five_year_scenarios[month] = {}
-                self.__five_year_scenarios[month]['RegressionScenario'] = RegressionScenarios(sorted_data=SortedGfemData(
-                    vbd=self.__vbd,
+                self.__five_year_parser_orig.set_month(month=month)
+                self.__five_year_scenarios_orig[month] = {}
+                self.__five_year_scenarios_orig[month]['RegressionScenario'] = RegressionScenarios(sorted_data=SortedGfemData(
+                    vbd=False,
                     prepared_data=GfemDataFrame(
                         parser=self.__five_year_parser,
                         file_path=self.__path_str)))
 
-                self.__five_year_scenarios[month]['Data'] = self.__five_year_scenarios[month]['RegressionScenario'].scenarios()
-                self.__five_year_scenarios[month]['DataframeList'] = self.__five_year_scenarios[month]['RegressionScenario'].dataframe
+                self.__five_year_scenarios_orig[month]['Data'] = self.__five_year_scenarios_orig[month]['RegressionScenario'].scenarios()
+                self.__five_year_scenarios_orig[month]['DataframeList'] = self.__five_year_scenarios_orig[month]['RegressionScenario'].dataframe
 
-            self.__solution = SolutionBalancer(dataframe_list=self.__dataframe_list,
-                                               company_names=self.company_names_full)
+            self.__model['origin']['scenario'] = self.__five_year_scenarios_orig
+            self.__five_year_scenarios = self.__model['origin']['scenario']
 
          except KeyError as e:
                 print(e)
@@ -320,8 +285,49 @@ class DataModel:
          except:
                 print('ошибка свода в формате пятилетки')
 
+        if self.__vbd:
+            try:
+                self.__five_year_parser_vbd = SetOfWellsParserMonth(data_path=self.__path_str, vbd=True)
+                self.__five_year_parser_vbd.read_excel()
+                print('Формат пятилетки ВБД прочитан')
+                self.__five_year_scenarios_vbd = {}
+                for month in self.months:
+                    self.__five_year_parser_vbd.set_month(month=month)
+                    self.__five_year_scenarios_vbd[month] = {}
+                    self.__five_year_scenarios_vbd[month]['RegressionScenario'] = RegressionScenarios(
+                        sorted_data=SortedGfemData(
+                            vbd=self.__vbd,
+                            prepared_data=GfemDataFrame(
+                                parser=self.__five_year_parser_vbd,
+                                file_path=self.__path_str)))
+
+                    self.__five_year_scenarios_vbd[month]['Data'] = self.__five_year_scenarios_vbd[month][
+                        'RegressionScenario'].scenarios()
+                    self.__five_year_scenarios_vbd[month]['DataframeList'] = self.__five_year_scenarios_vbd[month][
+                        'RegressionScenario'].dataframe
+
+                self.__model['vbd']['scenario'] = self.__five_year_scenarios_vbd
+            except KeyError as e:
+                print(e)
+                print('Ошибка свода в формате пятилетки ВБД')
+
+            except:
+                print('Ошибка свода в формате пятилетки ВБД')
+        self.choose_month(value=self.months[self.index])
+
+    def change_model(self):
+        self.model_type = not self.model_type
+        if not self.model_type:
+            self.__five_year_scenarios = self.__model['origin']['scenario']
+            self.max_value['ГПН'] = DataValue('50000')
+
+        else:
+            self.__five_year_scenarios = self.__model['vbd']['scenario']
+            self.max_value['ГПН'] = DataValue('6917')
+
+        self.choose_month(value=self.months[self.index])
+
     def __init_month_from_gfem(self, month: str):
-      #  parser = GfemDatabaseEcmParser(data_path=self.__path_str, month=month)
 
         self.__data = self.__five_year_scenarios[month]['Data']
         self.__dataframe_list = self.__five_year_scenarios[month]['DataframeList']
@@ -355,6 +361,7 @@ class DataModel:
         else:
             self.min_value = self.__min_value_full
             self.max_value = self.__max_value_full
+
 
         self.plot_coordinates()
 
@@ -391,7 +398,7 @@ class DataModel:
                 self.spd_value.toFloat, 0, self.arctic_value.toFloat,0,0,0,0,self.angara_value.toFloat,]
 
     def __result_crude_list(self):
-        if self.__vbd:
+        if self.model_type:
             result_crude = np.array(self.forecast_list)[
                             0:len(self.__do_result_list())] + np.array(self.__do_result_list())
         else:
@@ -665,7 +672,7 @@ class DataModel:
         return fcf
 
     def _find_solution(self, company_name: list = ['All'], company_value: list = [0.0], target: float = 0):
-        print(self.joint_venture)
+
         if self.joint_venture:
             j = 1
         else:
@@ -710,7 +717,7 @@ class DataModel:
             j = 1
         else:
             j = 0
-        self.__solution.export_overal_results(path=path, solution_index=j, month=self.__constraints.months[self.index])
+        self.__solution.export_overal_results(path=path, solution_index=j, month=self.__constraints.months[self.index], vbd = self.model_type)
 
 
 class FullOperModel:
@@ -720,8 +727,8 @@ class FullOperModel:
                  ):
         self.__data_model = data_model
         self._vbd_data_model = vbd_data_model
-        self.__model_for_view = None
-        self.vbd_model_type = True
+        self.__model_for_view = vbd_data_model
+        self.vbd_model_type = False
 
     def initialization(self):
         self.__data_model.initializtion()
@@ -733,7 +740,7 @@ class FullOperModel:
         if self.vbd_model_type:
             self.__model_for_view = self._vbd_data_model
         else:
-            self.__model_for_view = self.__data_model
+            self.__model_for_view = self._vbd_data_model
 
     def get_model(self):
         return self.__model_for_view
@@ -741,150 +748,5 @@ class FullOperModel:
 
 
 
-class DataModelFull(DataModel):
-    def __init__(self,
-                 scenarios: RegressionScenarios,
-                 portu_results: PortuDataFrame,
-                 path: str = None,
-                 ):
-        self.str_path = path
-        super().__init__(scenarios=scenarios, path=path)
-        self.portu_results = portu_results
-        self.portu_names = ['ООО "ГПН-Восток"',  'ПАО_СН_МНГ', 'АО «Мессояханефтегаз»',
-                            'AO «ГПН-ННГ»', 'ООО "ГПН-Оренбург"',
-                             'ООО "ГПН-Хантос"', 'ООО "ГПН - Ямал"',]
-        self.crude_volume = {}
-        self.fcf_volume = {}
-        self.fcf_values = []
 
-    def full_initializtion(self):
-        self.initializtion()
-        self.portu_results = self.portu_results.result()
-
-        df = pd.read_excel(self.str_path + '\Данные_по_объектам_для_балансировки_5тилетка.xlsx')
-        i = 0
-        crude_col = ['Crude 1',	'Crude 2',	'Crude 3',	'Crude 4',	'Crude 5',	'Crude 6',	'Crude 7',	'Crude 8',	'Crude 9',	'Crude 10']
-     #   fcf_col = ['FCF 1',	'FCF 2',	'FCF 3',	'FCF 4',	'FCF 5',	'FCF 6',	'FCF 7',	'FCF 8',	'FCF 9',	'FCF 10']
-        days = [31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-        for name in self.company_names:
-           temp_df = df.loc[df['ДО'] == self.portu_names[i]]
-           crude_list = []
-       #    fcf_list = []
-           for j in range(10):
-               a = temp_df[crude_col[j]].to_numpy().sum()
-               crude_list.append(a/days[j]*1000)
-       #        fcf_list.append(temp_df[fcf_col[j]].to_numpy().sum())
-           self.crude_volume[name] = crude_list
-        #   self.fcf_volume[name] = fcf_list
-           i += 1
-
-
-
-    def __get_values_from_portu(self, month: int, solution_index: int = 0):
-        new_values = []
-        fcf_values = []
-        days = [31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-        if solution_index == 0:
-            key = 'НДН за первый месяц; т./сут.'
-
-            key = 'НДН за первый месяц; тыс. т'
-        if solution_index == 1:
-            key = 'НДН за первый месяц; т./сут. с долей СП'
-        df = self.portu_results[month]
-        for name in self.portu_names:
-            temp_df = df.loc[df['ДО'] == name]
-            new_values.append(temp_df[key].sum()/days[month]*1000) #- temp_df['Добыча нефти, исходная'].sum()/days[month]*1000)
-            fcf_values.append(temp_df['FCF исходный'].sum() - temp_df['FCF первый месяц'].sum() )
-
-        i = 0
-        for name in self.company_names:
-            new_values[i] = self.crude_volume[name][month]-new_values[i]
-      #      fcf_values[i] = self.fcf_volume[name][month]-fcf_values[i]
-            i += 1
-        for i in range(7):
-            new_values.append(0)
-            fcf_values.append(0)
-
-        return new_values, fcf_values
-
-    def _update_fcf(self, values):
-        return np.array(self.fcf_values)/1000
-
-    def _find_solution(self, company_name: list = ['All'], company_value: list = [0.0], target: float = 0):
-
-        if self.index >= 2:
-           index = self.index - 2
-        else:
-           index = 2
-
-        new_values, fcf_values = self.__get_values_from_portu(month=index)
-        self.fcf_values = fcf_values
-
-        for i in range(len(new_values)):
-            if self.max_value[self.company_names_full[i]].toFloat < new_values[i]:
-                new_values[i] = self.max_value[self.company_names_full[i]].toFloat
-            if self.min_value[self.company_names_full[i]].toFloat > new_values[i]:
-                new_values[i] = self.min_value[self.company_names_full[i]].toFloat
-        return new_values
-
-
-class DataModelMonitoring:
-    def __init__(self,
-                 monitoring_module: AroMonitoring):
-        self.__monitoring_module = monitoring_module
-        self.excel_export = False
-
-      #  self.__field_list ={ 'ГПН-ННГ': ['Все месторождения', 'Еты-пуровское'] }
-        self.field = 'Все месторождения'
-        self.field_list_for_view = ['Все месторождения']
-      #  self.company_dict = CompanyDict(path=self.__monitoring_module.file_path).load(scenario_program=True)
-        self.company_dict = CompanyDictionary.names
-        self.do_list = list(sorted(set(self.company_dict.values())))
-        self.do_list.insert(0, 'Все ДО')
-        self.__field_list = {}
-        self.__company = 'All'
-
-
-        for name in self.do_list:
-            self.__field_list[name] = ['Все месторождения']
-            for key in self.company_dict:
-                if name == self.company_dict[key]:
-                    self.__field_list[name].append(key)
-
-        print(self.do_list,  self.__field_list)
-
-    def excel_export_option(self):
-        self.excel_export = not self.excel_export
-
-    def set_field(self, value):
-        self.field = value
-        self.__monitoring_module.filter['Company'] = self.__company
-        self.__monitoring_module.filter['Field'] = value
-
-    def set_do(self, value):
-        self.field_list_for_view = self.__field_list[value]
-        self.__company = value
-        if value == 'Все ДО': value = 'All'
-        self.__monitoring_module.filter['Company'] = value
-        self.__monitoring_module.filter['Field'] = 'All'
-
-    def company_form(self):
-        self.__monitoring_module.export_company_form()
-
-    def black_list(self):
-        self.__monitoring_module.black_list(excel_export=self.excel_export)
-    #    self.__monitoring_module.aro_full_info_black_list(excel_export=False)
-
-    def aro_full_info_black_list(self):
-        self.__monitoring_module.aro_full_info_black_list(excel_export=self.excel_export)
-
-    def import_company_form(self, file_path: pathlib.Path):
-        data = pd.read_excel(file_path)
-        self.__monitoring_module.load_company_form_to_db(data)
-
-    def upload_data_for_dashboard(self):
-        self.__monitoring_module.upload_data_for_dashboard()
-
-    def map_status_from_mor_db(self,):
-        self.__monitoring_module.map_status_from_mor_db()
 

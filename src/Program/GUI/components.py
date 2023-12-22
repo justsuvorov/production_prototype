@@ -67,6 +67,7 @@ def default_label(i):
         return {"width": label_width / 2, "margin": 5, "align": "center", "border": "0px", 'background-color': '#002033', 'color': 'white', "font-size": 13}
 
 
+
 class DefaultDropdown(Component):
     def __init__(self,
                  options,
