@@ -3,7 +3,7 @@ import datetime
 from Program.DOTests.HierarchyFromRatingsTest import *
 from Program.Production.GfemScenarios import RegressionScenarios, SortedGfemData, GfemDataFrame, PortuDataFrame
 from Program.Production.AppGui import Application
-from Program.GUI.my_app import MyApplication, OperBalancerApplication
+from Program.GUI.my_app import OperBalancerApplication
 from Program.GUI.data_model import DataModel
 from edifice import App
 import click
@@ -13,31 +13,33 @@ from Program.GUI.data_model_monitoring import DataModelMonitoring
 from Program.Production.GfemScenarios import *
 from Program.ObjectBuilders.Parser import *
 from Program.GUI.my_app import MonitoringApp, BalancerViewerApplication
-from Program.GUI.data_model import DataModel, FullOperModel
+from Program.GUI.data_model_vbd import DataModelVbd
+from Program.GUI.data_model_full import DataModelFull
 
 #@click.command()
 #@click.option('--path')
 path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
-    """
+
     #domain_model_full = domain_model(file_path=Path(path))
     scenarios = RegressionScenarios(sorted_data=SortedGfemData(
                                             prepared_data=GfemDataFrame(
                                                     file_path=path)
                                                                 )
                                     )
-    data_model = DataModel(scenarios=scenarios, path=path, five_year_format=True, vbd=True)
-    data_model.initializtion()
+    data_model_full = DataModelFull(scenarios=scenarios, path=path, five_year_format=True)
+    data_model_full.initialization()
+    data_model_vbd = DataModelVbd(scenarios=scenarios, path=path, five_year_format=True)
+    data_model_vbd.initialization()
   #  vbd_data_model = DataModel(scenarios=vbd_scenarios, path=path, five_year_format=True, vbd=True)
-
   #  full_oper_balaner_model = FullOperModel(data_model=data_model, vbd_data_model=vbd_data_model)
    # full_oper_balaner_model.initialization()
 
  #   data_model.full_initializtion()
    # app = Application(scenarios=scenarios, path=path)
     #app = MyApplication(data_model=data_model, result_path=path)
-    app = OperBalancerApplication(data_model=data_model, result_path=path)
+    app = OperBalancerApplication(data_modelFull=data_model_full, data_modelVbd=data_model_vbd, result_path=path)
  #   app = BalancerViewerApplication(data_model=data_model, result_path=path)
 
  #   app.initialization()
@@ -56,6 +58,6 @@ def main(path: str):
                         result_path=path)
 
     App(app).start()
-
+    """
 if __name__ == '__main__':
     main(path)
