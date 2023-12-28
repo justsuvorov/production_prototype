@@ -33,15 +33,19 @@ class SQLSpeakingObject:
 class GfemSQLSpeakingObject(SQLSpeakingObject):
     def __init__(self,
                  path: str,
-                 add_data_from_excel: bool = False
+                 add_data_from_excel: bool = False,
+                 gap: int = 0,
                  ):
         self.path = path
         self.db_name = self.path + '\gfem_results.db'
+        self.__gap = gap
         super().__init__(db_name=self.db_name)
         self.__gfem_base_parser = GfemDataBaseParser(data_path=self.db_name,
                                                      add_data_from_excel=add_data_from_excel,
-                                                     file_path=self.path)
+                                                     file_path=self.path,
+                                                     gap = self.__gap)
         self.__log = Logger()
+
 
     def names(self):
         return self.__gfem_base_parser.names()

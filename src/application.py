@@ -9,6 +9,7 @@ from edifice import App
 import click
 from pathlib import Path
 from Program.AROMonitoring.aro_monitoring import AroMonitoring
+from Program.GUI.data_model_monitoring import DataModelMonitoring
 from Program.Production.GfemScenarios import *
 from Program.ObjectBuilders.Parser import *
 from Program.GUI.my_app import MonitoringApp, BalancerViewerApplication
@@ -19,7 +20,7 @@ from Program.GUI.data_model import DataModel, FullOperModel
 path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
-
+    """
     #domain_model_full = domain_model(file_path=Path(path))
     scenarios = RegressionScenarios(sorted_data=SortedGfemData(
                                             prepared_data=GfemDataFrame(
@@ -48,13 +49,13 @@ def main(path: str):
 
     """
     
-
+    gap = 1
     filtered = {'Company': 'All', 'Field': 'All'}
-    monitoring_module = AroMonitoring(file_path=path, filter=filtered ) #,date=date)
+    monitoring_module = AroMonitoring(file_path=path, filter=filtered, gap=gap) #,date=date)
     app = MonitoringApp(data_model=DataModelMonitoring(monitoring_module=monitoring_module),
                         result_path=path)
 
     App(app).start()
-    """
+
 if __name__ == '__main__':
     main(path)

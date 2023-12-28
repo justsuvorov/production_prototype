@@ -12,6 +12,7 @@ class AroMonitoring:
 
     def __init__(self,
                  file_path: str,
+                 gap: int = 0,
                  filter: dict = {'Company': 'All', 'Field': 'All'},
                  date: datetime = datetime.datetime.today().replace(day=1)
                  ):
@@ -19,10 +20,12 @@ class AroMonitoring:
         self.file_path = file_path
         self.filter = filter
         self.date = date
+        self.__gap = gap
 
         self.__monitoring_base = MonitoringSQLSpeakingObject(path=self.file_path)
         self.__gfem_base = GfemSQLSpeakingObject(path=self.file_path,
-                                                 add_data_from_excel=self.add_data_from_excel)
+                                                 add_data_from_excel=self.add_data_from_excel,
+                                                 gap=self.__gap)
         self.__mor_db_base = SQLMorDBSpeakingObject(path=self.file_path)
 
     def _data(self) -> pd.DataFrame:

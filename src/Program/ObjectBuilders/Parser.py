@@ -153,6 +153,7 @@ class GfemDataBaseParser(Parser):
                  data_path: str,
                  file_path: str,
                  add_data_from_excel: bool = False,
+                 gap: int = 0
                  ):
         self.data_path = data_path
         self.series_names = ['id', 'Тип объекта', 'ДО', 'Месторождение', 'Лицензионный участок',
@@ -166,6 +167,7 @@ class GfemDataBaseParser(Parser):
                              'FCF за скользящий год; тыс. руб.',]
         self.__add_data_from_excel = add_data_from_excel
         self.file_path = file_path
+        self.__gap = gap
 
     def names(self):
         data = sqlite3.connect(self.data_path)
@@ -187,7 +189,7 @@ class GfemDataBaseParser(Parser):
             try:
                 add_df = self.__add_query()
                 print(add_df.shape[0])
-                df1 = df.loc[(df['GAP'] == 0)]
+                df1 = df.loc[(df['GAP'] == self.__gap)]
                 df1.loc[:,'Статус по рентабельности'] = 'Нерентабельная'
                 df['temp_name'] = df['Месторождение'] + df['Скважина']
                 df1['temp_name'] = df1['Месторождение'] + df1['Скважина']
@@ -199,15 +201,20 @@ class GfemDataBaseParser(Parser):
                 df1 = df1.drop(columns=['temp_name'])
             except:
                 print('Отсутсвуют скважины с ремонтом')
-                df1 = df.loc[df['GAP'] == 1]
-                df1.loc[:, 'Статус по рентабельности'] = 'ГЭП 1'
-                df2 = df.loc[df['GAP'] == 2]
-                df2.loc[:, 'Статус по рентабельности']= 'ГЭП 2'
-                df1 = pd.concat([df1, df2])
+                if self.__gap == 0:
+                    df1 = df.loc[df['GAP'] == self.__gap]
+                    df1.loc[:, 'Статус по рентабельности'] = 'Нерентабельная'
+                else:
+
+                    df1 = df.loc[df['GAP'] == 1]
+                    df1.loc[:, 'Статус по рентабельности'] = 'ГЭП 1'
+                    df2 = df.loc[df['GAP'] == 2]
+                    df2.loc[:, 'Статус по рентабельности']= 'ГЭП 2'
+                    df1 = pd.concat([df1, df2])
 
         else:
-            df1 = df.loc[df['GAP'] == 0]
-            df1.loc[:, 'Статус по рентабельности'] = 'Нерентабельная'
+            df1 = df.loc[df['GAP'] == self.__gap]
+            df1.loc[:, 'Статус по рентабельности'] = 'ГЭП ' + str(self.__gap)
         pd.reset_option("mode.chained_assignment")
         df1 = df1.drop(columns=['НДН за первый месяц'])
         return df1

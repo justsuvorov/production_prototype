@@ -18,101 +18,8 @@ from edifice import Timer
 
 
 class DataModel:
-    def __init__(self,
-                 scenarios: RegressionScenarios,
-                 path: str = None,
-                 five_year_format: bool = True,
-                 vbd: bool = False,
-            ):
-
-        self.__vbd = vbd
-        self.scenarios = scenarios
-        self.vbd_scenarios = scenarios
-        self.path = Path(path)
-        self.__path_str = path
-        self.__five_year_format = five_year_format
-
-
-        self.company_value = DataValue('0')
-        self.company_fcf = DataValue('0')
-
-        self.vostok_value = DataValue('0.0')
-        self.megion_value = DataValue('0.0')
-        self.messoyaha_value = DataValue('0.0')
-        self.nng_value = DataValue('0.0')
-        self.orenburg_value = DataValue('0.0')
-        self.hantos_value = DataValue('0.0')
-        self.yamal_value = DataValue('0.0')
-        self.crude_sum = DataValue('0')
-
-        self.shelf_value = DataValue('0')
-        self.polar_value = DataValue('0')
-        self.meretoyaha_value = DataValue('0')
-        self.palyan_value = DataValue('0')
-        self.spd_value = DataValue('0')
-        self.arctic_value = DataValue('0')
-        self.angara_value = DataValue('0')
-
-        self.shelf_fcf = DataValue('-')
-        self.polar_fcf = DataValue('-')
-        self.meretoyaha_fcf = DataValue('-')
-        self.palyan_fcf = DataValue('-')
-        self.spd_fcf = DataValue('-')
-        self.arctic_fcf = DataValue('-')
-        self.angara_fcf = DataValue('-')
-
-        self.forecast_sum = DataValue('0')
-        self.result_crude_sum = DataValue('0')
-        self.quota = DataValue('0.0')
-
-        self.vostok_fcf = DataValue('0.0')
-        self.megion_fcf = DataValue('0.0')
-        self.messoyaha_fcf = DataValue('0.0')
-        self.nng_fcf = DataValue('0.0')
-        self.orenburg_fcf = DataValue('0.0')
-        self.hantos_fcf = DataValue('0.0')
-        self.yamal_fcf = DataValue('0.0')
-        self.fcf_sum = DataValue('0.0')
-
-        self.full_company_list = []
-        self.forecast_list = []
-        self.crude_list = []
-        self.result_crude_list = []
-
-        self.joint_venture = False
-        self.__five_year_scenarios = {}
-
-        self.__constraints = None
-        self.__data = None
-        self.company_names = None
-        self.__solution = None
-        self.__dataframe_list = None
-        self.months = None
-        self.__control_option = False
-        self.control_option = False
-
-        self.__min_value_full = {}
-        self.__max_value_full = {}
-
-        self.__min_value_jv = {}
-        self.__max_value_jv = {}
-
-        self.min_value = {}
-        self.max_value = {}
-
-        self.index = 0
-        self.target = DataValue('0')
-
-        self.__last_company_value = [0]
-        self.__last_company = ['All']
-        self.__last_target = 0.0
-
-        self.__init_data = None
-        self.__init_dataframe_list = []
-        self.__five_year_parser = None
-
-        self.__model = {'vbd': {}, 'origin':{}}
-        self.model_type = False
+    def __init__(self):
+        raise "Abstract interface class"
 
     def reset_values(self):
         self.company_value = DataValue('0')
@@ -165,15 +72,9 @@ class DataModel:
         return x, new_values
 
     def plot_coordinates(self):
-        if self.joint_venture:
-            j = 1
-            key = 'НДН за первый месяц; т./сут. с долей СП'
-            key2 ='Уд.FCF с СП на 1 тн. (за 1 мес.)'
-        else:
-            j = 0
-            key = 'НДН за первый месяц; т./сут.'
-            key2 = 'Уд.FCF на 1 тн. (за 1 мес.)'
-        temp_dataframe = self.__dataframe_list[j]
+        key = 'НДН за первый месяц; т./сут.'
+        key2 = 'Уд.FCF на 1 тн. (за 1 мес.)'
+        temp_dataframe = self.__dataframe_list
 
         x = {}
         y = {}
@@ -223,23 +124,15 @@ class DataModel:
         self.company_names_full.append('Арктикгаз')
         self.company_names_full.append('Ангара')
 
-        self.__min_value_full['ГПН'] = DataValue(str(0))
-        self.__max_value_full['ГПН'] = DataValue(str(self.__data[0]['ГПН'][2]))
-        self.__min_value_jv['ГПН'] = DataValue(str(0))
-        self.__max_value_full['ГПН'] = DataValue('6219')
-        self.__max_value_jv['ГПН'] = DataValue(str(self.__data[1]['ГПН'][2]))
-        self.__max_value_jv['ГПН'] = DataValue('6219')
 
         for name in self.company_names:
-            self.__min_value_full[name] = DataValue(str(0))
-            self.__max_value_full[name] = DataValue(str(self.__data[0][name][2]))
-            self.__min_value_jv[name] = DataValue(str(0))
-            self.__max_value_jv[name] = DataValue(str(self.__data[1][name][2]))
+            self.min_value[name] = DataValue(str(0))
+            self.max_value[name] = DataValue(str(self.__data[0][name][2]))
 
         names = ['Заполярье', 'Шельф', 'Меретояханефтегаз', 'Пальян', 'СПД', 'Арктикгаз', 'Ангара']
         for name in names:
-            self.__max_value_full[name] = DataValue(str(1))
-            self.__max_value_jv[name] = DataValue(str(1))
+            self.max_value[name] = DataValue(str(1))
+
         self.__dataframe_list = self.scenarios.dataframe
         self.__init_dataframe_list = self.__dataframe_list.copy()
 
@@ -285,47 +178,30 @@ class DataModel:
          except:
                 print('ошибка свода в формате пятилетки')
 
-        if self.__vbd:
-            try:
-                self.__five_year_parser_vbd = SetOfWellsParserMonth(data_path=self.__path_str, vbd=True)
-                self.__five_year_parser_vbd.read_excel()
+
+        try:
+                self.__five_year_parser = SetOfWellsParserMonth(data_path=self.__path_str, vbd=True)
+                self.__five_year_parser.read_excel()
                 print('Формат пятилетки ВБД прочитан')
-                self.__five_year_scenarios_vbd = {}
+                self.__five_year_scenarios = {}
                 for month in self.months:
-                    self.__five_year_parser_vbd.set_month(month=month)
-                    self.__five_year_scenarios_vbd[month] = {}
-                    self.__five_year_scenarios_vbd[month]['RegressionScenario'] = RegressionScenarios(
+                    self.__five_year_parser.set_month(month=month)
+                    self.__five_year_scenarios[month] = {}
+                    self.__five_year_scenarios[month]['RegressionScenario'] = RegressionScenarios(
                         sorted_data=SortedGfemData(
-                            vbd=self.__vbd,
+                            vbd=False,
                             prepared_data=GfemDataFrame(
-                                parser=self.__five_year_parser_vbd,
+                                parser=self.__five_year_parser,
                                 file_path=self.__path_str)))
-
-                    self.__five_year_scenarios_vbd[month]['Data'] = self.__five_year_scenarios_vbd[month][
-                        'RegressionScenario'].scenarios()
-                    self.__five_year_scenarios_vbd[month]['DataframeList'] = self.__five_year_scenarios_vbd[month][
-                        'RegressionScenario'].dataframe
-
-                self.__model['vbd']['scenario'] = self.__five_year_scenarios_vbd
-            except KeyError as e:
+        except KeyError as e:
                 print(e)
                 print('Ошибка свода в формате пятилетки ВБД')
 
-            except:
+        except:
                 print('Ошибка свода в формате пятилетки ВБД')
-        self.choose_month(value=self.months[self.index])
 
-    def change_model(self):
-        self.model_type = not self.model_type
-        if not self.model_type:
-            self.__five_year_scenarios = self.__model['origin']['scenario']
-            self.max_value['ГПН'] = DataValue('50000')
 
-        else:
-            self.__five_year_scenarios = self.__model['vbd']['scenario']
-            self.max_value['ГПН'] = DataValue('6917')
 
-        self.choose_month(value=self.months[self.index])
 
     def __init_month_from_gfem(self, month: str):
 
@@ -338,8 +214,8 @@ class DataModel:
     def __load_min_max_for_other_companies(self, forecast_list):
         names = ['Заполярье', 'Шельф', 'Меретояханефтегаз',  'Пальян', 'СПД', 'Арктикгаз', 'Ангара']
         for name in names:
-            self.__min_value_full[name] = DataValue(str(0))
-            self.__min_value_jv[name] = DataValue(str(0))
+            self.__min_value[name] = DataValue(str(0))
+
 
         forecast_names = [3,0,4,7,12,14,19]
         for i in range(len(forecast_names)):
@@ -347,23 +223,8 @@ class DataModel:
                 value = round(forecast_list[forecast_names[i]],1) + 1
             else:
                 value = round(forecast_list[forecast_names[i]],1)
-            self.__max_value_full[names[i]].update(value)
-            self.__max_value_jv[names[i]].update(value)
+            self.__max_value[names[i]].update(value)
 
-    def choose_scenario(self, value: bool = None):
-
-        self.joint_venture = not self.joint_venture
-
-        if self.joint_venture:
-            self.min_value = self.__min_value_jv
-            self.max_value = self.__max_value_jv
-
-        else:
-            self.min_value = self.__min_value_full
-            self.max_value = self.__max_value_full
-
-
-        self.plot_coordinates()
 
     def __company_result_list(self):
         company_result_list = self.__constraints.dataframe['ДО'].iloc[:23].to_list()

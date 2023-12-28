@@ -1145,14 +1145,17 @@ class MyApplication(Component):
 
 class OperBalancerApplication(Component):
     def __init__(self,
-                 data_model: DataModel,
+                 data_modelFull: DataModel,
+                 data_modelVbd: DataModel,
                  result_path = None,
             #     vbd_data_model: DataModel = None,
                  ):
         super().__init__()
         self.__result_path = result_path
-        self._model_type = False
-        self._model = data_model
+        self._model_index = False
+        self._modelFull = data_modelFull
+        self._modelVbd = data_modelVbd
+        self._model = data_modelFull
         self._enableOnChangeCalback = True
         self._refresh_plots = True
         self.state = StateManager({
@@ -1261,7 +1264,6 @@ class OperBalancerApplication(Component):
         self._enableOnChangeCalback = True
 
     def _on_checkbox_changed(self,value ):
-        self._model.choose_scenario()
         self._enableOnChangeCalback = False
      #   self.set_state()
         self._enableOnChangeCalback = True
@@ -1362,9 +1364,12 @@ class OperBalancerApplication(Component):
                )
 
 
-    def _choose_model(self, value):
-        self._model_type = not self._model_type
-        self._model.change_model()
+    def _onModelChangeClick(self, value):
+        self._model_index = not self._model_index
+        if self._model_index:
+            self._model = self._modelVbd
+        else:
+            self._model = self._modelFull
         self.set_state()
 
 
@@ -1415,9 +1420,9 @@ class OperBalancerApplication(Component):
 
                                                              ),
                     View(layout="row", style={'align': 'left', 'height': 30})(RadioButton(text='Наращивание добычи',
-                                                                         checked=self._model_type,
-                                                                         on_change=self._choose_model,
-                                                                         style={'width': 500,
+                                                                                          checked=self._model_index,
+                                                                                          on_change=self._choose_model,
+                                                                                          style={'width': 500,
 
                                                                                 'background-color': '#002033',
                                                                                 'color': 'white', "font-size": 13}),
@@ -1655,9 +1660,9 @@ class OperBalancerApplication(Component):
 
                                                              ),
                     View(layout="row", style={'align': 'left', 'height': 30})(RadioButton(text='Наращивание добычи',
-                                                                         checked=self._model_type,
-                                                                         on_change=self._choose_model,
-                                                                         style={'width': 500,
+                                                                                          checked=self._model_index,
+                                                                                          on_change=self._choose_model,
+                                                                                          style={'width': 500,
                                                                                 'background-color': '#002033',
                                                                                 'height': 30,
                                                                                 'color': 'white', "font-size": 13}),
@@ -1852,7 +1857,7 @@ class OperBalancerApplication(Component):
         )
 
     def render(self):
-        if self._model_type:
+        if self._model_index:
             return self.vbd()
         else:
             return self.reload_app()
