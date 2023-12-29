@@ -18,7 +18,7 @@ class ModelProxy(DataModel):
     def __getattr__(self, name):
         return getattr(self.__model, name)
 
-    def switch(self):
+    def change_model(self):
         if self.__modelIndex == 0:
             self.__modelIndex = 1
             self.__model = self.__modelB

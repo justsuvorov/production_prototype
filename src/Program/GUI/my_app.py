@@ -934,7 +934,7 @@ class OperBalancerApplication(Component):
     def _onModelChangeClick(self, value):
         self._enableOnChangeCalback = False
         self._model_index = not self._model_index
-        self._model.switch()
+        self._model.change_model()
         self._model.choose_month(value=self._model.months[self._model.index])
         self.set_state()
         self._enableOnChangeCalback = True

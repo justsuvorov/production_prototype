@@ -3,8 +3,8 @@ import datetime
 from Program.DOTests.HierarchyFromRatingsTest import *
 from Program.Production.GfemScenarios import RegressionScenarios, SortedGfemData, GfemDataFrame, PortuDataFrame
 from Program.Production.AppGui import Application
-from Program.GUI.my_app import OperBalancerApplication
-from Program.GUI.data_model import DataModel
+from Program.GUI.my_app_gemba import OperBalancerApplication
+from Program.GUI.data_model_gemba import DataModel
 from edifice import App
 import click
 from pathlib import Path
@@ -29,10 +29,14 @@ def main(path: str):
                                                     file_path=path)
                                                                 )
                                     )
+    """
     data_model_full = DataModelFull(scenarios=scenarios, path=path, five_year_format=True)
     data_model_full.initialization()
     data_model_vbd = DataModelVbd(scenarios=scenarios, path=path, five_year_format=True)
     data_model_vbd.initialization()
+    """
+    data_model_gemba = DataModel(scenarios=scenarios, path=path, five_year_format=True, vbd=True)
+    data_model_gemba.initializtion()
   #  vbd_data_model = DataModel(scenarios=vbd_scenarios, path=path, five_year_format=True, vbd=True)
   #  full_oper_balaner_model = FullOperModel(data_model=data_model, vbd_data_model=vbd_data_model)
    # full_oper_balaner_model.initialization()
@@ -40,7 +44,9 @@ def main(path: str):
  #   data_model.full_initializtion()
    # app = Application(scenarios=scenarios, path=path)
     #app = MyApplication(data_model=data_model, result_path=path)
-    app = OperBalancerApplication(model_proxy=ModelProxy(modelA=data_model_full, modelB=data_model_vbd), result_path=path)
+ #   app = OperBalancerApplication(model_proxy=ModelProxy(modelA=data_model_full, modelB=data_model_vbd), result_path=path)
+    app = OperBalancerApplication(model_proxy=data_model_gemba,
+                                  result_path=path)
  #   app = BalancerViewerApplication(data_model=data_model, result_path=path)
 
  #   app.initialization()
