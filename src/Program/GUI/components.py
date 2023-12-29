@@ -109,7 +109,6 @@ class DefaultSlider(Component):
                  label: str,
                  value: DataValue,
                  fcf_value: DataValue,
-
                  min_value: DataValue,
                  max_value: DataValue,
                  onChanged: Callable[[str or float], None] = None,
@@ -123,7 +122,6 @@ class DefaultSlider(Component):
         self.__max_value = max_value
         self.__onChanged = onChanged
 
-
     def render(self):
 
         return View(layout="row", style={'background-color': '#002033', 'color': 'white', 'height': 30 })(
@@ -131,36 +129,27 @@ class DefaultSlider(Component):
             Slider(value=self.__value.toFloat,
                    min_value=self.__min_value.toFloat,
                    max_value=self.__max_value.toFloat,
-                   #    on_mouse_up=lambda value1: self.control(copmany=name, value=value),
-                   #     on_mouse_down=lambda value1: self.control(copmany=name, value=value),
-                   # on_change=self.__onValueChanged,
                    on_change=self.__onValueChanged,
                    on_mouse_up=self.__onSliderComplete,
                   ),
 
             TextInput(text=self.__value.toStr,
-                      #        on_click=lambda value1 :self.control(copmany=name, value=value),
                       on_change=self.__onValueChanged,
                       on_edit_finish=self.__onInputComplete,
                       style=default_label(i=6)),
-            #  TextInput(round(float(value), 1), on_change=lambda value: self.set_do_value(value=float(value), copmany=name)),
             Label(self.__fcf_value.toStr,
                   style=default_label(i=3))
-        )
+            )
 
     def __onSliderComplete(self, value):
         if self.__onChanged:
           self.__onChanged(self.__value.toFloat)
 
-
-
     def __onInputComplete(self):
         if self.__onChanged:
             self.__onChanged(self.__value.toFloat)
 
-
     def __onValueChanged(self, value):
-   #     print(f'new value: {value}')
         self.__value.update(value)
 
     def should_update(self, newprops: PropsDict, newstate: Mapping[Text, Any]) -> bool:

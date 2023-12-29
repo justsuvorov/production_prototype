@@ -932,19 +932,14 @@ class OperBalancerApplication(Component):
 
 
     def _onModelChangeClick(self, value):
-     #   self._enableOnChangeCalback = False
+        self._enableOnChangeCalback = False
         self._model_index = not self._model_index
         self._model.switch()
-
         self._model.choose_month(value=self._model.months[self._model.index])
-
-        print(f'OperBalancerApplication._onModelChangeClick | Before set_stste')
         self.set_state()
-        print(f'OperBalancerApplication._onModelChangeClick | After set_stste')
-   #     self._enableOnChangeCalback = True
+        self._enableOnChangeCalback = True
 
     def render(self):
-
 
         if self._model_index:
             label = 'Прирост '
@@ -1002,9 +997,8 @@ class OperBalancerApplication(Component):
                                                                                           checked=self._model_index,
                                                                                           on_change=self._onModelChangeClick,
                                                                                           style={'width': 500,
-
-                                                                                'background-color': '#002033',
-                                                                                'color': 'white', "font-size": 13}),
+                                                                                                 'background-color': '#002033',
+                                                                                                  'color': 'white', "font-size": 13}),
 
                                                                 ),
 
