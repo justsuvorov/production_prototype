@@ -15,6 +15,7 @@ from Program.ObjectBuilders.Parser import *
 from Program.GUI.my_app import MonitoringApp, BalancerViewerApplication
 from Program.GUI.data_model_vbd import DataModelVbd
 from Program.GUI.data_model_full import DataModelFull
+from Program.GUI.data_model import ModelProxy
 
 #@click.command()
 #@click.option('--path')
@@ -39,7 +40,7 @@ def main(path: str):
  #   data_model.full_initializtion()
    # app = Application(scenarios=scenarios, path=path)
     #app = MyApplication(data_model=data_model, result_path=path)
-    app = OperBalancerApplication(data_modelFull=data_model_full, data_modelVbd=data_model_vbd, result_path=path)
+    app = OperBalancerApplication(model_proxy=ModelProxy(modelA=data_model_full, modelB=data_model_vbd), result_path=path)
  #   app = BalancerViewerApplication(data_model=data_model, result_path=path)
 
  #   app.initialization()

@@ -1,9 +1,11 @@
 import os
 from typing import Callable
+
+import edifice
 from edifice import Label,  Slider, Dropdown, View, CheckBox,TextInput,  Component, StateManager, Window, Button, ScrollView, RadioButton
 from edifice.components.forms import FormDialog, Form
 from edifice.components import plotting
-from Program.GUI.data_model import DataModel
+from Program.GUI.data_model import DataModel, ModelProxy
 from Program.GUI.data_model_monitoring import *
 from Program.GUI.data_value import DataValue
 from Program.GUI.components import default_label, DefaultSlider, add_divider, DefaultDropdown
@@ -706,17 +708,18 @@ class BalancerViewerApplication(Component):
 
 class OperBalancerApplication(Component):
     def __init__(self,
-                 data_modelFull: DataModel,
-                 data_modelVbd: DataModel,
+                 model_proxy: DataModel,
+           #      data_modelFull: DataModel,
+           #      data_modelVbd: DataModel,
                  result_path = None,
             #     vbd_data_model: DataModel = None,
                  ):
         super().__init__()
         self.__result_path = result_path
         self._model_index = False
-        self._modelFull = data_modelFull
-        self._modelVbd = data_modelVbd
-        self._model = data_modelFull
+  #      self._modelFull = data_modelFull
+  #      self._modelVbd = data_modelVbd
+        self._model = model_proxy
         self._enableOnChangeCalback = True
         self._refresh_plots = True
         self.state = StateManager({
@@ -724,6 +727,7 @@ class OperBalancerApplication(Component):
         })
         self.result_path = result_path +'\Results.xlsx'
         self.names = []
+       # self.state_m = edifice.StateValue(initial_value=self._model_index)
 
 
     def _on_dropdown_select(self, value):
@@ -853,8 +857,8 @@ class OperBalancerApplication(Component):
         self._enableOnChangeCalback = True
 
     def _on_Reset_click_button(self, value):
+        self._on_gpn_changed(value=self._model.company_value.toFloat)
         self._enableOnChangeCalback = False
-        self._on_gpn_changed(value=self._model.company_value)
 
         self.set_state()
         self._enableOnChangeCalback = True
@@ -928,16 +932,20 @@ class OperBalancerApplication(Component):
 
 
     def _onModelChangeClick(self, value):
+     #   self._enableOnChangeCalback = False
         self._model_index = not self._model_index
-        if self._model_index:
-            self._model = self._modelVbd
-        else:
-            self._model = self._modelFull
-        self._model.choose_month(value=self._model.months[self._model.index])
-        self.set_state()
+        self._model.switch()
 
+        self._model.choose_month(value=self._model.months[self._model.index])
+
+        print(f'OperBalancerApplication._onModelChangeClick | Before set_stste')
+        self.set_state()
+        print(f'OperBalancerApplication._onModelChangeClick | After set_stste')
+   #     self._enableOnChangeCalback = True
 
     def render(self):
+
+
         if self._model_index:
             label = 'Прирост '
             label2 = 'Прирост '
@@ -1025,6 +1033,7 @@ class OperBalancerApplication(Component):
                     #        Label("", style={"width": 200, "align": 'center'}, ),
 
                     ScrollView(layout="column", style={'background-color': '#002033', 'color': 'white', 'height': 200})(
+
                         DefaultSlider(value=self._model.vostok_value,
                                       fcf_value=self._model.vostok_fcf,
                                       label=self._model.company_names[0],
@@ -1033,6 +1042,7 @@ class OperBalancerApplication(Component):
                                       onChanged=self._on_vostok_changed if self._enableOnChangeCalback else None,
 
                                       ),
+
 
                         DefaultSlider(value=self._model.megion_value,
                                       fcf_value=self._model.megion_fcf,

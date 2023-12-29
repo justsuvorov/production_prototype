@@ -2,16 +2,17 @@ import edifice
 import numpy as np
 import pandas as pd
 from copy import deepcopy, copy
-from typing import Callable
+from typing import Callable, Mapping, Text, Any
 from Program.GUI.data_value import DataValue
 
 from Program.Production.GfemScenarios import *
-
+from edifice._component import PropsDict
 from edifice import Label, Slider, Dropdown, View, CheckBox, TextInput, Component, StateManager, Window, Button, \
-    ScrollView
+    ScrollView, QtWidgetComponent, WidgetComponent, BaseComponent
 from edifice.components.forms import FormDialog, Form
 from edifice.components import plotting
 from edifice import Timer
+
 
 
 def add_divider(comp, comp2, comp3, comp4):
@@ -99,6 +100,9 @@ class DefaultDropdown(Component):
             Label(self.__label_value.toStr, style=default_label(i=1), )
         )
 
+ #   def should_update(self, newprops: PropsDict, newstate: Mapping[Text, Any]) -> bool:
+ #       return True
+
 
 class DefaultSlider(Component):
     def __init__(self,
@@ -148,10 +152,17 @@ class DefaultSlider(Component):
         if self.__onChanged:
           self.__onChanged(self.__value.toFloat)
 
+
+
     def __onInputComplete(self):
         if self.__onChanged:
             self.__onChanged(self.__value.toFloat)
 
+
     def __onValueChanged(self, value):
    #     print(f'new value: {value}')
         self.__value.update(value)
+
+    def should_update(self, newprops: PropsDict, newstate: Mapping[Text, Any]) -> bool:
+        return True
+
