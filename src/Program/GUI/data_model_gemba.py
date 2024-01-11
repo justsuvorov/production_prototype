@@ -227,9 +227,9 @@ class DataModel:
         self.__min_value_full['ГПН'] = DataValue(str(0))
         self.__max_value_full['ГПН'] = DataValue(str(self.__data[0]['ГПН'][2]))
         self.__min_value_jv['ГПН'] = DataValue(str(0))
-        self.__max_value_full['ГПН'] = DataValue('50000')
+        self.__max_value_full['ГПН'] = DataValue('176219')
         self.__max_value_jv['ГПН'] = DataValue(str(self.__data[1]['ГПН'][2]))
-        self.__max_value_jv['ГПН'] = DataValue('50000')
+        self.__max_value_jv['ГПН'] = DataValue('176219')
 
         for name in self.company_names:
             self.__min_value_full[name] = DataValue(str(0))
@@ -320,7 +320,7 @@ class DataModel:
         self.model_type = not self.model_type
         if not self.model_type:
             self.__five_year_scenarios = self.__model['origin']['scenario']
-            self.max_value['ГПН'] = DataValue('50000')
+            self.max_value['ГПН'] = DataValue('176219')
 
         else:
             self.__five_year_scenarios = self.__model['vbd']['scenario']

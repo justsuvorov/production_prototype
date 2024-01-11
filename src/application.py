@@ -17,9 +17,9 @@ from Program.GUI.data_model_vbd import DataModelVbd
 from Program.GUI.data_model_full import DataModelFull
 from Program.GUI.data_model import ModelProxy
 
-#@click.command()
-#@click.option('--path')
-path = r'C:\Users\User\Documents\production_prototype\src\program\data'
+@click.command()
+@click.option('--path')
+#path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
 
@@ -29,12 +29,12 @@ def main(path: str):
                                                     file_path=path)
                                                                 )
                                     )
-    """
+
     data_model_full = DataModelFull(scenarios=scenarios, path=path, five_year_format=True)
     data_model_full.initialization()
     data_model_vbd = DataModelVbd(scenarios=scenarios, path=path, five_year_format=True)
     data_model_vbd.initialization()
-    """
+    
     data_model_gemba = DataModel(scenarios=scenarios, path=path, five_year_format=True, vbd=True)
     data_model_gemba.initializtion()
   #  vbd_data_model = DataModel(scenarios=vbd_scenarios, path=path, five_year_format=True, vbd=True)
@@ -55,7 +55,7 @@ def main(path: str):
 
     #Просмотрщик для балансировки
 
-
+    
     """
     
     gap = 1
@@ -67,4 +67,4 @@ def main(path: str):
     App(app).start()
     """
 if __name__ == '__main__':
-    main(path)
+    main()
