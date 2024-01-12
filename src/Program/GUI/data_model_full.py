@@ -224,6 +224,8 @@ class DataModelFull(DataModel):
          except:
                 print('ошибка свода в формате пятилетки')
 
+        self.choose_month(value=self.month[0])
+
     def choose_scenario(self, value: bool = None):
 
         self.joint_venture = not self.joint_venture

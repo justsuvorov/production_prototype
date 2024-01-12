@@ -42,7 +42,10 @@ class GfemDataFrame:
         self.company_names = None
 
     def result(self):
+
         return self._recalculate_indicators()
+
+
 
     def _data(self) -> pd.DataFrame:
         return self.parser.data()
@@ -81,6 +84,7 @@ class GfemDataFrame:
         prepared_data['НДН за первый месяц; т./сут. с долей СП'] = prepared_data['НДН за первый месяц; тыс. т. с долей СП'] / (365 / 12) * 1000
         prepared_data['Уд.FCF с СП на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц c долей СП']/prepared_data['НДН за первый месяц; тыс. т. с долей СП']
         return prepared_data
+
 
 
 class PortuDataFrame(GfemDataFrame):

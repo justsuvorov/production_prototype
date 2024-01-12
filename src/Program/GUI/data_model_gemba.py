@@ -257,7 +257,7 @@ class DataModel:
         self.crude_list = self.__do_result_list()
         self.result_crude_list = self.__result_crude_list()
 
-        self.choose_scenario()
+
         if self.__five_year_format:
          try:
             self.__five_year_parser_orig = SetOfWellsParserMonth(data_path=self.__path_str, vbd=False)
@@ -314,7 +314,8 @@ class DataModel:
 
             except:
                 print('Ошибка свода в формате пятилетки ВБД')
-        self.choose_month(value=self.months[self.index])
+        self.choose_scenario()
+
 
     def change_model(self):
         self.model_type = not self.model_type
@@ -324,7 +325,7 @@ class DataModel:
 
         else:
             self.__five_year_scenarios = self.__model['vbd']['scenario']
-            self.max_value['ГПН'] = DataValue('6217')
+            self.max_value['ГПН'] = DataValue('8483')
 
         self.choose_month(value=self.months[self.index])
 
