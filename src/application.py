@@ -17,9 +17,9 @@ from Program.GUI.data_model_vbd import DataModelVbd
 from Program.GUI.data_model_full import DataModelFull
 from Program.GUI.data_model import ModelProxy
 
-@click.command()
-@click.option('--path')
-#path = r'C:\Users\User\Documents\production_prototype\src\program\data'
+#@click.command()
+#@click.option('--path')
+path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
 
@@ -30,10 +30,7 @@ def main(path: str):
                                                                 )
                                     )
 
-    data_model_full = DataModelFull(scenarios=scenarios, path=path, five_year_format=True)
-    data_model_full.initialization()
-    data_model_vbd = DataModelVbd(scenarios=scenarios, path=path, five_year_format=True)
-    data_model_vbd.initialization()
+
     
     data_model_gemba = DataModel(scenarios=scenarios, path=path, five_year_format=True, vbd=True)
     data_model_gemba.initializtion()
@@ -55,16 +52,19 @@ def main(path: str):
 
     #Просмотрщик для балансировки
 
-    
+
     """
-    
-    gap = 1
+
+    gap = 0
+
     filtered = {'Company': 'All', 'Field': 'All'}
     monitoring_module = AroMonitoring(file_path=path, filter=filtered, gap=gap) #,date=date)
     app = MonitoringApp(data_model=DataModelMonitoring(monitoring_module=monitoring_module),
                         result_path=path)
 
     App(app).start()
+    
     """
+
 if __name__ == '__main__':
-    main()
+    main(path)

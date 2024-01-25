@@ -9,7 +9,7 @@ from typing import Callable
 from Program.AROMonitoring.aro_monitoring import AroMonitoring
 from Program.Production.GfemScenarios import *
 from Program.Production.config_db import CompanyDictionary
-from Program.ObjectBuilders.Parser import SetOfWellsParserMonth
+from Program.ObjectBuilders.Parser import SetOfWellsParserMonth, SetOfWellsVBDParserMonth
 
 from edifice import Label,  Slider, Dropdown, View, CheckBox,TextInput,  Component, StateManager, Window, Button, ScrollView
 from edifice.components.forms import FormDialog, Form
@@ -166,14 +166,26 @@ class DataModel:
         return x, new_values
 
     def plot_coordinates(self):
-        if self.joint_venture:
-            j = 1
-            key = 'НДН за первый месяц; т./сут. с долей СП'
-            key2 ='Уд.FCF с СП на 1 тн. (за 1 мес.)'
+
+        if self.model_type:
+            if self.joint_venture:
+                key = 'НДН за первый месяц; т./сут. с долей СП'
+                key2 = 'Уд.FCF с СП на 1 тн. (за 1 год)'
+                j = 1
+            else:
+                j = 0
+                key = 'НДН за первый месяц; т./сут.'
+                key2 = 'Уд.FCF на 1 тн. (за 1 год)'
         else:
-            j = 0
-            key = 'НДН за первый месяц; т./сут.'
-            key2 = 'Уд.FCF на 1 тн. (за 1 мес.)'
+
+            if self.joint_venture:
+                j = 1
+                key = 'НДН за первый месяц; т./сут. с долей СП'
+                key2 ='Уд.FCF с СП на 1 тн. (за 1 мес.)'
+            else:
+                j = 0
+                key = 'НДН за первый месяц; т./сут.'
+                key2 = 'Уд.FCF на 1 тн. (за 1 мес.)'
         temp_dataframe = self.__dataframe_list[j]
 
         x = {}
@@ -187,6 +199,7 @@ class DataModel:
 
             x2[name] = np.array(values[value])
             company_dataframe = temp_dataframe.loc[temp_dataframe['ДО'] == name]
+
             company_result = company_dataframe[[key]].to_numpy()
             company_data = np.copy(company_result)
             x_initial = company_data.T[0]
@@ -197,6 +210,7 @@ class DataModel:
             else:
                 try:
                     result = company_dataframe[key2].iloc[array_index]
+
                 except IndexError:
                     result = company_dataframe[key2].iloc[-1]
 
@@ -204,8 +218,24 @@ class DataModel:
             y2[name] = result
             x[name] = x_j
             y[name] = company_dataframe[key2]
+            if self.model_type:
+                y[name] = y[name]/1000
+            if self.model_type:
+                y2[name] = y2[name] / 1000
 
         return x, y, x2, y2
+
+    def __load_min_max(self, data):
+        self.__min_value_full['ГПН'] = DataValue(str(0))
+        self.__max_value_full['ГПН'] = DataValue(str(self.__data[0]['ГПН'][2]))
+        self.__min_value_jv['ГПН'] = DataValue(str(0))
+        self.__max_value_jv['ГПН'] = DataValue(str(self.__data[1]['ГПН'][2]))
+
+        for name in self.company_names:
+            self.__min_value_full[name] = DataValue(str(0))
+            self.__max_value_full[name] = DataValue(str(self.__data[0][name][2]))
+            self.__min_value_jv[name] = DataValue(str(0))
+            self.__max_value_jv[name] = DataValue(str(self.__data[1][name][2]))
 
     def initializtion(self):
         self.__data = self.scenarios.scenarios()
@@ -224,18 +254,7 @@ class DataModel:
         self.company_names_full.append('Арктикгаз')
         self.company_names_full.append('Ангара')
 
-        self.__min_value_full['ГПН'] = DataValue(str(0))
-        self.__max_value_full['ГПН'] = DataValue(str(self.__data[0]['ГПН'][2]))
-        self.__min_value_jv['ГПН'] = DataValue(str(0))
-        self.__max_value_full['ГПН'] = DataValue('176219')
-        self.__max_value_jv['ГПН'] = DataValue(str(self.__data[1]['ГПН'][2]))
-        self.__max_value_jv['ГПН'] = DataValue('176219')
 
-        for name in self.company_names:
-            self.__min_value_full[name] = DataValue(str(0))
-            self.__max_value_full[name] = DataValue(str(self.__data[0][name][2]))
-            self.__min_value_jv[name] = DataValue(str(0))
-            self.__max_value_jv[name] = DataValue(str(self.__data[1][name][2]))
 
         names = ['Заполярье', 'Шельф', 'Меретояханефтегаз', 'Пальян', 'СПД', 'Арктикгаз', 'Ангара']
         for name in names:
@@ -257,7 +276,6 @@ class DataModel:
         self.crude_list = self.__do_result_list()
         self.result_crude_list = self.__result_crude_list()
 
-
         if self.__five_year_format:
          try:
             self.__five_year_parser_orig = SetOfWellsParserMonth(data_path=self.__path_str, vbd=False)
@@ -265,20 +283,22 @@ class DataModel:
             print('Формат пятилетки прочитан')
             self.__five_year_scenarios_orig = {}
             for month in self.months:
-
                 self.__five_year_parser_orig.set_month(month=month)
                 self.__five_year_scenarios_orig[month] = {}
-                self.__five_year_scenarios_orig[month]['RegressionScenario'] = RegressionScenarios(sorted_data=SortedGfemData(
-                    vbd=False,
-                    prepared_data=GfemDataFrame(
-                        parser=self.__five_year_parser,
-                        file_path=self.__path_str)))
+                self.__five_year_scenarios_orig[month]['RegressionScenario'] = RegressionScenarios(
+                    sorted_data=SortedGfemData(
+                        vbd=False,
+                        prepared_data=GfemDataFrame(
+                            parser=self.__five_year_parser,
+                            file_path=self.__path_str)))
 
                 self.__five_year_scenarios_orig[month]['Data'] = self.__five_year_scenarios_orig[month]['RegressionScenario'].scenarios()
                 self.__five_year_scenarios_orig[month]['DataframeList'] = self.__five_year_scenarios_orig[month]['RegressionScenario'].dataframe
 
+
             self.__model['origin']['scenario'] = self.__five_year_scenarios_orig
             self.__five_year_scenarios = self.__model['origin']['scenario']
+            self.__load_min_max(data=self.__five_year_scenarios_orig[self.months[0]]['Data'])
 
          except KeyError as e:
                 print(e)
@@ -288,24 +308,28 @@ class DataModel:
 
         if self.__vbd:
             try:
-                self.__five_year_parser_vbd = SetOfWellsParserMonth(data_path=self.__path_str, vbd=True)
+           #     self.__five_year_parser_vbd = SetOfWellsParserMonth(data_path=self.__path_str, vbd=True)
+                self.__five_year_parser_vbd = SetOfWellsVBDParserMonth(data_path=self.__path_str)
                 self.__five_year_parser_vbd.read_excel()
                 print('Формат пятилетки ВБД прочитан')
                 self.__five_year_scenarios_vbd = {}
-                for month in self.months:
-                    self.__five_year_parser_vbd.set_month(month=month)
-                    self.__five_year_scenarios_vbd[month] = {}
-                    self.__five_year_scenarios_vbd[month]['RegressionScenario'] = RegressionScenarios(
-                        sorted_data=SortedGfemData(
-                            vbd=self.__vbd,
-                            prepared_data=GfemDataFrame(
-                                parser=self.__five_year_parser_vbd,
-                                file_path=self.__path_str)))
+               # for month in self.months:
+                month = self.months[0]
+                self.__five_year_parser_vbd.set_month(month=month)
+                self.__five_year_scenarios_vbd[month] = {}
+                self.__five_year_scenarios_vbd[month]['RegressionScenario'] = RegressionScenarios(
+                    vbd=True,
+                    sorted_data=SortedGfemData(
+                        vbd=self.__vbd,
+                        prepared_data=GfemDataFrame(
+                            vbd=True,
+                            parser=self.__five_year_parser_vbd,
+                            file_path=self.__path_str)))
 
-                    self.__five_year_scenarios_vbd[month]['Data'] = self.__five_year_scenarios_vbd[month][
-                        'RegressionScenario'].scenarios()
-                    self.__five_year_scenarios_vbd[month]['DataframeList'] = self.__five_year_scenarios_vbd[month][
-                        'RegressionScenario'].dataframe
+                self.__five_year_scenarios_vbd[month]['Data'] = self.__five_year_scenarios_vbd[month][
+                    'RegressionScenario'].scenarios()
+                self.__five_year_scenarios_vbd[month]['DataframeList'] = self.__five_year_scenarios_vbd[month][
+                    'RegressionScenario'].dataframe
 
                 self.__model['vbd']['scenario'] = self.__five_year_scenarios_vbd
             except KeyError as e:
@@ -321,20 +345,22 @@ class DataModel:
         self.model_type = not self.model_type
         if not self.model_type:
             self.__five_year_scenarios = self.__model['origin']['scenario']
-            self.max_value['ГПН'] = DataValue('176219')
+
 
         else:
             self.__five_year_scenarios = self.__model['vbd']['scenario']
-            self.max_value['ГПН'] = DataValue('8483')
+
 
         self.choose_month(value=self.months[self.index])
 
     def __init_month_from_gfem(self, month: str):
-
+        if self.model_type:
+            month = self.months[0]
         self.__data = self.__five_year_scenarios[month]['Data']
         self.__dataframe_list = self.__five_year_scenarios[month]['DataframeList']
         self.__solution = SolutionBalancer(dataframe_list=self.__dataframe_list,
                                            company_names=self.company_names_full)
+        self.__load_min_max(data=self.__data)
         print('Прогноз показателей загружен')
 
     def __load_min_max_for_other_companies(self, forecast_list):
@@ -366,7 +392,6 @@ class DataModel:
 
         self.choose_month(value=self.months[self.index])
         self.plot_coordinates()
-
 
     def __company_result_list(self):
         company_result_list = self.__constraints.dataframe['ДО'].iloc[:23].to_list()
@@ -418,6 +443,7 @@ class DataModel:
                print('Ошибка чтения данных для выбранного месяца, используются данные свода')
                self.__dataframe_list = self.__init_dataframe_list
                self.__data = self.__init_data
+
 
         self.index = int(np.where(self.__constraints.months == value)[0])
         val = self.__constraints.extract_value(index=int(np.where(self.__constraints.months == value)[0]))

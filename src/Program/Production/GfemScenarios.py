@@ -62,6 +62,18 @@ class GfemDataFrame:
         prepared_data['FCF первый месяц'] = data['FCF первый месяц:']/1000
         prepared_data['НДН за первый месяц; тыс. т'] = data['НДН за первый месяц; тыс. т']
         prepared_data['НДН за первый месяц; т./сут.'] = prepared_data['НДН за первый месяц; тыс. т']/(365/12)*1000
+        if self.__vbd:
+            try:
+                prepared_data['Уд.FCF на 1 тн. (за 1 год)'] = data['FCF скользящий год'] / data[
+                    'НДН скользящий год']
+                prepared_data['FCF скользящий год'] = data['FCF скользящий год']/1000
+
+            except ZeroDivisionError:
+                data['НДН скользящий год'].loc[
+                    data['НДН скользящий год'] == 0] = 0.0001
+                prepared_data['Уд.FCF на 1 тн. (за 1 год)'] = data['FCF скользящий год']/1000 / data[
+                    'НДН скользящий год']
+
         try:
             prepared_data['Уд.FCF на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц']/prepared_data['НДН за первый месяц; тыс. т']
         except ZeroDivisionError:
@@ -78,11 +90,25 @@ class GfemDataFrame:
             prepared_data.at[index,'ДО'] = company_dict[row['Месторождение']]
             prepared_data.at[index,'Доля СП по добыче'] = companydict.joint_venture_crude_part[row['ДО']]
             prepared_data.at[index,'Доля СП по FCF'] = companydict.joint_venture_fcf_part[row['ДО']]
+        if self.__vbd:
+            prepared_data['НДН скользящий год с долей СП'] = data[
+                                                                 'НДН скользящий год'] * prepared_data['Доля СП по добыче']
+            prepared_data['FCF скользящий год c долей СП'] = data['FCF скользящий год'] * prepared_data[
+                'Доля СП по FCF']
+            prepared_data['Уд.FCF с СП на 1 тн. (за 1 год)'] = prepared_data['FCF скользящий год c долей СП'] / \
+                                                               prepared_data[
+                                                                   'НДН скользящий год с долей СП']
 
+            prepared_data['FCF скользящий год c долей СП'] = prepared_data['FCF скользящий год c долей СП']/1000
         prepared_data['НДН за первый месяц; тыс. т. с долей СП'] = prepared_data['НДН за первый месяц; тыс. т'] * prepared_data['Доля СП по добыче']
-        prepared_data['FCF первый месяц c долей СП'] = prepared_data['FCF первый месяц'] * prepared_data['Доля СП по FCF']
+
+        prepared_data['FCF первый месяц c долей СП'] = prepared_data['FCF первый месяц'] * prepared_data[
+            'Доля СП по FCF']
+
         prepared_data['НДН за первый месяц; т./сут. с долей СП'] = prepared_data['НДН за первый месяц; тыс. т. с долей СП'] / (365 / 12) * 1000
         prepared_data['Уд.FCF с СП на 1 тн. (за 1 мес.)'] = prepared_data['FCF первый месяц c долей СП']/prepared_data['НДН за первый месяц; тыс. т. с долей СП']
+
+
         return prepared_data
 
 
@@ -150,13 +176,20 @@ class SortedGfemData:
         result_data = []
         result_jv = []
         ascending = True
-        if self.__vbd == True: ascending = False
-        result_data.append(dataframe.sort_values(by='Уд.FCF на 1 тн. (за 1 мес.)', ascending=ascending))
-        result_jv.append(dataframe.sort_values(by='Уд.FCF с СП на 1 тн. (за 1 мес.)', ascending=ascending))
+        sorted_value_full = 'Уд.FCF на 1 тн. (за 1 мес.)'
+        sorted_value_sp = 'Уд.FCF с СП на 1 тн. (за 1 мес.)'
+        if self.__vbd:
+            ascending = False
+            sorted_value_full = 'Уд.FCF на 1 тн. (за 1 год)'
+            sorted_value_sp = 'Уд.FCF с СП на 1 тн. (за 1 год)'
+
+
+        result_data.append(dataframe.sort_values(by=sorted_value_full, ascending=ascending))
+        result_jv.append(dataframe.sort_values(by=sorted_value_sp, ascending=ascending))
         for name in company_names:
             result = dataframe.loc[dataframe['ДО'] == name]
-            result_data.append(result.sort_values(by='Уд.FCF на 1 тн. (за 1 мес.)', ascending=ascending))
-            result_jv.append(result.sort_values(by='Уд.FCF с СП на 1 тн. (за 1 мес.)', ascending=ascending))
+            result_data.append(result.sort_values(by=sorted_value_full, ascending=ascending))
+            result_jv.append(result.sort_values(by=sorted_value_sp, ascending=ascending))
 
         return {'Без учета СП': result_data, 'C учетом СП': result_jv}
 
@@ -165,10 +198,12 @@ class RegressionScenarios:
 
     def __init__(self,
                  sorted_data: SortedGfemData,
+                 vbd: bool = False
                  ):
         self.sorted_data = sorted_data
         self.company_names = None
         self.dataframe = []
+        self.__vbd = vbd
 
     def _data(self):
         data = self.sorted_data.result()
@@ -232,11 +267,18 @@ class RegressionScenarios:
         self.dataframe.append(jv_data[0])
         result_full = []
         result_jv = []
+        if self.__vbd:
+            fcf = 'FCF скользящий год'
+            fcf_jv = 'FCF скользящий год c долей СП'
+        else:
+            fcf = 'FCF первый месяц'
+            fcf_jv = 'FCF первый месяц c долей СП'
+
         for dataframe in full_data:
-            result_full.append(dataframe[['НДН за первый месяц; т./сут.', 'FCF первый месяц']])
+            result_full.append(dataframe[['НДН за первый месяц; т./сут.', fcf]])
 
         for dataframe in jv_data:
-            result_jv.append(dataframe[['НДН за первый месяц; т./сут. с долей СП', 'FCF первый месяц c долей СП']])
+            result_jv.append(dataframe[['НДН за первый месяц; т./сут. с долей СП', fcf_jv]])
 
         return [result_full, result_jv]
 
