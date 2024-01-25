@@ -254,8 +254,6 @@ class DataModel:
         self.company_names_full.append('Арктикгаз')
         self.company_names_full.append('Ангара')
 
-
-
         names = ['Заполярье', 'Шельф', 'Меретояханефтегаз', 'Пальян', 'СПД', 'Арктикгаз', 'Ангара']
         for name in names:
             self.__max_value_full[name] = DataValue(str(1))
@@ -289,12 +287,11 @@ class DataModel:
                     sorted_data=SortedGfemData(
                         vbd=False,
                         prepared_data=GfemDataFrame(
-                            parser=self.__five_year_parser,
+                            parser=self.__five_year_parser_orig,
                             file_path=self.__path_str)))
 
                 self.__five_year_scenarios_orig[month]['Data'] = self.__five_year_scenarios_orig[month]['RegressionScenario'].scenarios()
                 self.__five_year_scenarios_orig[month]['DataframeList'] = self.__five_year_scenarios_orig[month]['RegressionScenario'].dataframe
-
 
             self.__model['origin']['scenario'] = self.__five_year_scenarios_orig
             self.__five_year_scenarios = self.__model['origin']['scenario']
@@ -306,6 +303,7 @@ class DataModel:
          except:
                 print('ошибка свода в формате пятилетки')
 
+
         if self.__vbd:
             try:
            #     self.__five_year_parser_vbd = SetOfWellsParserMonth(data_path=self.__path_str, vbd=True)
@@ -313,7 +311,6 @@ class DataModel:
                 self.__five_year_parser_vbd.read_excel()
                 print('Формат пятилетки ВБД прочитан')
                 self.__five_year_scenarios_vbd = {}
-               # for month in self.months:
                 month = self.months[0]
                 self.__five_year_parser_vbd.set_month(month=month)
                 self.__five_year_scenarios_vbd[month] = {}
@@ -340,16 +337,13 @@ class DataModel:
                 print('Ошибка свода в формате пятилетки ВБД')
         self.choose_scenario()
 
-
     def change_model(self):
         self.model_type = not self.model_type
         if not self.model_type:
             self.__five_year_scenarios = self.__model['origin']['scenario']
 
-
         else:
             self.__five_year_scenarios = self.__model['vbd']['scenario']
-
 
         self.choose_month(value=self.months[self.index])
 
@@ -358,6 +352,7 @@ class DataModel:
             month = self.months[0]
         self.__data = self.__five_year_scenarios[month]['Data']
         self.__dataframe_list = self.__five_year_scenarios[month]['DataframeList']
+        print(self.__dataframe_list[1].head())
         self.__solution = SolutionBalancer(dataframe_list=self.__dataframe_list,
                                            company_names=self.company_names_full)
         self.__load_min_max(data=self.__data)
@@ -368,8 +363,7 @@ class DataModel:
         for name in names:
             self.__min_value_full[name] = DataValue(str(0))
             self.__min_value_jv[name] = DataValue(str(0))
-
-        forecast_names = [3,0,4,7,12,14,19]
+        forecast_names = [3, 0, 4, 7, 12, 14, 19]
         for i in range(len(forecast_names)):
             if forecast_list[forecast_names[i]] == 0:
                 value = round(forecast_list[forecast_names[i]],1) + 1
@@ -444,11 +438,9 @@ class DataModel:
                self.__dataframe_list = self.__init_dataframe_list
                self.__data = self.__init_data
 
-
         self.index = int(np.where(self.__constraints.months == value)[0])
         val = self.__constraints.extract_value(index=int(np.where(self.__constraints.months == value)[0]))
         self.forecast_list = self.__constraints.extract_list(index=self.index)
-
         self.__load_min_max_for_other_companies(forecast_list=self.forecast_list)
         self.target.update(val)
         self.forecast_sum.update(self.__constraints.extract_list(index=self.index)[20])

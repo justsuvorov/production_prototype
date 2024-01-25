@@ -147,12 +147,14 @@ class SetOfWellsVBDParserMonth(Parser):
 
         new_df['FCF первый месяц:'] = df.loc[:,'FCF_' + str(self.__month)]
         new_df['НДН за первый месяц; тыс. т'] = df.loc[:, 'Oil_'+ str(self.__month)]
+        a = self.__indicator_numbers[0]+11
+        b =  self.__indicator_numbers[2] + 11
 
-        new_df['FCF скользящий год'] = df.loc[:, 'FCF_' + '2023-12-01 00:00:00':'FCF_'  + '2024-12-01 00:00:00'].sum(axis=1)
+        new_df['FCF скользящий год'] = df.loc[:, 'FCF_' + '2023-12-01 00:00:00':'FCF_'  + '2024-11-01 00:00:00'].sum(axis=1)
+        new_df['FCF скользящий год'] = df.loc[:, df.columns[self.__indicator_numbers[2]]:df.columns[b]].sum(axis=1)
 
-        new_df['НДН скользящий год'] = df.loc[:, 'Oil_' + '2023-12-01 00:00:00':'Oil_'  + '2024-12-01 00:00:00'].sum(axis=1)
+        new_df['НДН скользящий год'] = df.loc[:, df.columns[self.__indicator_numbers[0]]:df.columns[a]].sum(axis=1)
 
-        print(new_df['FCF скользящий год'])
         return new_df
 
     def set_month(self, month: str):
