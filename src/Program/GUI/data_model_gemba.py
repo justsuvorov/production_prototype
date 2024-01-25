@@ -115,48 +115,6 @@ class DataModel:
         self.__model = {'vbd': {}, 'origin':{}}
         self.model_type = False
 
-    def reset_values(self):
-        self.company_value = DataValue('0')
-        self.company_fcf = DataValue('0')
-
-        self.vostok_value = DataValue('0.0')
-        self.megion_value = DataValue('0.0')
-        self.messoyaha_value = DataValue('0.0')
-        self.nng_value = DataValue('0.0')
-        self.orenburg_value = DataValue('0.0')
-        self.hantos_value = DataValue('0.0')
-        self.yamal_value = DataValue('0.0')
-        self.crude_sum = DataValue('0')
-
-        self.shelf_value = DataValue('0')
-        self.polar_value = DataValue('0')
-        self.meretoyaha_value = DataValue('0')
-        self.palyan_value = DataValue('0')
-        self.spd_value = DataValue('0')
-        self.arctic_value = DataValue('0')
-        self.angara_value = DataValue('0')
-
-        self.shelf_fcf = DataValue('-')
-        self.polar_fcf = DataValue('-')
-        self.meretoyaha_fcf = DataValue('-')
-        self.palyan_fcf = DataValue('-')
-        self.spd_fcf = DataValue('-')
-        self.arctic_fcf = DataValue('-')
-        self.angara_fcf = DataValue('-')
-
-        self.forecast_sum = DataValue('0')
-        self.result_crude_sum = DataValue('0')
-        self.quota = DataValue('0.0')
-
-        self.vostok_fcf = DataValue('0.0')
-        self.megion_fcf = DataValue('0.0')
-        self.messoyaha_fcf = DataValue('0.0')
-        self.nng_fcf = DataValue('0.0')
-        self.orenburg_fcf = DataValue('0.0')
-        self.hantos_fcf = DataValue('0.0')
-        self.yamal_fcf = DataValue('0.0')
-        self.fcf_sum = DataValue('0.0')
-
     def pie_plot_coordinates(self):
         values = self.__do_values_for_plot()
         x = []
@@ -303,10 +261,9 @@ class DataModel:
          except:
                 print('ошибка свода в формате пятилетки')
 
-
         if self.__vbd:
             try:
-           #     self.__five_year_parser_vbd = SetOfWellsParserMonth(data_path=self.__path_str, vbd=True)
+
                 self.__five_year_parser_vbd = SetOfWellsVBDParserMonth(data_path=self.__path_str)
                 self.__five_year_parser_vbd.read_excel()
                 print('Формат пятилетки ВБД прочитан')
