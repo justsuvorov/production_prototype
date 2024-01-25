@@ -33,7 +33,6 @@ class DataModel:
         self.__path_str = path
         self.__five_year_format = five_year_format
 
-
         self.company_value = DataValue('0')
         self.company_fcf = DataValue('0')
 

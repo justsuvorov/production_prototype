@@ -68,7 +68,7 @@ class SetOfWellsParserMonth(Parser):
         return self.__choose_month()
 
     def read_excel(self):
-        df = pd.read_excel(self.__data_path)
+        df = pd.read_excel(self.__data_path, sheet_name=0)
         df.iloc[0,self.__indicator_numbers[0]:self.__indicator_numbers[1]] =  'Oil_' + df.iloc[0, self.__indicator_numbers[0]:self.__indicator_numbers[1]].astype(str)
         df.iloc[0, self.__indicator_numbers[2]:] = 'FCF_'+ df.iloc[0, self.__indicator_numbers[2]:].astype(str)
 
@@ -111,7 +111,7 @@ class SetOfWellsVBDParserMonth(Parser):
 
                  ):
 
-        self.__data_path = data_path + '/VBD.xlsm'
+        self.__data_path = data_path + '/СВОД_NEW_Скв_5лет_испр.xlsm'
         self.__month = pd.to_datetime(month, format='%Y-%m')
         self.__indicator_numbers = [4, 64, 124]
         self.__df = None
@@ -120,7 +120,7 @@ class SetOfWellsVBDParserMonth(Parser):
         return self.__choose_month()
 
     def read_excel(self):
-        df = pd.read_excel(self.__data_path)
+        df = pd.read_excel(self.__data_path, sheet_name=1)
         df.iloc[0,self.__indicator_numbers[0]:self.__indicator_numbers[1]] =  'Oil_' + df.iloc[0, self.__indicator_numbers[0]:self.__indicator_numbers[1]].astype(str)
         df.iloc[0, self.__indicator_numbers[2]:] = 'FCF_'+ df.iloc[0, self.__indicator_numbers[2]:].astype(str)
 

@@ -17,9 +17,9 @@ from Program.GUI.data_model_vbd import DataModelVbd
 from Program.GUI.data_model_full import DataModelFull
 from Program.GUI.data_model import ModelProxy
 
-#@click.command()
-#@click.option('--path')
-path = r'C:\Users\User\Documents\production_prototype\src\program\data'
+@click.command()
+@click.option('--path')
+#path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
 
@@ -67,4 +67,4 @@ def main(path: str):
     """
 
 if __name__ == '__main__':
-    main(path)
+    main()
