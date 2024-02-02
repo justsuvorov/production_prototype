@@ -17,12 +17,12 @@ from Program.GUI.data_model_vbd import DataModelVbd
 from Program.GUI.data_model_full import DataModelFull
 from Program.GUI.data_model import ModelProxy
 
-@click.command()
-@click.option('--path')
-#path = r'C:\Users\User\Documents\production_prototype\src\program\data'
+#@click.command()
+#@click.option('--path')
+path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
-
+    """
     #domain_model_full = domain_model(file_path=Path(path))
     scenarios = RegressionScenarios(sorted_data=SortedGfemData(
                                             prepared_data=GfemDataFrame(
@@ -55,7 +55,7 @@ def main(path: str):
 
     """
 
-    gap = 0
+    gap = 1
 
     filtered = {'Company': 'All', 'Field': 'All'}
     monitoring_module = AroMonitoring(file_path=path, filter=filtered, gap=gap) #,date=date)
@@ -64,7 +64,7 @@ def main(path: str):
 
     App(app).start()
     
-    """
+
 
 if __name__ == '__main__':
-    main()
+    main(path)
