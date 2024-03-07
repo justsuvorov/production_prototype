@@ -261,36 +261,36 @@ class DataModel:
                 print('ошибка свода в формате пятилетки')
 
         if self.__vbd:
-            try:
+     #       try:
 
-                self.__five_year_parser_vbd = SetOfWellsVBDParserMonth(data_path=self.__path_str)
-                self.__five_year_parser_vbd.read_excel()
-                print('Формат пятилетки ВБД прочитан')
-                self.__five_year_scenarios_vbd = {}
-                month = self.months[0]
-                self.__five_year_parser_vbd.set_month(month=month)
-                self.__five_year_scenarios_vbd[month] = {}
-                self.__five_year_scenarios_vbd[month]['RegressionScenario'] = RegressionScenarios(
-                    vbd=True,
-                    sorted_data=SortedGfemData(
-                        vbd=self.__vbd,
-                        prepared_data=GfemDataFrame(
-                            vbd=True,
-                            parser=self.__five_year_parser_vbd,
-                            file_path=self.__path_str)))
+            self.__five_year_parser_vbd = SetOfWellsVBDParserMonth(data_path=self.__path_str)
+            self.__five_year_parser_vbd.read_excel()
+            print('Формат пятилетки ВБД прочитан')
+            self.__five_year_scenarios_vbd = {}
+            month = self.months[0]
+            self.__five_year_parser_vbd.set_month(month=month)
+            self.__five_year_scenarios_vbd[month] = {}
+            self.__five_year_scenarios_vbd[month]['RegressionScenario'] = RegressionScenarios(
+                vbd=True,
+                sorted_data=SortedGfemData(
+                    vbd=self.__vbd,
+                    prepared_data=GfemDataFrame(
+                        vbd=True,
+                        parser=self.__five_year_parser_vbd,
+                        file_path=self.__path_str)))
 
-                self.__five_year_scenarios_vbd[month]['Data'] = self.__five_year_scenarios_vbd[month][
-                    'RegressionScenario'].scenarios()
-                self.__five_year_scenarios_vbd[month]['DataframeList'] = self.__five_year_scenarios_vbd[month][
-                    'RegressionScenario'].dataframe
+            self.__five_year_scenarios_vbd[month]['Data'] = self.__five_year_scenarios_vbd[month][
+                'RegressionScenario'].scenarios()
+            self.__five_year_scenarios_vbd[month]['DataframeList'] = self.__five_year_scenarios_vbd[month][
+                'RegressionScenario'].dataframe
 
-                self.__model['vbd']['scenario'] = self.__five_year_scenarios_vbd
-            except KeyError as e:
-                print(e)
-                print('Ошибка свода в формате пятилетки ВБД')
+            self.__model['vbd']['scenario'] = self.__five_year_scenarios_vbd
+       #     except KeyError as e:
+       #         print(e)
+       #         print('Ошибка свода в формате пятилетки ВБД')
 
-            except:
-                print('Ошибка свода в формате пятилетки ВБД')
+       #     except:
+       #         print('Ошибка свода в формате пятилетки ВБД')
         self.choose_scenario()
 
     def change_model(self):

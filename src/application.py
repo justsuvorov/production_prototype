@@ -22,7 +22,7 @@ from Program.GUI.data_model import ModelProxy
 path = r'C:\Users\User\Documents\production_prototype\src\program\data'
 
 def main(path: str):
-    """
+
     #domain_model_full = domain_model(file_path=Path(path))
     scenarios = RegressionScenarios(sorted_data=SortedGfemData(
                                             prepared_data=GfemDataFrame(
@@ -63,7 +63,7 @@ def main(path: str):
                         result_path=path)
 
     App(app).start()
-    
+    """
 
 
 if __name__ == '__main__':

@@ -150,9 +150,7 @@ class SetOfWellsVBDParserMonth(Parser):
         a = self.__indicator_numbers[0]+11
         b =  self.__indicator_numbers[2] + 11
 
-        new_df['FCF скользящий год'] = df.loc[:, 'FCF_' + '2023-12-01 00:00:00':'FCF_'  + '2024-11-01 00:00:00'].sum(axis=1)
         new_df['FCF скользящий год'] = df.loc[:, df.columns[self.__indicator_numbers[2]]:df.columns[b]].sum(axis=1)
-
         new_df['НДН скользящий год'] = df.loc[:, df.columns[self.__indicator_numbers[0]]:df.columns[a]].sum(axis=1)
 
         return new_df

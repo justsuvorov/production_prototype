@@ -229,34 +229,48 @@ class RegressionScenarios:
         x_initial = data1.T[0]
         y_initial = data1.T[1]
         x1 = np.cumsum(x_initial)
-        x = x1[:, np.newaxis]
+
+
         y = np.cumsum(y_initial)
-       #lot(x, y, label = 'Исходный профиль')
-       # xlabel('НДН, тыс.т')
-       # ylabel("FCF, тыс. руб")
+        array_index = np.searchsorted(y,0, side="left")
+        y = y[array_index: ]
+        x1 = x1[array_index:]
+        x1 = np.insert(x1, 0, 0)
+        x = x1[:, np.newaxis]
+        y = np.insert(y, 0, 0)
+
 
         try:
             X_train, X_test, Y_train, Y_test = train_test_split(x, y,
                                                                 test_size=1,
-                                                                random_state=1)
+                                                                random_state=0)
 
             poly_model = PiecewiseRegressor(verbose=True,
-                                            binner=KBinsDiscretizer(n_bins=120))
+                                            binner=KBinsDiscretizer(n_bins=200))
         #    poly = PolynomialFeatures(2)
          #   poly_model2 = make_pipeline(poly, LinearRegression())
             poly_model.fit(X_train, Y_train)
+
+
         except :
             x1 = np.zeros(2)
             x = x1[:, np.newaxis]
             poly_model = PiecewiseRegressor(verbose=True,
-                                            binner=KBinsDiscretizer(n_bins=120))
+                                           binner=KBinsDiscretizer(n_bins=4120))
             poly_model.fit(x, np.zeros(2))
 
-      #  poly_model2.fit(X_train, Y_train)
-     #   plot(x, poly_model.predict(x),'g--', label='Кусочно-линейная аппрокимация',)
+          #  poly_model2.fit(X_train, Y_train)
+
       #  plot(x, poly_model2.predict(x), label='Апроксимация полиномом 2й степени')
-      #  legend()
-      #  show()
+
+        if not self.__vbd:
+            plot(x, y, label='Исходный профиль')
+            xlabel('НДН, тыс.т')
+            ylabel("FCF, тыс. руб")
+            legend()
+            plot(x, poly_model.predict(x), 'g--', label='Кусочно-линейная аппрокимация', )
+            show()
+
         return [poly_model, x.min(), x.max()]
 
     def data_for_regression(self):
