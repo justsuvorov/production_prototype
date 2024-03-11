@@ -6,6 +6,7 @@ import pathlib
 
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
+from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
@@ -16,8 +17,11 @@ from sklearn.linear_model import  LinearRegression, Lasso
 from sklearn.utils._testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.preprocessing import KBinsDiscretizer
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
 from mlinsights.mlmodel import PiecewiseRegressor
 from Program.Production.config_db import CompanyDictionary
+from scipy import optimize
 
 
 from Program.ObjectBuilders.Parser import *
@@ -229,48 +233,43 @@ class RegressionScenarios:
         x_initial = data1.T[0]
         y_initial = data1.T[1]
         x1 = np.cumsum(x_initial)
-
-
         y = np.cumsum(y_initial)
-        array_index = np.searchsorted(y,0, side="left")
-        y = y[array_index: ]
-        x1 = x1[array_index:]
-        x1 = np.insert(x1, 0, 0)
         x = x1[:, np.newaxis]
-        y = np.insert(y, 0, 0)
+        X_train, X_test, Y_train, Y_test = train_test_split(x, y,
+                                                            test_size=1,
+                                                            random_state=0)
 
 
-        try:
-            X_train, X_test, Y_train, Y_test = train_test_split(x, y,
-                                                                test_size=1,
-                                                                random_state=0)
+   #     try:
 
-            poly_model = PiecewiseRegressor(verbose=True,
-                                            binner=KBinsDiscretizer(n_bins=200))
-        #    poly = PolynomialFeatures(2)
-         #   poly_model2 = make_pipeline(poly, LinearRegression())
-            poly_model.fit(X_train, Y_train)
+        poly_model = PiecewiseRegressor(verbose=True,
+                                        binner=DecisionTreeRegressor(max_depth=9)
+                                       # binner=KBinsDiscretizer(n_bins=10, encode='onehot',  ),
+                                       )
+
+        poly_model.fit(X_train, Y_train)
 
 
-        except :
-            x1 = np.zeros(2)
-            x = x1[:, np.newaxis]
-            poly_model = PiecewiseRegressor(verbose=True,
-                                           binner=KBinsDiscretizer(n_bins=4120))
-            poly_model.fit(x, np.zeros(2))
+    #    except :
+   #         x1 = np.zeros(2)
+    #        x = x1[:, np.newaxis]
+    #        poly_model = PiecewiseRegressor(verbose=True,
+    #                                        binner=KBinsDiscretizer(n_bins=80))
+    #        poly_model.fit(x, np.zeros(2))
 
           #  poly_model2.fit(X_train, Y_train)
 
       #  plot(x, poly_model2.predict(x), label='Апроксимация полиномом 2й степени')
-
+        """
         if not self.__vbd:
             plot(x, y, label='Исходный профиль')
             xlabel('НДН, тыс.т')
             ylabel("FCF, тыс. руб")
-            legend()
-            plot(x, poly_model.predict(x), 'g--', label='Кусочно-линейная аппрокимация', )
-            show()
 
+            plot(x, poly_model.predict(x), 'g--', label='Кусочно-линейная аппрокимация', )
+            legend()
+            show()
+        """
         return [poly_model, x.min(), x.max()]
 
     def data_for_regression(self):
@@ -296,6 +295,24 @@ class RegressionScenarios:
 
         return [result_full, result_jv]
 
+
+class GaussianFeatures(BaseEstimator, TransformerMixin):
+    def __init__(self, N, width_factor=2):
+        self.N = N
+        self.width_factor = width_factor
+
+    @staticmethod
+    def _gauss_basis(x, y, width, axis=None):
+        arg = (x - y) / width
+        return np.exp(-0.5 * np.sum(arg ** 2, axis))
+
+    def fit(self, X, y=None):
+        self.centers_ = np.linspace(X.min(), X.max(), self.N)
+        self.width_ = self.width_factor * (self.centers_[1] - self.centers_[0])
+        return self
+
+    def transform(self, X):
+        return self._gauss_basis(X[:, :, np.newaxis], self.centers_, self.width_, axis=1)
 
 class SolutionBalancer:
 
