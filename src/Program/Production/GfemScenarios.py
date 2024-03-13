@@ -244,7 +244,7 @@ class RegressionScenarios:
 
         poly_model = PiecewiseRegressor(verbose=True,
                                         binner=DecisionTreeRegressor(max_depth=9)
-                                       # binner=KBinsDiscretizer(n_bins=10, encode='onehot',  ),
+                                       #binner=KBinsDiscretizer(n_bins=80),
                                        )
 
         poly_model.fit(X_train, Y_train)
