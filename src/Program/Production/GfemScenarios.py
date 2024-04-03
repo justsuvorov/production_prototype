@@ -240,22 +240,22 @@ class RegressionScenarios:
                                                             random_state=0)
 
 
-   #     try:
+        try:
 
-        poly_model = PiecewiseRegressor(verbose=True,
-                                        binner=DecisionTreeRegressor(max_depth=9)
-                                       #binner=KBinsDiscretizer(n_bins=80),
-                                       )
+            poly_model = PiecewiseRegressor(verbose=True,
+                                            binner=DecisionTreeRegressor(max_depth=9)
+                                           #binner=KBinsDiscretizer(n_bins=80),
+                                           )
 
-        poly_model.fit(X_train, Y_train)
+            poly_model.fit(X_train, Y_train)
 
 
-    #    except :
-   #         x1 = np.zeros(2)
-    #        x = x1[:, np.newaxis]
-    #        poly_model = PiecewiseRegressor(verbose=True,
-    #                                        binner=KBinsDiscretizer(n_bins=80))
-    #        poly_model.fit(x, np.zeros(2))
+        except :
+            x1 = np.zeros(2)
+            x = x1[:, np.newaxis]
+            poly_model = PiecewiseRegressor(verbose=True,
+                                            binner=DecisionTreeRegressor(max_depth=9))
+            poly_model.fit(x, np.zeros(2))
 
           #  poly_model2.fit(X_train, Y_train)
 
