@@ -1,21 +1,10 @@
-import datetime
 
-from Program.DOTests.HierarchyFromRatingsTest import *
-from Program.Production.GfemScenarios import RegressionScenarios, SortedGfemData, GfemDataFrame, PortuDataFrame
-from Program.Production.AppGui import Application
 from Program.GUI.my_app_gemba import OperBalancerApplication
 from Program.GUI.data_model_gemba import DataModel
 from edifice import App
 import click
-from pathlib import Path
-from Program.AROMonitoring.aro_monitoring import AroMonitoring
-from Program.GUI.data_model_monitoring import DataModelMonitoring
 from Program.Production.GfemScenarios import *
-from Program.ObjectBuilders.Parser import *
-from Program.GUI.my_app import MonitoringApp, BalancerViewerApplication
-from Program.GUI.data_model_vbd import DataModelVbd
-from Program.GUI.data_model_full import DataModelFull
-from Program.GUI.data_model import ModelProxy
+
 
 @click.command()
 @click.option('--path')
